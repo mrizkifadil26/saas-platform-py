@@ -41,14 +41,20 @@ class InMemoryTaskQueue:
 
         return job.provider_job_id
 
-    def tick_delay(self) -> None:
+    def tick_delay(self,  queue: str) -> None:
         """
-        Release all delayed jobs into their respective queues.
+        Move all delayed jobs from the delayed queue to the active queue.
+        This method processes all jobs that are waiting in the delayed queue for
+        the specified queue and transfers them to the main task queue for execution.
+        Args:
+            queue (str): The name of the queue to process delayed jobs for.
+        Returns:
+            None
         """
-        for queue, jobs in self._delayed.items():
-            while jobs:
-                job = jobs.popleft()
-                self._queues[queue].append(job)
+        jobs = self._delayed[queue]
+        while jobs:
+            job = jobs.popleft()
+            self._queues[queue].append(job)
 
     def reserve(self, queue: str, *, timeout: int = 5) -> Optional[ReservedJob]:
         if not self._queues[queue]:
