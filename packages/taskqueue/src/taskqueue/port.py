@@ -1,10 +1,10 @@
 from dataclasses import dataclass
-from typing import Optional, Protocol
+from typing import Any, Optional, Protocol
 
 
 @dataclass(frozen=True)
 class ReservedJob:
-    provider_job_id: int
+    handle: Any   # opaque provider handle (Job, receipt handle, tag, id...)
     body: str
     queue: str  # tube/queue name
 
@@ -23,6 +23,6 @@ class TaskQueue(Protocol):
         delay: int = 0,
         ttr: int = 60,
         priority: int = 2**31,
-    ) -> int: ...
+    ) -> Any: ...
     def reserve(self, queue: str, *, timeout: int = 5) -> Optional[ReservedJob]: ...
-    def delete(self, provider_job_id: int) -> None: ...
+    def delete(self, handle: Any) -> None: ...

@@ -1,3 +1,10 @@
+from .capabilities import (
+    SupportsBury,
+    SupportsDelay,
+    SupportsKick,
+    SupportsPeek,
+    SupportsRelease,
+)
 from .in_memory import InMemoryTaskQueue
 from .job import JobEnvelope
 from .port import ReservedJob, TaskQueue
@@ -10,4 +17,10 @@ __all__ = [
     "ReservedJob",
     "TaskQueue",
     "InMemoryTaskQueue",
+
+    "SupportsBury",
+    "SupportsRelease",
+    "SupportsPeek",
+    "SupportsKick",
+    "SupportsDelay",
 ]
