@@ -529,7 +529,7 @@ pytest = ">=6.2.5"
 dev = ["pre-commit", "pytest-asyncio", "tox"]
 
 [[package]]
-name = "queue"
+name = "taskqueue"
 version = "0.1.0"
 description = ""
 optional = false
@@ -543,10 +543,10 @@ pydantic = "^2.6"
 
 [package.source]
 type = "directory"
-url = "../../packages/queue"
+url = "../../packages/taskqueue"
 
 [[package]]
-name = "queue-beanstalk"
+name = "taskqueue-beanstalk"
 version = "0.1.0"
 description = ""
 optional = false
@@ -557,51 +557,11 @@ develop = true
 
 [package.dependencies]
 greenstalk = "^2.0.0"
-queue = {path = "../queue", develop = true}
+taskqueue = {path = "../taskqueue", develop = true}
 
 [package.source]
 type = "directory"
-url = "../../packages/queue_beanstalk"
-
-[[package]]
-name = "types-gevent"
-version = "25.9.0.20251228"
-description = "Typing stubs for gevent"
-optional = false
-python-versions = ">=3.9"
-groups = ["dev"]
-files = [
-    {file = "types_gevent-25.9.0.20251228-py3-none-any.whl", hash = "sha256:e2e225af4fface9241c16044983eb2fc3993f2d13d801f55c2932848649b7f2f"},
-    {file = "types_gevent-25.9.0.20251228.tar.gz", hash = "sha256:423ef9891d25c5a3af236c3e9aace4c444c86ff773fe13ef22731bc61d59abef"},
-]
-
-[package.dependencies]
-types-greenlet = "*"
-types-psutil = ">=7.2.0"
-
-[[package]]
-name = "types-greenlet"
-version = "3.3.0.20251206"
-description = "Typing stubs for greenlet"
-optional = false
-python-versions = ">=3.9"
-groups = ["dev"]
-files = [
-    {file = "types_greenlet-3.3.0.20251206-py3-none-any.whl", hash = "sha256:8d11041c0b0db545619e8c8a1266aa4aaa4ebeae8ae6b4b7049917a6045a5590"},
-    {file = "types_greenlet-3.3.0.20251206.tar.gz", hash = "sha256:3e1ab312ab7154c08edc2e8110fbf00d9920323edc1144ad459b7b0052063055"},
-]
-
-[[package]]
-name = "types-psutil"
-version = "7.2.1.20260116"
-description = "Typing stubs for psutil"
-optional = false
-python-versions = ">=3.9"
-groups = ["dev"]
-files = [
-    {file = "types_psutil-7.2.1.20260116-py3-none-any.whl", hash = "sha256:f516d2a71b28a4fd290f065cb30d7e7141ee605899aa592d8d4b80e45c9849be"},
-    {file = "types_psutil-7.2.1.20260116.tar.gz", hash = "sha256:4661be5d5d7acd5d8afb02a92d05160a6cbb2ce74723245b51f7ba7dfdb9f981"},
-]
+url = "../../packages/taskqueue_beanstalk"
 
 [[package]]
 name = "typing-extensions"
@@ -695,4 +655,4 @@ testing = ["coverage[toml]", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "49affbda7a095ec7de7a53296eff2942ba26be1aa102482f9834050ce95e4491"
+content-hash = "85b682060bd502b3136d202ba25559efb7e52bb6ec7c3a24da93341ad35c3e56"

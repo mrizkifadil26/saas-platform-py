@@ -1,14 +1,3 @@
-[project]
-name = "worker"
-version = "0.1.0"
-description = ""
-authors = [
-    {name = "Muhammad Rizki Fadillah",email = "mrizkifadil26@gmail.com"}
-]
-requires-python = ">=3.11"
-dependencies = [
-]
-
 [tool.poetry]
 name = "worker"
 version = "0.1.0"
@@ -18,13 +7,12 @@ packages = [{ include = "worker", from = "src" }]
 python = "^3.11"
 gevent = "^24.2.1"
 pydantic = "^2.6"
-queue = { path = "../../packages/queue", develop = true }
-queue-beanstalk = { path = "../../packages/queue_beanstalk", develop = true }
+taskqueue = { path = "../../packages/taskqueue", develop = true }
+taskqueue-beanstalk = { path = "../../packages/taskqueue_beanstalk", develop = true }
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0"
 pytest-mock = "^3.12"
-types-gevent = "^25.9.0.20251228"
 
 
 [build-system]
