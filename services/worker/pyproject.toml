@@ -2,6 +2,7 @@
 name = "worker"
 version = "0.1.0"
 packages = [{ include = "worker", from = "src" }]
+include = ["src/worker/py.typed"]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -10,10 +11,10 @@ pydantic = "^2.6"
 taskqueue = { path = "../../packages/taskqueue", develop = true }
 taskqueue-beanstalk = { path = "../../packages/taskqueue_beanstalk", develop = true }
 
-[tool.poetry.group.dev.dependencies]
+[tool.poetry.group.test.dependencies]
 pytest = "^8.0"
 pytest-mock = "^3.12"
-
+pytest-asyncio = "^1.3.0"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
