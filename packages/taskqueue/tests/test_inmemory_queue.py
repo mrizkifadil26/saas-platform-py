@@ -1,5 +1,5 @@
-from packages.taskqueue.src.taskqueue.in_memory import InMemoryTaskQueue
-from packages.taskqueue.src.taskqueue.job import JobEnvelope
+from taskqueue.in_memory import InMemoryTaskQueue
+from taskqueue.job import JobEnvelope
 
 
 def test_put_reserve_fifo_order():
@@ -8,8 +8,8 @@ def test_put_reserve_fifo_order():
     j1 = JobEnvelope(type="a", payload={"data": 1}).to_json()
     j2 = JobEnvelope(type="b", payload={"data": 2}).to_json()
 
-    id1 = q.put("q1", j1)
-    id2 = q.put("q1", j2)
+    h1 = q.put("q1", j1)
+    h2 = q.put("q1", j2)
 
     r1 = q.reserve("q1")
     r2 = q.reserve("q1")
@@ -18,8 +18,8 @@ def test_put_reserve_fifo_order():
     assert r1 is not None and r2 is not None
     assert r3 is None
 
-    assert r1.provider_job_id == id1
-    assert r2.provider_job_id == id2
+    assert r1.handle == h1
+    assert r2.handle == h2
 
     env1 = JobEnvelope.from_json(r1.body)
     env2 = JobEnvelope.from_json(r2.body)
@@ -42,23 +42,23 @@ def test_queues_are_isolated():
     assert JobEnvelope.from_json(r2.body).payload["q"] == 2
 
 
-def test_delete_records_job_id():
+def test_delete_records_handle():
     q = InMemoryTaskQueue()
 
-    jid = q.put("q1", JobEnvelope(type="a").to_json())
+    h = q.put("q1", JobEnvelope(type="a").to_json())
     r = q.reserve("q1")
     assert r is not None
-    assert r.provider_job_id == jid
+    assert r.handle == h
 
-    q.delete(jid)
-    assert jid in q.deleted
+    q.delete(h)
+    assert h in q.deleted
 
 
 def test_delayed_jobs_are_not_visible_until_tick_delay():
     q = InMemoryTaskQueue()
 
     delayed_body = JobEnvelope(type="delayed").to_json()
-    jid = q.put("q1", delayed_body, delay=10)
+    h = q.put("q1", delayed_body, delay=10)
 
     # Not visible yet
     assert q.reserve("q1") is None
@@ -67,7 +67,7 @@ def test_delayed_jobs_are_not_visible_until_tick_delay():
     q.tick_delay("q1")
     r = q.reserve("q1")
     assert r is not None
-    assert r.provider_job_id == jid
+    assert r.handle == h
 
     env = JobEnvelope.from_json(r.body)
     assert env.type == "delayed"
