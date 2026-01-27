@@ -1,13 +1,12 @@
-[project]
-name = "taskqueue-beanstalk"
-version = "0.1.0"
-description = ""
-authors = [
-    {name = "Muhammad Rizki Fadillah",email = "mrizkifadil26@gmail.com"}
-]
-requires-python = ">=3.11"
-dependencies = [
-]
+# [project]
+# name = "taskqueue-beanstalk"
+# version = "0.1.0"
+# description = ""
+# authors = [
+#     { name = "Muhammad Rizki Fadillah", email = "mrizkifadil26@gmail.com" },
+# ]
+# requires-python = ">=3.11"
+# dependencies = []
 
 [tool.poetry]
 name = "taskqueue-beanstalk"
@@ -21,7 +20,10 @@ taskqueue = { path = "../taskqueue", develop = true }
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0"
+mypy = "^1.19.1"
 
+[tool.mypy]
+python_version = "3.11"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
