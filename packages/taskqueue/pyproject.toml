@@ -1,18 +1,8 @@
-[project]
-name = "taskqueue"
-version = "0.1.0"
-description = ""
-authors = [
-    {name = "Muhammad Rizki Fadillah",email = "mrizkifadil26@gmail.com"}
-]
-requires-python = ">=3.11"
-dependencies = [
-]
-
 [tool.poetry]
 name = "taskqueue"
 version = "0.1.0"
 packages = [{ include = "taskqueue", from = "src" }]
+include = ["src/taskqueue/py.typed"]
 
 [tool.poetry.dependencies]
 python = "^3.11"
