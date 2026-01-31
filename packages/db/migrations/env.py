@@ -91,8 +91,9 @@ def run_migrations_online() -> None:
             version_table_schema="internal",
         )
 
+        _ensure_schemas(connection)  # Ensure required schemas exist
+
         with context.begin_transaction():
-            _ensure_schemas(connection)  # Ensure required schemas exist
             context.run_migrations()
 
 
