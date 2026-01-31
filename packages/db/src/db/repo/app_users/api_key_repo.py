@@ -12,9 +12,9 @@ class APIKeyRepo:
 
     async def create_api_key(
         self,
-        workspace_id: int,
+        *,
+        workspace_id: uuid.UUID,
         name: str,
-        prefix: str,
         key_hash: str,
         last4: str,
         created_by_user_id: uuid.UUID | None = None,
@@ -22,29 +22,37 @@ class APIKeyRepo:
         api_key = APIKey(
             workspace_id=workspace_id,
             name=name,
-            prefix=prefix,
             key_hash=key_hash,
             last4=last4,
             created_by_user_id=created_by_user_id,
         )
+
         self.db.add(api_key)
         await self.db.flush()
         return api_key
 
     async def list_api_keys(
         self,
-        workspace_id: int,
+        workspace_id: uuid.UUID,
+        *,
         included_revoked: bool = False,
     ) -> list[APIKey]:
         stmt = select(APIKey).where(APIKey.workspace_id == workspace_id)
         if not included_revoked:
             stmt = stmt.where(APIKey.revoked_at.is_(None))
 
+        stmt = stmt.order_by(APIKey.created_at.desc())
         res = await self.db.execute(stmt)
         return list(res.scalars().all())
     
     async def get_by_hash(self, key_hash: str) -> APIKey | None:
-        res = await self.db.execute(select(APIKey).where(APIKey.key_hash == key_hash))
+        stmt = (
+            select(APIKey)
+            .where(APIKey.key_hash == key_hash)
+            .where(APIKey.revoked_at.is_(None))
+            .limit(1)
+        )
+        res = await self.db.execute(stmt)
         return res.scalar_one_or_none()
 
     async def revoke_api_key(self, api_key: APIKey) -> bool:
