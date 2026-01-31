@@ -23,7 +23,7 @@ class APIKey(Base):
     last4: Mapped[str] = mapped_column(String(4), nullable=False)
 
     created_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("app_users.users.id", ondelete="SET NULL"), nullable=True
+        UUID(as_uuid=True), ForeignKey("auth.users.id", ondelete="SET NULL"), nullable=True
     )
 
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
