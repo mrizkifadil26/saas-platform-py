@@ -5,6 +5,7 @@ from db.repo.app_users.api_key_repo import APIKeyRepo
 from db.repo.app_users.audit_repo import AuditRepo
 from db.repo.app_users.entitlement_repo import EntitlementRepo
 from db.repo.app_users.membership_repo import MembershipRepo
+from db.repo.app_users.session_repo import SessionRepo
 from db.repo.app_users.user_repo import UserRepo
 from db.repo.app_users.workspace_repo import WorkspaceRepo
 
@@ -19,6 +20,7 @@ class AppUsersUoW:
     _api_keys: APIKeyRepo | None = field(default=None, init=False, repr=False)
     _entitlements: EntitlementRepo | None = field(default=None, init=False, repr=False)
     _audit: AuditRepo | None = field(default=None, init=False, repr=False)
+    _sessions: SessionRepo | None = field(default=None, init=False, repr=False)
 
     @property
     def workspaces(self) -> WorkspaceRepo:
@@ -55,6 +57,12 @@ class AppUsersUoW:
         if self._audit is None:
             self._audit = AuditRepo(self.db)
         return self._audit
+    
+    @property
+    def sessions(self) -> SessionRepo:
+        if self._sessions is None:
+            self._sessions = SessionRepo(self.db)
+        return self._sessions
 
     async def flush(self) -> None:
         await self.db.flush()
