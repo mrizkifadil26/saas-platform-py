@@ -67,12 +67,12 @@ class SessionRepo:
     ) -> Session:
         s = Session(
             user_id=user_id,
-            tenant_id=workspace_id,
+            workspace_id=workspace_id,
             token_hash=token_hash,
             created_at=created_at,
             expires_at=expires_at,
             revoked_at=None,
-            last_seen_at=None,
+            last_used_at=None,
         )
 
         self.db.add(s)
