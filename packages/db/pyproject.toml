@@ -31,4 +31,15 @@ test = [
 ]
 
 [tool.pytest.ini_options]
-markers = ["migration: tests related to database migrations"]
+markers = [
+    "db: tests that require a real database",
+    "migration: tests related to database migrations",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["db"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
