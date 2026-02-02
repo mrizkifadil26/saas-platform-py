@@ -13,6 +13,8 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.ext.asyncio.engine import AsyncEngine
 
+from tests.factories import Factories, build_factories
+
 # TEST_DATABASE_URL = os.environ["TEST_DATABASE_URL"]
 
 
@@ -92,3 +94,9 @@ def sessionmaker(engine: AsyncEngine):
         expire_on_commit=False,
         autoflush=False,
     )
+
+
+@pytest.fixture
+def factories(db_session) -> Factories:
+    # db_session is your existing AsyncSession fixture
+    return build_factories(db_session)
