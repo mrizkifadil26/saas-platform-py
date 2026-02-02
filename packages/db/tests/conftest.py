@@ -1,3 +1,4 @@
+import asyncio
 import os
 from pathlib import Path
 
@@ -5,7 +6,7 @@ import pytest
 from dotenv import load_dotenv
 from collections.abc import AsyncGenerator
 import pytest_asyncio
-from sqlalchemy import make_url
+from sqlalchemy import NullPool, make_url
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
     async_sessionmaker,
@@ -31,6 +32,19 @@ def _repo_root() -> Path:
     return Path(__file__).resolve().parents[3]
 
 
+@pytest.fixture(scope="session")
+def event_loop():
+    """Use a single asyncio event loop for the whole test session.
+
+    Required when you have session-scoped async resources (e.g., SQLAlchemy async engine).
+    """
+    loop = asyncio.new_event_loop()
+    try:
+        yield loop
+    finally:
+        loop.close()
+
+
 @pytest.fixture(scope="session", autouse=True)
 def load_env() -> None:
     root = _repo_root()
@@ -50,16 +64,17 @@ def test_db_url() -> str:
 
 @pytest_asyncio.fixture(scope="session")
 async def engine(test_db_url: str) -> AsyncGenerator[AsyncEngine, None]:
-    eng = create_async_engine(
+    engine = create_async_engine(
         test_db_url,
-        pool_pre_ping=True,
+        # pool_pre_ping=True,
+        poolclass=NullPool,
         future=True,
     )
 
     try:
-        yield eng
+        yield engine
     finally:
-        await eng.dispose()
+        await engine.dispose()
 
 
 @pytest_asyncio.fixture
