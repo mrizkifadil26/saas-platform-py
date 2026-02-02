@@ -24,3 +24,11 @@ build-backend = "poetry.core.masonry.api"
 
 [dependency-groups]
 dev = ["alembic (>=1.18.2,<2.0.0)"]
+test = [
+    "pytest (>=9.0.2,<10.0.0)",
+    "pytest-asyncio (>=1.3.0,<2.0.0)",
+    "python-dotenv (>=1.2.1,<2.0.0)",
+]
+
+[tool.pytest.ini_options]
+markers = ["migration: tests related to database migrations"]
