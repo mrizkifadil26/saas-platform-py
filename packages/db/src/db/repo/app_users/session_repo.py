@@ -60,14 +60,14 @@ class SessionRepo:
         self,
         *,
         user_id: uuid.UUID,
-        tenant_id: uuid.UUID,
+        workspace_id: uuid.UUID,
         token_hash: bytes,
         created_at: datetime,
         expires_at: datetime,
     ) -> Session:
         s = Session(
             user_id=user_id,
-            tenant_id=tenant_id,
+            tenant_id=workspace_id,
             token_hash=token_hash,
             created_at=created_at,
             expires_at=expires_at,
