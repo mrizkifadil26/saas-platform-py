@@ -34,9 +34,9 @@ class UserRepo:
         self,
         *,
         email: str,
-        full_name: str | None = None,
+        fullname: str | None = None,
     ) -> User:
-        u = User(email=email, full_name=full_name)
+        u = User(email=email, fullname=fullname)
 
         self.db.add(u)
         await self.db.flush()
