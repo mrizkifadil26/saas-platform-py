@@ -28,12 +28,23 @@ class BeanstalkTaskQueue(SupportsRelease, SupportsBury):
         # e.g., self.connection = beanstalkc.Connection(host=config.host, port=config.port)
 
     def put(
-        self, queue: str, body: str, *, delay: int = 0, ttr: int = 60, priority: int = 0
+        self,
+        queue: str,
+        body: str,
+        *,
+        delay: int = 0,
+        ttr: int = 60,
+        priority: int = 0,
     ) -> int:
         self._client.use(queue)
         return int(self._client.put(body, priority=priority, delay=delay, ttr=ttr))
 
-    def reserve(self, queue: str, *, timeout: int = 5) -> Optional[ReservedJob]:
+    def reserve(
+        self,
+        queue: str,
+        *,
+        timeout: int = 5,
+    ) -> Optional[ReservedJob]:
         # NOTE: greenstalk.watch adds to watched set; be aware if you watch many queues.
         self._client.watch(queue)
         try:
@@ -52,8 +63,19 @@ class BeanstalkTaskQueue(SupportsRelease, SupportsBury):
         self._client.delete(handle)
 
     # ✅ Capability methods use the *Job object* via ReservedJob.handle
-    def release(self, job: ReservedJob, *, delay: int = 0, priority: int = 2**31) -> None:
+    def release(
+        self,
+        job: ReservedJob,
+        *,
+        delay: int = 0,
+        priority: int = 2**31,
+    ) -> None:
         self._client.release(job.handle, priority=priority, delay=delay)
 
-    def bury(self, job: ReservedJob, *, priority: int = 2**31) -> None:
+    def bury(
+        self,
+        job: ReservedJob,
+        *,
+        priority: int = 2**31,
+    ) -> None:
         self._client.bury(job.handle, priority=priority)
