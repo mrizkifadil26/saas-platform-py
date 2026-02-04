@@ -15,6 +15,10 @@
         {
             "name": "API",
             "path": "services/api"
+        },
+        {
+            "name": "Pipeline",
+            "path": "packages/pipeline"
         }
     ],
     "settings": {
