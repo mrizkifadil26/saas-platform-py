@@ -1,0 +1,23 @@
+{
+    "folders": [
+        {
+            "name": "Root",
+            "path": "."
+        },
+        {
+            "name": "DB",
+            "path": "packages/db"
+        },
+        {
+            "name": "Infra",
+            "path": "infra"
+        },
+        {
+            "name": "API",
+            "path": "services/api"
+        }
+    ],
+    "settings": {
+        "python.terminal.activateEnvironment": false
+    }
+}
