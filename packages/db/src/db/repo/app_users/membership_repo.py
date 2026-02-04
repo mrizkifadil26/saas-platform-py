@@ -15,13 +15,11 @@ class MembershipRepo:
         user_id: uuid.UUID,
         workspace_id: uuid.UUID,
         role: str = "member",
-        status: str = "active",
     ) -> Membership:
         membership = Membership(
             user_id=user_id,
             workspace_id=workspace_id,
             role=role,
-            status=status,
         )
 
         self.db.add(membership)
@@ -78,3 +76,19 @@ class MembershipRepo:
         res = await self.db.execute(stmt)
 
         return int(res.scalar_one())
+
+    async def get_membership(
+        self,
+        *,
+        workspace_id: uuid.UUID,
+        user_id: uuid.UUID,
+    ) -> Membership | None:
+        stmt = (
+            select(Membership)
+            .where(Membership.workspace_id == workspace_id)
+            .where(Membership.user_id == user_id)
+            .limit(1)
+        )
+
+        res = await self.db.execute(stmt)
+        return res.scalar_one_or_none()

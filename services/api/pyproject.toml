@@ -3,32 +3,33 @@ name = "api"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "Muhammad Rizki Fadillah",email = "mrizkifadil26@gmail.com"}
+    { name = "Muhammad Rizki Fadillah", email = "mrizkifadil26@gmail.com" },
 ]
 requires-python = ">=3.11"
 dependencies = [
-    "psycopg[binary] (>=3.3.2,<4.0.0)"
+    "psycopg[binary] (>=3.3.2,<4.0.0)",
+    "fastapi (>=0.128.0,<0.129.0)",
+    "uvicorn (>=0.40.0,<0.41.0)",
+    "pydantic-settings (>=2.12.0,<3.0.0)",
 ]
 
+[tool.poetry]
+packages = [{ include = "api", from = "src" }]
+
+[tool.poetry.dependencies]
+common = { path = "../../packages/common", develop = true }
+db = { path = "../../packages/db", develop = true }
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.poetry]
-name = "api"
-version = "0.1.0"
-packages = [{ include = "api", from = "src" }]
-
-[tool.poetry.dependencies]
-python = "^3.11"
-fastapi = "^0.110"
-uvicorn = { extras = ["standard"], version = "^0.27" }
-
-# 👇 monorepo dependency
-common = { path = "../../packages/common", develop = true }
-db = { path = "../../packages/db", develop = true }
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.0"
-ruff = "^0.6"
+[dependency-groups]
+dev = [
+    "mypy (>=1.19.1,<2.0.0)",
+    "ruff (>=0.15.0,<0.16.0)"
+]
+test = [
+    "pytest (>=9.0.2,<10.0.0)",
+    "httpx (>=0.28.1,<0.29.0)"
+]
