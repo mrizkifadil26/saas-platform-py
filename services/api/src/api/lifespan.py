@@ -1,10 +1,11 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from db.engine.app_users import make_app_users_engine, make_app_users_sessionmaker
 from db.config.settings import AppUsersDBSettings
 
-
+@asynccontextmanager
 async def lifespan(app: FastAPI):
     settings = app.state.settings
 

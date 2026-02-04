@@ -10,3 +10,8 @@ class Settings(BaseSettings):
 
     db_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/app_users"
     db_echo: bool = False
+
+    cors_allow_origins: list[str] = ["http://localhost:3000"]
+    cors_allow_methods: list[str] = ["*"]
+    cors_allow_headers: list[str] = ["*"]
+    cors_allow_credentials: bool = True
