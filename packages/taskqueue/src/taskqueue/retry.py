@@ -7,7 +7,7 @@ def compute_delay_seconds(attempt: int, base_delay: float = 2.0, max_delay: floa
     :param max_delay: The maximum delay in seconds.
     :return: The computed delay in seconds.
     """
-    delay = base_delay * (2 ** attempt)
+    delay = base_delay * (2**attempt)
     return min(delay, max_delay)
 
 

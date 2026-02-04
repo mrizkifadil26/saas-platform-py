@@ -1,4 +1,4 @@
-from taskqueue.in_memory import InMemoryTaskQueue
+from taskqueue.backend.in_memory import InMemoryTaskQueue
 from taskqueue.job import JobEnvelope
 
 

@@ -2,7 +2,7 @@ from collections import defaultdict, deque
 from dataclasses import dataclass
 from typing import Deque, Optional
 
-from .port import ReservedJob
+from taskqueue.port import ReservedJob
 
 
 @dataclass
