@@ -23,3 +23,9 @@ db = { path = "../../packages/db", develop = true }
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "mypy (>=1.19.1,<2.0.0)",
+    "ruff (>=0.15.0,<0.16.0)"
+]
