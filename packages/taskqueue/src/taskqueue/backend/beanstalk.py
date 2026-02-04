@@ -3,7 +3,11 @@ from typing import Optional
 
 import greenstalk
 
-from taskqueue import SupportsBury, ReservedJob, SupportsRelease
+from taskqueue.capabilities import (
+    SupportsBury,
+    ReservedJob,
+    SupportsRelease,
+)
 
 
 @dataclass(frozen=True)
@@ -23,7 +27,9 @@ class BeanstalkTaskQueue(SupportsRelease, SupportsBury):
         # Initialize connection to Beanstalkd server here
         # e.g., self.connection = beanstalkc.Connection(host=config.host, port=config.port)
 
-    def put(self, queue: str, body: str, *, delay: int = 0, ttr: int = 60, priority: int = 0) -> int:
+    def put(
+        self, queue: str, body: str, *, delay: int = 0, ttr: int = 60, priority: int = 0
+    ) -> int:
         self._client.use(queue)
         return int(self._client.put(body, priority=priority, delay=delay, ttr=ttr))
 
@@ -34,7 +40,7 @@ class BeanstalkTaskQueue(SupportsRelease, SupportsBury):
             job: greenstalk.Job[str] = self._client.reserve(timeout=timeout)
         except greenstalk.TimedOutError:
             return None
-        
+
         # job is a greenstalk.Job[str]
         return ReservedJob(
             handle=job,
