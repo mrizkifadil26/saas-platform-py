@@ -1,6 +1,6 @@
 from typing import Protocol, runtime_checkable
 
-from taskqueue.port import ReservedJob
+from taskq.port import ReservedJob
 
 
 @runtime_checkable

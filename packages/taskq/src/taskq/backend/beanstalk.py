@@ -3,7 +3,7 @@ from typing import Optional
 
 import greenstalk
 
-from taskqueue.capabilities import (
+from taskq.capabilities import (
     SupportsBury,
     ReservedJob,
     SupportsRelease,

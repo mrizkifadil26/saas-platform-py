@@ -1,5 +1,5 @@
-from taskqueue.backend.in_memory import InMemoryTaskQueue
-from taskqueue.job import JobEnvelope
+from taskq.backend.in_memory import InMemoryTaskQueue
+from taskq.job import JobEnvelope
 
 
 def test_put_reserve_fifo_order():
