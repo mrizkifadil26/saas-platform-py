@@ -9,12 +9,20 @@
             "path": "packages/db"
         },
         {
+            "name": "UI",
+            "path": "packages/ui"
+        },
+        {
             "name": "Infra",
             "path": "infra"
         },
         {
             "name": "API",
             "path": "services/api"
+        },
+        {
+            "name": "Web",
+            "path": "apps/web"
         }
     ],
     "settings": {
