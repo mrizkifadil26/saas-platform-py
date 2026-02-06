@@ -1,6 +1,67 @@
-__pycache__/
-.venv/
-*.pyc
-.env
-.dist/
+# =========================
+# OS / Editor
+# =========================
+.DS_Store
+Thumbs.db
+
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+node_modules/
+.pnpm-store/
+
+.pnpm-debug.log*
+
+# Next.js
+.next/
+out/
+.vercel/
+
+# Build outputs (shared packages)
+dist/
 build/
+
+# =========================
+# TypeScript
+# =========================
+*.tsbuildinfo
+
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python tooling
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# =========================
+# Env files (secrets!)
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log
+
+# =========================
+# Misc
+# =========================
+.cache/
+tmp/
+temp/
