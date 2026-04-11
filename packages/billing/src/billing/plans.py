@@ -1,5 +1,7 @@
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, Optional
+
+from .types import Credits, PlanCode
 
 
 PlanKind = Literal["subscription", "payg"]
