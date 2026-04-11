@@ -1,0 +1,18 @@
+[project]
+name = "billing"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Muhammad Rizki Fadillah",email = "mrizkifadil26@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+]
+
+[tool.poetry]
+packages = [{include = "billing", from = "src"}]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
