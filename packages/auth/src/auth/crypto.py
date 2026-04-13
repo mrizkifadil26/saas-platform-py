@@ -1,8 +1,8 @@
 import hashlib
 import secrets
+
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
-
 
 _ph = PasswordHasher()
 
