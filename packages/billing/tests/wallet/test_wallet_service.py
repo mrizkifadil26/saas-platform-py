@@ -1,8 +1,8 @@
 import pytest
 from billing.core.errors import IdempotencyConflict, InsufficientCredits
 from billing.core.models import Wallet
-from billing.core.service import consume_credits
 from billing.core.types import Credits, RequestId, UserId
+from billing.core.wallet.service import consume_credits
 
 
 def test_consume_credits_success():

@@ -2,10 +2,10 @@ from .errors import BillingError, IdempotencyConflict, InsufficientCredits, Unkn
 from .models import Wallet
 from .payg.plans import PaygPlan, get_payg_plan
 from .payg.service import grant_payg_credits
-from .service import ConsumeCreditsResult, consume_credits
 from .subscription.plans import SubscriptionPlan, get_subscription_plan
 from .subscription.service import grant_subscription_credits
 from .types import Credits, PlanCode, RequestId
+from .wallet.service import ConsumeCreditsResult, consume_credits
 
 __all__ = [
     "BillingError",

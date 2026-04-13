@@ -3,8 +3,8 @@ from dataclasses import dataclass
 from billing.core.events import BillingEvent
 from billing.core.models import Wallet
 
-from .errors import IdempotencyConflict, InsufficientCredits, InvalidCreditsAmount
-from .types import Credits, RequestId
+from ..errors import IdempotencyConflict, InsufficientCredits, InvalidCreditsAmount
+from ..types import Credits, RequestId
 
 
 @dataclass(frozen=True)
