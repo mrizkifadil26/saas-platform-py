@@ -1,6 +1,6 @@
 import pytest
+from billing.domain.credits.models import Wallet
 from billing.domain.errors import IdempotencyConflict, InsufficientCredits
-from billing.domain.models import Wallet
 from billing.domain.types import Credits, RequestId, UserId
 from billing.domain.wallet.service import consume_credits
 

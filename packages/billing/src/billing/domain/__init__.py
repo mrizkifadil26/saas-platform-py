@@ -1,5 +1,5 @@
+from .credits.models import Wallet
 from .errors import BillingError, IdempotencyConflict, InsufficientCredits, UnknownPlan
-from .models import Wallet
 from .payg.plans import PaygPlan, get_payg_plan
 from .payg.service import grant_payg_credits
 from .subscription.plans import SubscriptionPlan, get_subscription_plan

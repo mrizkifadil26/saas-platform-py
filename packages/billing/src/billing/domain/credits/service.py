@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
+from billing.domain.credits.models import Wallet
 from billing.domain.events import BillingEvent
-from billing.domain.models import Wallet
 
 from ..errors import IdempotencyConflict, InsufficientCredits, InvalidCreditsAmount
 from ..types import Credits, RequestId

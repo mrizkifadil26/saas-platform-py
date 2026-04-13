@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 
+from billing.domain.credits.models import Wallet
 from billing.domain.errors import IdempotencyConflict
 from billing.domain.events import BillingEvent
-from billing.domain.models import Wallet
 from billing.domain.payg.plans import PaygPlan, get_payg_plan
 from billing.domain.types import Credits, PlanCode, RequestId
 
