@@ -12,3 +12,7 @@ class UnknownPlan(BillingError):
 
 class IdempotencyConflict(BillingError):
     pass
+
+
+class InvalidCreditsAmount(BillingError):
+    pass

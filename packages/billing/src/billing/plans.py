@@ -3,7 +3,6 @@ from typing import Literal, Optional
 
 from .types import Credits, PlanCode
 
-
 PlanKind = Literal["subscription", "payg"]
 
 
@@ -12,6 +11,7 @@ class Plan:
     code: PlanCode
     kind: PlanKind
     tier: str
-    billing_interval: Optional[str]
-    credits_grant: Credits
-    
+    price_cents: int
+    currency: str = "usd"
+    billing_interval: Optional[str] = None
+    credits_grant: Credits = Credits(0)
