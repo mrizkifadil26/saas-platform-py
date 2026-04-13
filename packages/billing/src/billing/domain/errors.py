@@ -16,3 +16,11 @@ class IdempotencyConflict(BillingError):
 
 class InvalidCreditsAmount(BillingError):
     pass
+
+
+class InvalidSubscriptionStatus(BillingError):
+    pass
+
+
+class DuplicatePeriodGrant(BillingError):
+    pass

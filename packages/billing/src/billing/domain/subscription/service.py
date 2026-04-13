@@ -1,10 +1,27 @@
 from dataclasses import dataclass
+from datetime import datetime
 
 from billing.domain.credits.models import Wallet
 from billing.domain.errors import IdempotencyConflict
 from billing.domain.events import BillingEvent
+from billing.domain.subscription.models import Subscription
 from billing.domain.subscription.plans import SubscriptionPlan, get_subscription_plan
 from billing.domain.types import Credits, PlanCode, RequestId
+
+
+@dataclass(frozen=True)
+class CreateSubscriptionResult:
+    subscription: Subscription
+    event: BillingEvent
+
+
+def create_subscription(
+    user_id: str,
+    plan_code: PlanCode,
+    current_period_start: datetime,
+    current_period_end: datetime,
+    provider_subscription_id: str | None = None,
+) -> CreateSubscriptionResult: ...
 
 
 @dataclass(frozen=True)
