@@ -1,4 +1,4 @@
-from billing.errors import BillingError, IdempotencyConflict, InsufficientCredits, UnknownPlan
+from billing.core.errors import BillingError, IdempotencyConflict, InsufficientCredits, UnknownPlan
 
 
 def test_insufficient_credits_is_billing_error():

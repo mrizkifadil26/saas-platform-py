@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
-from billing.types import Credits, PlanCode, RequestId, UserId
+from billing.core.types import Credits, PlanCode, RequestId, UserId
 
 BillingEventType = Literal[
     "credits_charged",

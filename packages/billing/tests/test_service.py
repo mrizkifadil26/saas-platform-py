@@ -1,8 +1,8 @@
 import pytest
-from billing.charge import consume_credits
-from billing.errors import IdempotencyConflict, InsufficientCredits
-from billing.models import Wallet
-from billing.types import Credits, RequestId, UserId
+from billing.core.errors import IdempotencyConflict, InsufficientCredits
+from billing.core.models import Wallet
+from billing.core.service import consume_credits
+from billing.core.types import Credits, RequestId, UserId
 
 
 def test_consume_credits_success():
@@ -41,6 +41,24 @@ def test_consume_credits_insufficient():
             request_id=RequestId("req_123"),
             used_request_ids=set(),
         )
+
+
+def test_consume_credits_insufficient_does_not_mark_request_id():
+    wallet = Wallet(
+        user_id=UserId("user_123"),
+        credits=Credits(10),
+    )
+    used_request_ids = set[str]()
+
+    with pytest.raises(InsufficientCredits):
+        consume_credits(
+            wallet=wallet,
+            cost=Credits(40),
+            request_id=RequestId("req_123"),
+            used_request_ids=used_request_ids,
+        )
+
+    assert "req_123" not in used_request_ids
 
 
 def test_consume_credits_idempotency_conflict():

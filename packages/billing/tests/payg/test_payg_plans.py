@@ -1,7 +1,7 @@
 import pytest
-from billing.errors import UnknownPlan
-from billing.payg.plans import PaygPlan, get_payg_plan
-from billing.types import Credits, PlanCode
+from billing.core.errors import UnknownPlan
+from billing.core.payg.plans import PaygPlan, get_payg_plan
+from billing.core.types import Credits, PlanCode
 
 
 def test_get_payg_plan_existing():

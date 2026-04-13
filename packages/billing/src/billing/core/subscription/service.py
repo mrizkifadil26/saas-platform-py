@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 
-from billing.errors import IdempotencyConflict
-from billing.events import BillingEvent
-from billing.models import Wallet
-from billing.subscription.plans import SubscriptionPlan, get_subscription_plan
-from billing.types import Credits, PlanCode, RequestId
+from billing.core.errors import IdempotencyConflict
+from billing.core.events import BillingEvent
+from billing.core.models import Wallet
+from billing.core.subscription.plans import SubscriptionPlan, get_subscription_plan
+from billing.core.types import Credits, PlanCode, RequestId
 
 
 @dataclass(frozen=True)

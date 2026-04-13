@@ -1,5 +1,5 @@
-from billing.events import BillingEvent
-from billing.types import Credits, PlanCode, RequestId, UserId
+from billing.core.events import BillingEvent
+from billing.core.types import Credits, PlanCode, RequestId, UserId
 
 
 def test_billing_event_fields():

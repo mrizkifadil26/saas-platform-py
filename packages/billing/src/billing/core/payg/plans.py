@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
-from billing.errors import UnknownPlan
-from billing.types import Credits, PlanCode
+from billing.core.errors import UnknownPlan
+from billing.core.types import Credits, PlanCode
 
 
 @dataclass(frozen=True)

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from billing.types import Credits, UserId
+from billing.core.types import Credits, UserId
 
 
 @dataclass(frozen=True)
