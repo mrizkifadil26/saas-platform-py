@@ -1,27 +1,25 @@
 from dataclasses import dataclass
 
-from billing.core.events import BillingEvent
-from billing.core.models import Wallet
-
-from ..errors import IdempotencyConflict, InsufficientCredits, InvalidCreditsAmount
-from ..types import Credits, RequestId
+from billing.domain.errors import IdempotencyConflict
+from billing.domain.events import BillingEvent
+from billing.domain.models import Wallet
+from billing.domain.payg.plans import PaygPlan, get_payg_plan
+from billing.domain.types import Credits, PlanCode, RequestId
 
 
 @dataclass(frozen=True)
-class ConsumeCreditsResult:
+class GrantPaygCreditsResult:
     wallet: Wallet
+    plan: PaygPlan
     event: BillingEvent
 
 
-def consume_credits(
+def grant_payg_credits(
     wallet: Wallet,
-    cost: Credits,
+    plan_code: PlanCode,
     request_id: RequestId | None = None,
     used_request_ids: set[str] | None = None,
-) -> ConsumeCreditsResult:
-    if int(cost) < 0:
-        raise InvalidCreditsAmount(f"cost must be >= 0, got {cost}")
-
+) -> GrantPaygCreditsResult:
     if (
         request_id is not None
         and used_request_ids is not None
@@ -29,10 +27,8 @@ def consume_credits(
     ):
         raise IdempotencyConflict(f"Request {request_id} already processed")
 
-    new_balance = Credits(wallet.credits - cost)
-
-    if wallet.credits < cost:
-        raise InsufficientCredits(f"Insufficient credits: {wallet.credits} < {cost}")
+    plan = get_payg_plan(plan_code)
+    new_balance = Credits(wallet.credits + plan.credits_grant)
 
     if request_id is not None and used_request_ids is not None:
         used_request_ids.add(str(request_id))
@@ -43,13 +39,15 @@ def consume_credits(
     )
 
     event = BillingEvent(
-        event_type="credits_charged",
+        event_type="payg_credits_granted",
         user_id=wallet.user_id,
-        credits=cost,
+        credits=plan.credits_grant,
+        plan_code=plan.code,
         request_id=request_id,
     )
 
-    return ConsumeCreditsResult(
+    return GrantPaygCreditsResult(
         wallet=updated_wallet,
+        plan=plan,
         event=event,
     )

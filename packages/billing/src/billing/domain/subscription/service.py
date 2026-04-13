@@ -1,25 +1,25 @@
 from dataclasses import dataclass
 
-from billing.core.errors import IdempotencyConflict
-from billing.core.events import BillingEvent
-from billing.core.models import Wallet
-from billing.core.payg.plans import PaygPlan, get_payg_plan
-from billing.core.types import Credits, PlanCode, RequestId
+from billing.domain.errors import IdempotencyConflict
+from billing.domain.events import BillingEvent
+from billing.domain.models import Wallet
+from billing.domain.subscription.plans import SubscriptionPlan, get_subscription_plan
+from billing.domain.types import Credits, PlanCode, RequestId
 
 
 @dataclass(frozen=True)
-class GrantPaygCreditsResult:
+class GrantSubscriptionCreditsResult:
     wallet: Wallet
-    plan: PaygPlan
+    plan: SubscriptionPlan
     event: BillingEvent
 
 
-def grant_payg_credits(
+def grant_subscription_credits(
     wallet: Wallet,
     plan_code: PlanCode,
     request_id: RequestId | None = None,
     used_request_ids: set[str] | None = None,
-) -> GrantPaygCreditsResult:
+) -> GrantSubscriptionCreditsResult:
     if (
         request_id is not None
         and used_request_ids is not None
@@ -27,7 +27,7 @@ def grant_payg_credits(
     ):
         raise IdempotencyConflict(f"Request {request_id} already processed")
 
-    plan = get_payg_plan(plan_code)
+    plan = get_subscription_plan(plan_code)
     new_balance = Credits(wallet.credits + plan.credits_grant)
 
     if request_id is not None and used_request_ids is not None:
@@ -39,14 +39,14 @@ def grant_payg_credits(
     )
 
     event = BillingEvent(
-        event_type="payg_credits_granted",
+        event_type="subscription_credits_granted",
         user_id=wallet.user_id,
         credits=plan.credits_grant,
         plan_code=plan.code,
         request_id=request_id,
     )
 
-    return GrantPaygCreditsResult(
+    return GrantSubscriptionCreditsResult(
         wallet=updated_wallet,
         plan=plan,
         event=event,

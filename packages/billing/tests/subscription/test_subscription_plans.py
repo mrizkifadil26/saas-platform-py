@@ -1,7 +1,7 @@
 import pytest
-from billing.core.errors import UnknownPlan
-from billing.core.subscription.plans import SubscriptionPlan, get_subscription_plan
-from billing.core.types import Credits, PlanCode
+from billing.domain.errors import UnknownPlan
+from billing.domain.subscription.plans import SubscriptionPlan, get_subscription_plan
+from billing.domain.types import Credits, PlanCode
 
 
 def test_get_subscription_plan_existing():

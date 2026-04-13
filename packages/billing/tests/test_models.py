@@ -1,5 +1,5 @@
-from billing.core.models import Wallet
-from billing.core.types import Credits, UserId
+from billing.domain.models import Wallet
+from billing.domain.types import Credits, UserId
 
 
 def test_wallet_fields():

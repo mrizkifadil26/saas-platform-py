@@ -1,25 +1,27 @@
 from dataclasses import dataclass
 
-from billing.core.errors import IdempotencyConflict
-from billing.core.events import BillingEvent
-from billing.core.models import Wallet
-from billing.core.subscription.plans import SubscriptionPlan, get_subscription_plan
-from billing.core.types import Credits, PlanCode, RequestId
+from billing.domain.events import BillingEvent
+from billing.domain.models import Wallet
+
+from ..errors import IdempotencyConflict, InsufficientCredits, InvalidCreditsAmount
+from ..types import Credits, RequestId
 
 
 @dataclass(frozen=True)
-class GrantSubscriptionCreditsResult:
+class ConsumeCreditsResult:
     wallet: Wallet
-    plan: SubscriptionPlan
     event: BillingEvent
 
 
-def grant_subscription_credits(
+def consume_credits(
     wallet: Wallet,
-    plan_code: PlanCode,
+    cost: Credits,
     request_id: RequestId | None = None,
     used_request_ids: set[str] | None = None,
-) -> GrantSubscriptionCreditsResult:
+) -> ConsumeCreditsResult:
+    if int(cost) < 0:
+        raise InvalidCreditsAmount(f"cost must be >= 0, got {cost}")
+
     if (
         request_id is not None
         and used_request_ids is not None
@@ -27,8 +29,10 @@ def grant_subscription_credits(
     ):
         raise IdempotencyConflict(f"Request {request_id} already processed")
 
-    plan = get_subscription_plan(plan_code)
-    new_balance = Credits(wallet.credits + plan.credits_grant)
+    new_balance = Credits(wallet.credits - cost)
+
+    if wallet.credits < cost:
+        raise InsufficientCredits(f"Insufficient credits: {wallet.credits} < {cost}")
 
     if request_id is not None and used_request_ids is not None:
         used_request_ids.add(str(request_id))
@@ -39,15 +43,13 @@ def grant_subscription_credits(
     )
 
     event = BillingEvent(
-        event_type="subscription_credits_granted",
+        event_type="credits_charged",
         user_id=wallet.user_id,
-        credits=plan.credits_grant,
-        plan_code=plan.code,
+        credits=cost,
         request_id=request_id,
     )
 
-    return GrantSubscriptionCreditsResult(
+    return ConsumeCreditsResult(
         wallet=updated_wallet,
-        plan=plan,
         event=event,
     )

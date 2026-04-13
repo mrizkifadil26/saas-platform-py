@@ -1,4 +1,4 @@
-from billing.core.types import Credits, PlanCode, RequestId
+from billing.domain.types import Credits, PlanCode, RequestId
 
 
 def test_credits_wraps_int():
