@@ -23,6 +23,7 @@ class CreditGrant:
     expires_at: datetime | None = None
     request_id: RequestId | None = None
     plan_code: PlanCode | None = None
+    metadata: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
