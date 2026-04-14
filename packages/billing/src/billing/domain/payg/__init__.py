@@ -1,5 +1,8 @@
 from .plans import PaygPlan, get_payg_plan
-from .service import GrantPaygCreditsResult, grant_payg_credits
+from .service import (
+    GrantPaygCreditsResult,
+    grant_payg_credits,
+)
 
 __all__ = [
     "GrantPaygCreditsResult",

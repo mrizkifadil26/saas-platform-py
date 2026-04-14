@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Literal, NewType
 
 Credits = NewType("Credits", int)
@@ -10,9 +10,11 @@ ConsumptionId = NewType("ConsumptionId", str)
 SubscriptionId = NewType("SubscriptionId", str)
 
 CreditSource = Literal["payg", "subscription"]
-SubscriptionStatus = Literal["active", "past_due", "canceled"]
+SubscriptionStatus = Literal[
+    "active", "past_due", "canceled"
+]
 
 
 def utc_now() -> datetime:
     """Timezone-aware UTC datetime"""
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
