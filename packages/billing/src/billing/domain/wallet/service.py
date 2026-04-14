@@ -1,55 +1,84 @@
 from dataclasses import dataclass
+from datetime import datetime
 
-from billing.domain.events import BillingEvent
+from billing.domain.credits.models import CreditGrant
+from billing.domain.credits.policies import is_grant_active
+from billing.domain.subscription.models import Subscription
 from billing.domain.wallet.models import Wallet
 
-from ..errors import IdempotencyConflict, InsufficientCredits, InvalidCreditsAmount
-from ..types import Credits, RequestId
+from ..types import Credits, UserId, utc_now
+
+
+def build_wallet(
+    user_id: UserId,
+    grants: list[CreditGrant],
+    now: datetime | None = None,
+) -> Wallet:
+    now = now or utc_now()
+
+    subscription_total = 0
+    payg_total = 0
+
+    for grant in grants:
+        if grant.user_id != user_id:
+            continue
+
+        if not is_grant_active(grant, now):
+            continue
+
+        if grant.source == "subscription":
+            subscription_total += int(
+                grant.remaining_credits
+            )
+        elif grant.source == "payg":
+            payg_total += int(grant.remaining_credits)
+
+    total = subscription_total + payg_total
+
+    return Wallet(
+        user_id=user_id,
+        total_credits=Credits(total),
+        subscription_credits=Credits(subscription_total),
+        payg_credits=Credits(payg_total),
+    )
 
 
 @dataclass(frozen=True)
-class ConsumeCreditsResult:
-    wallet: Wallet
-    event: BillingEvent
+class BillingSummary:
+    user_id: UserId
+    total_credits: Credits
+    subscription_credits: Credits
+    payg_credits: Credits
+    subscription_status: str | None
+    subscription_plan_code: str | None
+    current_period_end: datetime | None
 
 
-def consume_credits(
-    wallet: Wallet,
-    cost: Credits,
-    request_id: RequestId | None = None,
-    used_request_ids: set[str] | None = None,
-) -> ConsumeCreditsResult:
-    if int(cost) < 0:
-        raise InvalidCreditsAmount(f"cost must be >= 0, got {cost}")
-
-    if (
-        request_id is not None
-        and used_request_ids is not None
-        and str(request_id) in used_request_ids
-    ):
-        raise IdempotencyConflict(f"Request {request_id} already processed")
-
-    new_balance = Credits(wallet.credits - cost)
-
-    if wallet.credits < cost:
-        raise InsufficientCredits(f"Insufficient credits: {wallet.credits} < {cost}")
-
-    if request_id is not None and used_request_ids is not None:
-        used_request_ids.add(str(request_id))
-
-    updated_wallet = Wallet(
-        user_id=wallet.user_id,
-        credits=new_balance,
+def get_billing_summary(
+    user_id: UserId,
+    grants: list[CreditGrant],
+    subscription: Subscription | None = None,
+    now: datetime | None = None,
+) -> BillingSummary:
+    now = now or utc_now()
+    wallet = build_wallet(
+        user_id=user_id,
+        grants=grants,
+        now=now,
     )
 
-    event = BillingEvent(
-        event_type="credits_charged",
-        user_id=wallet.user_id,
-        credits=cost,
-        request_id=request_id,
-    )
-
-    return ConsumeCreditsResult(
-        wallet=updated_wallet,
-        event=event,
+    return BillingSummary(
+        user_id=user_id,
+        total_credits=wallet.total_credits,
+        subscription_credits=wallet.subscription_credits,
+        payg_credits=wallet.payg_credits,
+        subscription_status=subscription.status
+        if subscription
+        else None,
+        subscription_plan_code=str(subscription.plan_code)
+        if subscription
+        else None,
+        current_period_end=subscription.current_period_end
+        if subscription
+        else None,
     )
