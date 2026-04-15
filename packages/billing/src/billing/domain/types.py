@@ -9,7 +9,12 @@ GrantId = NewType("GrantId", str)
 ConsumptionId = NewType("ConsumptionId", str)
 SubscriptionId = NewType("SubscriptionId", str)
 
-CreditSource = Literal["payg", "subscription"]
+CreditSource = Literal[
+    "payg",
+    "subscription",
+    "promo",
+    "compensation",
+]
 SubscriptionStatus = Literal[
     "active", "past_due", "canceled"
 ]

@@ -6,7 +6,10 @@ from billing.domain.credits.models import (
     CreditConsumption,
     CreditGrant,
 )
-from billing.domain.credits.policies import grant_priority
+from billing.domain.credits.policies import (
+    grant_priority,
+    is_grant_active,
+)
 from billing.domain.errors import (
     IdempotencyConflict,
     InvalidCreditsAmount,
@@ -64,7 +67,7 @@ def consume_credits(
         grant
         for grant in grants
         if grant.user_id == user_id
-        # and is_grant_active(grant, now)
+        and is_grant_active(grant, now)
     ]
     active_user_grants.sort(key=grant_priority)
 
