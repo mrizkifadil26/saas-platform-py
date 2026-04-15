@@ -1,8 +1,14 @@
 import pytest
+
 from billing.domain.credits.models import Wallet
 from billing.domain.errors import IdempotencyConflict
 from billing.domain.payg.service import grant_payg_credits
-from billing.domain.types import Credits, PlanCode, RequestId, UserId
+from billing.domain.types import (
+    Credits,
+    PlanCode,
+    RequestId,
+    UserId,
+)
 
 
 def test_grant_payg_credits_success():
