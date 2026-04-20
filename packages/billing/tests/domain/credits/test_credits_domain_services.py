@@ -57,7 +57,7 @@ def test_consume_credits_rejects_negative_cost(
         )
 
 
-def test_consume_credits_allows_zero_cost_and_returns_empty_allocations_untouched_grants_zero_cost_event(
+def test_consume_credits_allows_zero_cost_and_returns_empty_allocations_no_touched_grants_and_zero_cost_event(
     now,
     consumption_id,
     user_id,
@@ -84,9 +84,7 @@ def test_consume_credits_allows_zero_cost_and_returns_empty_allocations_untouche
 
     assert result.consumption.cost == Credits(0)
     assert result.consumption.allocations == ()
-    assert result.touched_grants[
-        0
-    ].remaining_credits == Credits(100)
+    assert result.touched_grants == ()
     assert result.event.cost == Credits(0)
 
 
@@ -317,7 +315,8 @@ def test_consume_credits_mutates_only_touched_grants(
         for grant in result.touched_grants
     }
     assert changed[touched.grant_id] == Credits(70)
-    assert changed[untouched.grant_id] == Credits(100)
+    assert untouched.grant_id not in changed
+    assert untouched.remaining_credits == Credits(100)
 
 
 def test_consume_credits_returns_credit_consumption_with_expected_allocations(
