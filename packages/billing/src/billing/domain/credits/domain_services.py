@@ -84,6 +84,7 @@ def consume_credits(
     allocations: list[ConsumptionAllocation] = []
     # updated_by_id: dict[GrantId, CreditGrant] = {}
 
+    touched_grants: list[CreditGrant] = []
     for grant in active_grants:
         if remaining_to_consume == 0:
             break
@@ -92,6 +93,7 @@ def consume_credits(
             int(grant.remaining_credits),
             remaining_to_consume,
         )
+
         # remaining_to_consume -= to_consume
         if to_consume <= 0:
             continue
@@ -122,9 +124,9 @@ def consume_credits(
         #     if replacement is not None:
         #         grants[idx] = replacement
         allocation = grant.consume(Credits(to_consume))
-
         allocations.append(allocation)
 
+        touched_grants.append(grant)
         remaining_to_consume -= to_consume
 
     # TODO: mark request ID as used? where to store used request IDs? should it be stored in a separate table or as part of the wallet/grant state?
@@ -173,6 +175,6 @@ def consume_credits(
         # wallet=wallet,
         consumption=consumption,
         # updated_grants=tuple(updated_by_id.values()),
-        touched_grants=tuple(active_grants),
+        touched_grants=tuple(touched_grants),
         event=event,
     )
