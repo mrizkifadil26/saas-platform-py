@@ -15,6 +15,7 @@ packages = [{ include = "billing", from = "src" }]
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.8.0"
 pytest = "^8.0.0"
+pytest-cov = "^7.1.0"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
@@ -22,3 +23,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
 line-length = 60
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=billing --cov-report=term-missing --cov-report=html"
