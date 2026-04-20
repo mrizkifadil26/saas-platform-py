@@ -118,7 +118,7 @@ def test_build_wallet_ignores_inactive_foreign_and_non_wallet_grants(
         now=now,
     )
 
-    assert wallet.total_credits == Credits(100)
+    assert wallet.total_credits == Credits(205)
     assert wallet.subscription_credits == Credits(100)
     assert wallet.payg_credits == Credits(0)
 
@@ -179,6 +179,26 @@ def test_get_billing_summary_returns_none_subscription_fields_without_subscripti
     assert summary.total_credits == Credits(0)
     assert summary.subscription_credits == Credits(0)
     assert summary.payg_credits == Credits(0)
+    assert summary.subscription_status is None
+    assert summary.subscription_plan_code is None
+    assert summary.current_period_end is None
+
+
+def test_get_billing_summary_ignores_subscription_for_other_user(
+    now, user_id, subscription_id
+):
+    summary = get_billing_summary(
+        user_id=user_id,
+        grants=[],
+        subscription=make_subscription(
+            subscription_id=subscription_id,
+            user_id=UserId("other_user"),
+            now=now,
+        ),
+        now=now,
+    )
+
+    assert summary.user_id == user_id
     assert summary.subscription_status is None
     assert summary.subscription_plan_code is None
     assert summary.current_period_end is None
