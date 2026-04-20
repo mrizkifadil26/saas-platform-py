@@ -3,7 +3,10 @@ from uuid import uuid4
 
 import pytest
 
-from billing.domain.credits.value_objects import GrantId
+from billing.domain.credits.value_objects import (
+    ConsumptionId,
+    GrantId,
+)
 from billing.domain.shared.ids import RequestId, UserId
 from billing.domain.subscription.value_objects import (
     SubscriptionId,
@@ -43,6 +46,11 @@ def subscription_id() -> SubscriptionId:
 @pytest.fixture
 def grant_id() -> GrantId:
     return GrantId.new()
+
+
+@pytest.fixture
+def consumption_id() -> ConsumptionId:
+    return ConsumptionId.new()
 
 
 @pytest.fixture
