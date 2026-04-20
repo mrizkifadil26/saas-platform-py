@@ -16,7 +16,7 @@ class SubscriptionId:
     value: UUID
 
     @classmethod
-    def generate(cls) -> SubscriptionId:
+    def new(cls) -> SubscriptionId:
         return cls(uuid4())
 
     def __str__(self) -> str:
