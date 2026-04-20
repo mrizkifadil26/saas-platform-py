@@ -2,7 +2,7 @@ from datetime import timedelta
 
 import pytest
 
-from billing.domain.shared.ids import RequestId, UserId
+from billing.domain.shared.ids import UserId
 from billing.domain.shared.value_objects import PlanCode
 from billing.domain.subscription.domain_services import (
     cancel_subscription,
@@ -195,6 +195,7 @@ def test_cancel_subscription_raises_if_subscription_already_canceled(
 def test_grant_subscription_credits_requires_active_subscription(
     now,
     grant_id,
+    request_id,
 ):
     subscription = make_subscription(
         status="past_due",
@@ -206,7 +207,7 @@ def test_grant_subscription_credits_requires_active_subscription(
         grant_subscription_credits(
             grant_id=grant_id,
             subscription=subscription,
-            request_id=RequestId("req_123"),
+            request_id=request_id,
             now=now,
         )
 
@@ -214,6 +215,7 @@ def test_grant_subscription_credits_requires_active_subscription(
 def test_grant_subscription_credits_raises_duplicate_period_grant_if_already_granted(
     now,
     grant_id,
+    request_id,
 ):
     subscription = make_subscription(
         status="active",
@@ -226,7 +228,7 @@ def test_grant_subscription_credits_raises_duplicate_period_grant_if_already_gra
         grant_subscription_credits(
             grant_id=grant_id,
             subscription=subscription,
-            request_id=RequestId("req_123"),
+            request_id=request_id,
             now=now,
         )
 
@@ -234,6 +236,7 @@ def test_grant_subscription_credits_raises_duplicate_period_grant_if_already_gra
 def test_grant_subscription_credits_creates_credit_grant_using_plan_credits(
     now,
     grant_id,
+    request_id,
 ):
     subscription = make_subscription(
         status="active",
@@ -244,7 +247,7 @@ def test_grant_subscription_credits_creates_credit_grant_using_plan_credits(
     result = grant_subscription_credits(
         grant_id=grant_id,
         subscription=subscription,
-        request_id=RequestId("req_123"),
+        request_id=request_id,
         now=now,
     )
 
@@ -257,6 +260,7 @@ def test_grant_subscription_credits_creates_credit_grant_using_plan_credits(
 def test_grant_subscription_credits_sets_grant_expiry_to_subscription_current_period_end(
     now,
     grant_id,
+    request_id,
 ):
     subscription = make_subscription(
         status="active",
@@ -267,7 +271,7 @@ def test_grant_subscription_credits_sets_grant_expiry_to_subscription_current_pe
     result = grant_subscription_credits(
         grant_id=grant_id,
         subscription=subscription,
-        request_id=RequestId("req_123"),
+        request_id=request_id,
         now=now,
     )
 
@@ -280,6 +284,7 @@ def test_grant_subscription_credits_sets_grant_expiry_to_subscription_current_pe
 def test_grant_subscription_credits_sets_grant_source_to_subscription(
     now,
     grant_id,
+    request_id,
 ):
     subscription = make_subscription(
         status="active",
@@ -290,7 +295,7 @@ def test_grant_subscription_credits_sets_grant_source_to_subscription(
     result = grant_subscription_credits(
         grant_id=grant_id,
         subscription=subscription,
-        request_id=RequestId("req_123"),
+        request_id=request_id,
         now=now,
     )
 
@@ -300,6 +305,7 @@ def test_grant_subscription_credits_sets_grant_source_to_subscription(
 def test_grant_subscription_credits_updates_last_granted_period_start(
     now,
     grant_id,
+    request_id,
 ):
     subscription = make_subscription(
         status="active",
@@ -311,7 +317,7 @@ def test_grant_subscription_credits_updates_last_granted_period_start(
     result = grant_subscription_credits(
         grant_id=grant_id,
         subscription=subscription,
-        request_id=RequestId("req_123"),
+        request_id=request_id,
         now=now,
     )
 
@@ -324,6 +330,7 @@ def test_grant_subscription_credits_updates_last_granted_period_start(
 def test_grant_subscription_credits_emits_event_with_same_credits_plan_and_request_id(
     now,
     grant_id,
+    request_id,
 ):
     subscription = make_subscription(
         status="active",
@@ -334,7 +341,7 @@ def test_grant_subscription_credits_emits_event_with_same_credits_plan_and_reque
     result = grant_subscription_credits(
         grant_id=grant_id,
         subscription=subscription,
-        request_id=RequestId("req_123"),
+        request_id=request_id,
         now=now,
     )
 
@@ -343,7 +350,7 @@ def test_grant_subscription_credits_emits_event_with_same_credits_plan_and_reque
         == subscription.subscription_id
     )
     assert result.event.plan_code == subscription.plan_code
-    assert result.event.request_id == RequestId("req_123")
+    assert result.event.request_id == request_id
     assert (
         result.event.credits == result.grant.granted_credits
     )
