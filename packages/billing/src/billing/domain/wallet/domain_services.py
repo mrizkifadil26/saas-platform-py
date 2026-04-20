@@ -21,6 +21,7 @@ def build_wallet(
 ) -> Wallet:
     # now = now or utc_now()
 
+    total = 0
     subscription_total = 0
     payg_total = 0
 
@@ -31,14 +32,14 @@ def build_wallet(
         if not grant.is_active(now):
             continue
 
+        total += int(grant.remaining_credits)
+
         if grant.source == "subscription":
             subscription_total += int(
                 grant.remaining_credits
             )
         elif grant.source == "payg":
             payg_total += int(grant.remaining_credits)
-
-    total = subscription_total + payg_total
 
     return Wallet(
         user_id=user_id,
@@ -56,6 +57,9 @@ def get_billing_summary(
     now: datetime,
 ) -> BillingSummary:
     # now = now or utc_now()
+    if subscription is not None and subscription.user_id != user_id:
+        subscription = None
+
     wallet = build_wallet(
         user_id=user_id,
         grants=grants,
