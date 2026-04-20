@@ -1,11 +1,18 @@
 import pytest
 from billing.domain.errors import UnknownPlan
-from billing.domain.subscription.plans import SubscriptionPlan, get_subscription_plan
 from billing.domain.types import Credits, PlanCode
+
+from billing.domain.subscription.plans import (
+    SubscriptionPlan,
+    get_subscription_plan,
+)
 
 
 def test_get_subscription_plan_existing():
-    plan = get_subscription_plan(PlanCode("sub_basic_monthly"))
+    plan = get_subscription_plan(
+        PlanCode("sub_basic_monthly")
+    )
+
     assert isinstance(plan, SubscriptionPlan)
     assert plan.code == PlanCode("sub_basic_monthly")
     assert plan.billing_interval == "month"
