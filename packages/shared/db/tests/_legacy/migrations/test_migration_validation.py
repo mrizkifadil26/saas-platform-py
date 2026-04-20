@@ -8,7 +8,7 @@ This test suite enforces:
 
 Required env var:
 - TEST_DATABASE_URL_SYNC (sync driver URL)
-  Example: postgresql://postgres:postgres@localhost:5432/app_users_test
+  Example: postgresql://postgres:postgres@localhost:5432/app_test
 
 Notes:
 - This test DROPS and recreates the public schema on the test DB.
@@ -26,7 +26,7 @@ from alembic.script import ScriptDirectory
 # ---- Import your Base.metadata (DeclarativeBase) ----
 # Adjust import if your Base lives elsewhere.
 from db.models.base import Base
-from packages.shared.db.tests.migrations._alembic_utils import (
+from packages.shared.db.tests._legacy.migrations._alembic_utils import (
     alembic_config,
     assert_safe_test_db,
     get_current_revision,

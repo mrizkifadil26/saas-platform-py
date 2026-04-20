@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from db.repo.app_users.session_repo import SessionRepo
-from packages.shared.db.tests.factories import Factories
+from db.repo.app.session_repo import SessionRepo
+from packages.shared.db.tests._legacy.factories import Factories
 from sqlalchemy.ext.asyncio import AsyncSession
 
 pytestmark = [pytest.mark.db, pytest.mark.asyncio]

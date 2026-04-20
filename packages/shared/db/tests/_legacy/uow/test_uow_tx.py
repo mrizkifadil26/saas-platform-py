@@ -2,10 +2,10 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from db.models.app_users.session import Session
-from db.models.app_users.user import User
-from db.models.app_users.workspace import Workspace
-from db.uow.app_users import AppUsersUoW
+from db.models.app.session import Session
+from db.models.app.user import User
+from db.models.app.workspace import Workspace
+from db.uow.app import AppUoW
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio.session import AsyncSession, async_sessionmaker
 
@@ -15,7 +15,7 @@ pytestmark = [pytest.mark.db, pytest.mark.asyncio]
 async def test_uow_rolls_back_on_exception(
     sessionmaker: async_sessionmaker[AsyncSession],
 ):
-    uow = AppUsersUoW(sessionmaker)
+    uow = AppUoW(sessionmaker)
     token_hash = b"\x44" * 32
     now = datetime.now(timezone.utc)
 

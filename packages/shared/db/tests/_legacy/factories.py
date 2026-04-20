@@ -3,19 +3,18 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
-from datetime import datetime, timezone, timedelta
-from typing import Callable, Awaitable, Optional
+from datetime import datetime, timedelta, timezone
+from typing import Awaitable, Callable, Optional
 
+from db.models.app.membership import Membership
+from db.models.app.session import Session
+from db.models.app.user import User
+from db.models.app.workspace import Workspace
+from db.repo.app.membership_repo import MembershipRepo
+from db.repo.app.session_repo import SessionRepo
+from db.repo.app.user_repo import UserRepo
+from db.repo.app.workspace_repo import WorkspaceRepo
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from db.models.app_users.membership import Membership
-from db.models.app_users.session import Session
-from db.models.app_users.user import User
-from db.models.app_users.workspace import Workspace
-from db.repo.app_users.membership_repo import MembershipRepo
-from db.repo.app_users.session_repo import SessionRepo
-from db.repo.app_users.user_repo import UserRepo
-from db.repo.app_users.workspace_repo import WorkspaceRepo
 
 
 @dataclass

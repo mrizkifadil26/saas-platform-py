@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 import pytest_asyncio
 from dotenv import load_dotenv
-from packages.shared.db.tests.factories import Factories, build_factories
+from packages.shared.db.tests._legacy.factories import Factories, build_factories
 from sqlalchemy import NullPool, make_url
 from sqlalchemy.ext.asyncio import (
     AsyncSession,

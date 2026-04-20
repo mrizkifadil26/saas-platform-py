@@ -46,7 +46,7 @@ def get_sync_url() -> str:
     if not url:
         raise RuntimeError(
             "TEST_DATABASE_URL_SYNC is required.\n"
-            "Example: postgresql://postgres:postgres@localhost:5432/app_users_test"
+            "Example: postgresql://postgres:postgres@localhost:5432/app_test"
         )
 
     return url
