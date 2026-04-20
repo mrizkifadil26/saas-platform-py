@@ -82,8 +82,6 @@ def consume_credits(
 
     remaining_to_consume = int(cost)
     allocations: list[ConsumptionAllocation] = []
-    touched: list[CreditGrant] = []
-
     # updated_by_id: dict[GrantId, CreditGrant] = {}
 
     for grant in active_grants:
@@ -126,7 +124,6 @@ def consume_credits(
         allocation = grant.consume(Credits(to_consume))
 
         allocations.append(allocation)
-        touched.append(grant)
 
         remaining_to_consume -= to_consume
 
@@ -176,6 +173,6 @@ def consume_credits(
         # wallet=wallet,
         consumption=consumption,
         # updated_grants=tuple(updated_by_id.values()),
-        touched_grants=tuple(touched),
+        touched_grants=tuple(active_grants),
         event=event,
     )

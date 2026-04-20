@@ -3,6 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from uuid import UUID, uuid4
 
+from billing.domain.credits.exceptions import (
+    InvalidCreditsAmount,
+)
+
 # Credits = NewType("Credits", int)
 # GrantId = NewType("GrantId", str)
 # ConsumptionId = NewType("ConsumptionId", str)
@@ -14,7 +18,9 @@ class Credits:
 
     def __post_init__(self):
         if self.value < 0:
-            raise ValueError("Credits must be non-negative")
+            raise InvalidCreditsAmount(
+                "Credits must be non-negative"
+            )
 
     def __int__(self) -> int:
         return self.value
@@ -28,7 +34,9 @@ class Credits:
     def __sub__(self, other: Credits) -> Credits:
         result = self.value - other.value
         if result < 0:
-            raise ValueError("Insufficient credits")
+            raise InvalidCreditsAmount(
+                "Insufficient credits"
+            )
 
         return Credits(result)
 

@@ -13,5 +13,7 @@ def grant_priority(
         "compensation": 3,
     }.get(grant.source, 99)
 
-    expiry_sort = grant.expires_at or datetime.max
+    expiry_sort = grant.expires_at or datetime.max.replace(
+        tzinfo=grant.created_at.tzinfo
+    )
     return (source_rank, expiry_sort, grant.created_at)
