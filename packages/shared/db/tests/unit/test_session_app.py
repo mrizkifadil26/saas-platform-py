@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @pytest.mark.asyncio
-async def test_get_app_users_session():
-    cfg = AppDBSettings(database_url="sqlite+aiosqlite:///./test_app_users.db")
+async def test_get_app_session():
+    cfg = AppDBSettings(database_url="sqlite+aiosqlite:///./test_app.db")
     engine = make_app_engine(cfg)
     sessionmaker = make_app_sessionmaker(engine)
 
