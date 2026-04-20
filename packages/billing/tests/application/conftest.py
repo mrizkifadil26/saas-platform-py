@@ -40,6 +40,7 @@ class FakeSubscriptionRepository:
                 "past_due",
             ):
                 return subscription
+
         return None
 
     def save(
@@ -79,12 +80,12 @@ class FakeIdempotencyStore(IdempotencyStore):
 
 
 class FakeUnitOfWork(SubscriptionApplicationUnitOfWork):
-    subscriptions: FakeSubscriptionRepository
-    credit_grants: FakeCreditGrantRepository
+    subscription: FakeSubscriptionRepository
+    credit_grant: FakeCreditGrantRepository
 
     def __init__(self) -> None:
-        self.subscriptions = FakeSubscriptionRepository()
-        self.credit_grants = FakeCreditGrantRepository()
+        self.subscription = FakeSubscriptionRepository()
+        self.credit_grant = FakeCreditGrantRepository()
         self.committed = False
         self.rollback_called = False
 

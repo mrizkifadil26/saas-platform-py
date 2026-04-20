@@ -8,6 +8,7 @@ from billing.domain.credits.value_objects import (
     GrantId,
 )
 from billing.domain.shared.ids import RequestId, UserId
+from billing.domain.shared.value_objects import PlanCode
 from billing.domain.subscription.value_objects import (
     SubscriptionId,
 )
@@ -56,3 +57,8 @@ def consumption_id() -> ConsumptionId:
 @pytest.fixture
 def request_id() -> RequestId:
     return RequestId(f"req_{uuid4().hex}")
+
+
+@pytest.fixture
+def plan_code() -> PlanCode:
+    return PlanCode("sub_basic_monthly")
