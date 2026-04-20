@@ -1,7 +1,7 @@
 import uuid
 
-from packages.shared.db.src.db.models.app_users.membership import Membership
-from packages.shared.db.src.db.models.app_users.user import User
+from packages.shared.db.src.db.models.app.membership import Membership
+from packages.shared.db.src.db.models.app.user import User
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 

@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from packages.shared.db.src.db.models.app_users.audit_log import AuditLog
+from packages.shared.db.src.db.models.app.audit_log import AuditLog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 

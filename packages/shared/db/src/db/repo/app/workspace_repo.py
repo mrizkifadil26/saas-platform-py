@@ -1,7 +1,7 @@
 import uuid
 
-from packages.shared.db.src.db.models.app_users.membership import Membership
-from packages.shared.db.src.db.models.app_users.workspace import Workspace
+from packages.shared.db.src.db.models.app.membership import Membership
+from packages.shared.db.src.db.models.app.workspace import Workspace
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 

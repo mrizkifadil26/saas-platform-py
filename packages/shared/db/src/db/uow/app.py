@@ -3,18 +3,18 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
 
-from packages.shared.db.src.db.repo.app_users.api_key_repo import APIKeyRepo
-from packages.shared.db.src.db.repo.app_users.audit_repo import AuditRepo
-from packages.shared.db.src.db.repo.app_users.entitlement_repo import EntitlementRepo
-from packages.shared.db.src.db.repo.app_users.membership_repo import MembershipRepo
-from packages.shared.db.src.db.repo.app_users.session_repo import SessionRepo
-from packages.shared.db.src.db.repo.app_users.user_repo import UserRepo
-from packages.shared.db.src.db.repo.app_users.workspace_repo import WorkspaceRepo
+from packages.shared.db.src.db.repo.app.api_key_repo import APIKeyRepo
+from packages.shared.db.src.db.repo.app.audit_repo import AuditRepo
+from packages.shared.db.src.db.repo.app.entitlement_repo import EntitlementRepo
+from packages.shared.db.src.db.repo.app.membership_repo import MembershipRepo
+from packages.shared.db.src.db.repo.app.session_repo import SessionRepo
+from packages.shared.db.src.db.repo.app.user_repo import UserRepo
+from packages.shared.db.src.db.repo.app.workspace_repo import WorkspaceRepo
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 
 @dataclass
-class AppUsersUoW:
+class AppUoW:
     _sf: async_sessionmaker[AsyncSession]
 
     db: Optional[AsyncSession] = field(default=None, init=False, repr=False)
@@ -27,7 +27,7 @@ class AppUsersUoW:
     _audit: AuditRepo | None = field(default=None, init=False, repr=False)
     _sessions: SessionRepo | None = field(default=None, init=False, repr=False)
 
-    async def __aenter__(self) -> AppUsersUoW:
+    async def __aenter__(self) -> AppUoW:
         self.db = self._sf()
         return self
 

@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from packages.shared.db.src.db.models.app_users.api_key import APIKey
+from packages.shared.db.src.db.models.app.api_key import APIKey
 from sqlalchemy import select, update
 
 

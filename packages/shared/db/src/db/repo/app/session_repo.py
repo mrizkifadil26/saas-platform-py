@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from packages.shared.db.src.db.models.app_users.session import Session
+from packages.shared.db.src.db.models.app.session import Session
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 

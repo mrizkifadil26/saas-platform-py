@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from packages.shared.db.src.db.models.app_users.entitlement import WorkspaceEntitlement
+from packages.shared.db.src.db.models.app.entitlement import WorkspaceEntitlement
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 

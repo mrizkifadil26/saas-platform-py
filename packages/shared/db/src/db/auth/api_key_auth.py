@@ -1,4 +1,4 @@
-from packages.shared.db.src.db.repo.app_users.api_key_repo import APIKeyRepo
+from packages.shared.db.src.db.repo.app.api_key_repo import APIKeyRepo
 from packages.shared.db.src.db.utils.api_keys import hash_token
 from sqlalchemy.ext.asyncio import AsyncSession
 
