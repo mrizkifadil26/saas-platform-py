@@ -26,6 +26,7 @@ class CreditGrantWriter(Protocol):
 
 class SubscriptionApplicationUnitOfWork(Protocol):
     subscription: SubscriptionRepository
+    credit_grant: CreditGrantWriter
 
     def commit(self) -> None:
         raise NotImplementedError
