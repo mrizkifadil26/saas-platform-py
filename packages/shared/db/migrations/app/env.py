@@ -2,8 +2,7 @@ import os
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import Connection, engine_from_config
-from sqlalchemy import pool
+from sqlalchemy import Connection, engine_from_config, pool
 
 
 # this is the Alembic Config object, which provides
@@ -17,9 +16,12 @@ def get_url():
         or os.environ.get("TEST_DATABASE_URL")
     )
     if not url:
-        raise RuntimeError("No database URL found. Set DATABASE_URL/SQL_URI/TEST_DATABASE_URL_SYNC.")
-    
+        raise RuntimeError(
+            "No database URL found. Set DATABASE_URL/SQL_URI/TEST_DATABASE_URL_SYNC."
+        )
+
     return url
+
 
 config = context.config
 config.set_main_option("sqlalchemy.url", get_url())
@@ -33,8 +35,8 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
+import db.models.app  # noqa: F401, E402  (registers models)
 from db.models.base import Base  # noqa: E402
-import db.models.app_users  # noqa: F401, E402  (registers models)
 
 target_metadata = Base.metadata
 # other values from the config, defined by the needs of env.py,
