@@ -1,7 +1,11 @@
 from dataclasses import dataclass
 
-from billing.domain.errors import UnknownPlan
-from billing.domain.types import Credits, PlanCode
+from packages.billing.src.billing.domain.exceptions import (
+    UnknownPlan,
+)
+
+from billing.domain.credits.value_objects import Credits
+from billing.domain.shared.value_objects import PlanCode
 
 
 @dataclass(frozen=True)
@@ -39,7 +43,9 @@ CATALOG: dict[str, SubscriptionPlan] = {
 }
 
 
-def get_subscription_plan(code: PlanCode) -> SubscriptionPlan:
+def get_subscription_plan(
+    code: PlanCode,
+) -> SubscriptionPlan:
     p = CATALOG.get(str(code))
     if not p:
         raise UnknownPlan(str(code))

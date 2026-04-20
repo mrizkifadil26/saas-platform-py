@@ -1,14 +1,17 @@
-from .models import (
+from .domain_services import (
+    ConsumeCreditsResult,
+    consume_credits,
+)
+from .entities import (
     ConsumptionAllocation,
     CreditConsumption,
     CreditGrant,
 )
-from .policies import grant_priority, is_grant_active
 
 __all__ = [
     "ConsumptionAllocation",
     "CreditConsumption",
     "CreditGrant",
-    "grant_priority",
-    "is_grant_active",
+    "ConsumeCreditsResult",
+    "consume_credits",
 ]

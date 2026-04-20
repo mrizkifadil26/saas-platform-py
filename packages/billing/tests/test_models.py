@@ -1,4 +1,4 @@
-from billing.domain.credits.models import Wallet
+from billing.domain.credits.entities import Wallet
 from billing.domain.types import Credits, UserId
 
 

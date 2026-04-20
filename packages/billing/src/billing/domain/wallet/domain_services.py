@@ -1,20 +1,26 @@
-from dataclasses import dataclass
 from datetime import datetime
 
-from billing.domain.credits.models import CreditGrant
-from billing.domain.credits.policies import is_grant_active
-from billing.domain.subscription.models import Subscription
-from billing.domain.wallet.models import Wallet
+from packages.billing.src.billing.domain.subscription.entities import (
+    Subscription,
+)
 
-from ..types import Credits, UserId, utc_now
+from billing.domain.credits.entities import CreditGrant
+from billing.domain.credits.value_objects import Credits
+from billing.domain.shared.ids import UserId
+from billing.domain.wallet.value_objects import (
+    BillingSummary,
+    Wallet,
+)
 
 
 def build_wallet(
+    *,
     user_id: UserId,
     grants: list[CreditGrant],
-    now: datetime | None = None,
+    # now: datetime | None = None,
+    now: datetime,
 ) -> Wallet:
-    now = now or utc_now()
+    # now = now or utc_now()
 
     subscription_total = 0
     payg_total = 0
@@ -23,7 +29,7 @@ def build_wallet(
         if grant.user_id != user_id:
             continue
 
-        if not is_grant_active(grant, now):
+        if not grant.is_active(now):
             continue
 
         if grant.source == "subscription":
@@ -43,24 +49,14 @@ def build_wallet(
     )
 
 
-@dataclass(frozen=True)
-class BillingSummary:
-    user_id: UserId
-    total_credits: Credits
-    subscription_credits: Credits
-    payg_credits: Credits
-    subscription_status: str | None
-    subscription_plan_code: str | None
-    current_period_end: datetime | None
-
-
 def get_billing_summary(
+    *,
     user_id: UserId,
     grants: list[CreditGrant],
-    subscription: Subscription | None = None,
-    now: datetime | None = None,
+    subscription: Subscription | None,
+    now: datetime,
 ) -> BillingSummary:
-    now = now or utc_now()
+    # now = now or utc_now()
     wallet = build_wallet(
         user_id=user_id,
         grants=grants,
