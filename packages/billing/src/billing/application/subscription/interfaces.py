@@ -1,5 +1,6 @@
 from typing_extensions import Protocol
 
+from billing.domain.credits.entities import CreditGrant
 from billing.domain.subscription.repositories import (
     SubscriptionRepository,
 )
@@ -15,6 +16,11 @@ class IdempotencyStore(Protocol):
         raise NotImplementedError
 
     def save(self, key: str, fingerprint: str) -> None:
+        raise NotImplementedError
+
+
+class CreditGrantWriter(Protocol):
+    def save(self, grant: CreditGrant) -> None:
         raise NotImplementedError
 
 

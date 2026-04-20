@@ -17,7 +17,10 @@ from .events import (
 )
 from .plans import SubscriptionPlan, get_subscription_plan
 from .repositories import SubscriptionRepository
-from .value_objects import SubscriptionId
+from .value_objects import (
+    SubscriptionId,
+    SubscriptionStatus,
+)
 
 __all__ = [
     "CancelSubscriptionResult",
@@ -37,4 +40,5 @@ __all__ = [
     "SubscriptionRenewed",
     "SubscriptionRepository",
     "SubscriptionId",
+    "SubscriptionStatus",
 ]

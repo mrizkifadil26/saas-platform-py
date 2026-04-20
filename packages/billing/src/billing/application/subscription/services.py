@@ -4,6 +4,7 @@ import json
 from billing.application.exceptions import (
     SubscriptionNotFound,
 )
+
 from billing.application.subscription.commands import (
     CancelSubscriptionCommand,
     CreateSubscriptionCommand,
@@ -171,6 +172,7 @@ class SubscriptionApplicationService:
         # This service only handles subscription application flow.
         # Persisting the credit grant belongs to credits application/infra.
         # For now we only emit the event and return the grant DTO.
+        # self.uow.credit_grants.save(result.grant)
         self._publish(result.event)
 
         if (
