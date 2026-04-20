@@ -1,4 +1,9 @@
-class SubscriptionDomainError(Exception):
+from billing.domain.shared.exceptions import (
+    BillingDomainError,
+)
+
+
+class SubscriptionDomainError(BillingDomainError):
     """Base exception for subscription domain errors."""
 
 

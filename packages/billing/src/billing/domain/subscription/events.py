@@ -5,7 +5,7 @@ from datetime import datetime
 
 from billing.domain.credits.value_objects import Credits
 from billing.domain.shared.ids import RequestId, UserId
-from billing.domain.shared.plans import PlanCode
+from billing.domain.shared.value_objects import PlanCode
 from billing.domain.subscription.value_objects import (
     SubscriptionId,
 )

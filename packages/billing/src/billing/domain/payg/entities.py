@@ -1,19 +1,10 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from packages.billing.src.billing.domain.credits.value_objects import (
-    Credits,
-)
-from packages.billing.src.billing.domain.payg.value_objects import (
-    PaygPurchaseId,
-)
-from packages.billing.src.billing.domain.shared.ids import (
-    RequestId,
-    UserId,
-)
-from packages.billing.src.billing.domain.shared.value_objects import (
-    PlanCode,
-)
+from billing.domain.credits.value_objects import Credits
+from billing.domain.payg.value_objects import PaygPurchaseId
+from billing.domain.shared.ids import RequestId, UserId
+from billing.domain.shared.value_objects import PlanCode
 
 
 @dataclass(eq=False, slots=True)

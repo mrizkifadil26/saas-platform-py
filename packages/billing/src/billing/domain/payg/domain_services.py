@@ -1,34 +1,18 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-from packages.billing.src.billing.domain.config import (
-    PAYG_EXPIRY_DAYS,
-)
-from packages.billing.src.billing.domain.credits.value_objects import (
-    GrantId,
-)
-from packages.billing.src.billing.domain.payg.catalogs import (
+from billing.domain.config import PAYG_EXPIRY_DAYS
+from billing.domain.credits.entities import CreditGrant
+from billing.domain.credits.value_objects import GrantId
+from billing.domain.payg.catalogs import (
     PaygPack,
     get_payg_pack,
 )
-from packages.billing.src.billing.domain.payg.entities import (
-    PaygPurchase,
-)
-from packages.billing.src.billing.domain.payg.events import (
-    PaygCreditsGranted,
-)
-from packages.billing.src.billing.domain.payg.value_objects import (
-    PaygPurchaseId,
-)
-from packages.billing.src.billing.domain.shared.ids import (
-    RequestId,
-    UserId,
-)
-from packages.billing.src.billing.domain.shared.value_objects import (
-    PlanCode,
-)
-
-from billing.domain.credits.entities import CreditGrant
+from billing.domain.payg.entities import PaygPurchase
+from billing.domain.payg.events import PaygCreditsGranted
+from billing.domain.payg.value_objects import PaygPurchaseId
+from billing.domain.shared.ids import RequestId, UserId
+from billing.domain.shared.value_objects import PlanCode
 
 
 @dataclass(frozen=True)

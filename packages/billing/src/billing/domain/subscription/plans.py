@@ -1,11 +1,10 @@
 from dataclasses import dataclass
 
-from packages.billing.src.billing.domain.exceptions import (
-    UnknownPlan,
-)
-
 from billing.domain.credits.value_objects import Credits
 from billing.domain.shared.value_objects import PlanCode
+from billing.domain.subscription.exceptions import (
+    UnknownPlan,
+)
 
 
 @dataclass(frozen=True)

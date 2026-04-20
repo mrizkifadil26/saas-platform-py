@@ -3,6 +3,6 @@ from typing import Literal
 CreditSource = Literal[
     "payg",
     "subscription",
-    "promo",
+    "promotion",
     "compensation",
 ]

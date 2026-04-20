@@ -1,16 +1,9 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from packages.billing.src.billing.domain.credits.value_objects import (
-    Credits,
-)
-from packages.billing.src.billing.domain.shared.ids import (
-    RequestId,
-    UserId,
-)
-from packages.billing.src.billing.domain.shared.value_objects import (
-    PlanCode,
-)
+from billing.domain.credits.value_objects import Credits
+from billing.domain.shared.ids import RequestId, UserId
+from billing.domain.shared.value_objects import PlanCode
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,4 +13,4 @@ class PaygCreditsGranted:
     credits: Credits
     occurred_at: datetime
     request_id: RequestId | None = None
-    metadata: dict[str, str] | None = field(default=None)
+    metadata: dict[str, str] = field(default_factory=dict)

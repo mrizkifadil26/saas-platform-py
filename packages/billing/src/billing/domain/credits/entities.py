@@ -1,10 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from packages.billing.src.billing.domain.shared.value_objects import (
-    PlanCode,
-)
-
 from billing.domain.credits.exceptions import (
     InvalidCreditsAmount,
 )
@@ -16,6 +12,9 @@ from billing.domain.credits.value_objects import (
 )
 from billing.domain.shared.enums import CreditSource
 from billing.domain.shared.ids import RequestId, UserId
+from billing.domain.shared.value_objects import (
+    PlanCode,
+)
 
 
 @dataclass(eq=True, slots=True)

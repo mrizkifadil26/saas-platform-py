@@ -1,11 +1,8 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from packages.billing.src.billing.domain.shared.value_objects import (
-    PlanCode,
-)
-
 from billing.domain.shared.ids import UserId
+from billing.domain.shared.value_objects import PlanCode
 from billing.domain.subscription.exceptions import (
     InvalidSubscriptionStatus,
 )

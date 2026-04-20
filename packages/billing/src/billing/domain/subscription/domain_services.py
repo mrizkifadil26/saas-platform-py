@@ -1,14 +1,11 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from packages.billing.src.billing.domain.shared.value_objects import (
-    PlanCode,
-)
-from packages.billing.src.billing.domain.subscription.plans import (
+from billing.domain.shared.value_objects import PlanCode
+from billing.domain.subscription.plans import (
     SubscriptionPlan,
     get_subscription_plan,
 )
-
 from billing.domain.credits.entities import CreditGrant
 from billing.domain.credits.value_objects import GrantId
 from billing.domain.shared.ids import RequestId, UserId

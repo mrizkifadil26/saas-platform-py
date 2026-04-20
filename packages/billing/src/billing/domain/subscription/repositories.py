@@ -13,13 +13,13 @@ class SubscriptionRepository(ABC):
     @abstractmethod
     def get(
         self, subscription_id: SubscriptionId
-    ) -> SubscriptionId | None:
+    ) -> Subscription | None:
         raise NotImplementedError
 
     @abstractmethod
     def get_active_for_user(
         self, user_id: UserId
-    ) -> SubscriptionId | None:
+    ) -> Subscription | None:
         raise NotImplementedError
 
     @abstractmethod

@@ -1,14 +1,8 @@
 from dataclasses import dataclass
 
-from packages.billing.src.billing.domain.credits.value_objects import (
-    Credits,
-)
-from packages.billing.src.billing.domain.payg.exceptions import (
-    UnknownPaygPack,
-)
-from packages.billing.src.billing.domain.shared.value_objects import (
-    PlanCode,
-)
+from billing.domain.credits.value_objects import Credits
+from billing.domain.payg.exceptions import UnknownPaygPack
+from billing.domain.shared.value_objects import PlanCode
 
 
 @dataclass(frozen=True)

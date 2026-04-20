@@ -1,12 +1,11 @@
 from datetime import datetime
 
-from packages.billing.src.billing.domain.subscription.entities import (
-    Subscription,
-)
-
 from billing.domain.credits.entities import CreditGrant
 from billing.domain.credits.value_objects import Credits
 from billing.domain.shared.ids import UserId
+from billing.domain.subscription.entities import (
+    Subscription,
+)
 from billing.domain.wallet.value_objects import (
     BillingSummary,
     Wallet,
