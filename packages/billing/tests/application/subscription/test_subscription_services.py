@@ -32,7 +32,8 @@ from billing.domain.subscription.value_objects import (
 )
 
 
-def test_create_subscription_success(
+@pytest.mark.asyncio
+async def test_create_subscription_success(
     uow,
     event_publisher,
     idempotency_store,
@@ -46,7 +47,7 @@ def test_create_subscription_success(
         idempotency_store=idempotency_store,
     )
 
-    result = service.create_subscription(
+    result = await service.create_subscription(
         CreateSubscriptionCommand(
             user_id=user_id,
             plan_code=plan_code,
@@ -70,8 +71,8 @@ def test_create_subscription_success(
         event_publisher.events[0], SubscriptionCreated
     )
 
-
-def test_create_subscription_raises_when_active_subscription_exists(
+@pytest.mark.asyncio
+async def test_create_subscription_raises_when_active_subscription_exists(
     uow,
     event_publisher,
     idempotency_store,
@@ -80,7 +81,7 @@ def test_create_subscription_raises_when_active_subscription_exists(
     plan_code,
     now,
 ):
-    uow.subscription.save(active_subscription)
+    await uow.subscription.save(active_subscription)
 
     service = SubscriptionApplicationService(
         uow=uow,
@@ -89,7 +90,7 @@ def test_create_subscription_raises_when_active_subscription_exists(
     )
 
     with pytest.raises(ActiveSubscriptionAlreadyExists):
-        service.create_subscription(
+        await service.create_subscription(
             CreateSubscriptionCommand(
                 user_id=user_id,
                 plan_code=plan_code,
@@ -103,14 +104,15 @@ def test_create_subscription_raises_when_active_subscription_exists(
     assert event_publisher.events == []
 
 
-def test_cancel_subscription_at_period_end_success(
+@pytest.mark.asyncio
+async def test_cancel_subscription_at_period_end_success(
     uow,
     event_publisher,
     idempotency_store,
     active_subscription,
     now,
 ):
-    uow.subscription.save(active_subscription)
+    await uow.subscription.save(active_subscription)
 
     service = SubscriptionApplicationService(
         uow=uow,
@@ -118,14 +120,14 @@ def test_cancel_subscription_at_period_end_success(
         idempotency_store=idempotency_store,
     )
 
-    result = service.cancel_subscription(
+    result = await service.cancel_subscription(
         CancelSubscriptionCommand(
             subscription_id=active_subscription.subscription_id,
             immediate=False,
             now=now,
         )
     )
-    saved = uow.subscription.get(
+    saved = await uow.subscription.get(
         active_subscription.subscription_id
     )
 
@@ -144,15 +146,15 @@ def test_cancel_subscription_at_period_end_success(
     )
     assert event_publisher.events[0].immediate is False
 
-
-def test_cancel_subscription_immediately_success(
+@pytest.mark.asyncio
+async def test_cancel_subscription_immediately_success(
     uow,
     event_publisher,
     idempotency_store,
     active_subscription,
     now,
 ):
-    uow.subscription.save(active_subscription)
+    await uow.subscription.save(active_subscription)
 
     service = SubscriptionApplicationService(
         uow=uow,
@@ -160,7 +162,7 @@ def test_cancel_subscription_immediately_success(
         idempotency_store=idempotency_store,
     )
 
-    result = service.cancel_subscription(
+    result = await service.cancel_subscription(
         CancelSubscriptionCommand(
             subscription_id=active_subscription.subscription_id,
             immediate=True,
@@ -168,7 +170,7 @@ def test_cancel_subscription_immediately_success(
         )
     )
 
-    saved = uow.subscription.get(
+    saved = await uow.subscription.get(
         active_subscription.subscription_id
     )
 
@@ -186,7 +188,9 @@ def test_cancel_subscription_immediately_success(
     assert event_publisher.events[0].immediate is True
 
 
-def test_cancel_subscription_raises_when_not_found(
+
+@pytest.mark.asyncio
+async def test_cancel_subscription_raises_when_not_found(
     uow,
     event_publisher,
     idempotency_store,
@@ -199,7 +203,7 @@ def test_cancel_subscription_raises_when_not_found(
     )
 
     with pytest.raises(SubscriptionNotFound):
-        service.cancel_subscription(
+        await service.cancel_subscription(
             CancelSubscriptionCommand(
                 subscription_id=SubscriptionId.new(),
                 immediate=False,
@@ -211,14 +215,15 @@ def test_cancel_subscription_raises_when_not_found(
     assert event_publisher.events == []
 
 
-def test_renew_subscription_success(
+@pytest.mark.asyncio
+async def test_renew_subscription_success(
     uow,
     event_publisher,
     idempotency_store,
     active_subscription,
     now,
 ):
-    uow.subscription.save(active_subscription)
+    await uow.subscription.save(active_subscription)
 
     next_period_start = (
         active_subscription.current_period_end
@@ -231,7 +236,7 @@ def test_renew_subscription_success(
         idempotency_store=idempotency_store,
     )
 
-    result = service.renew_subscription(
+    result = await service.renew_subscription(
         RenewSubscriptionCommand(
             subscription_id=active_subscription.subscription_id,
             next_period_start=next_period_start,
@@ -240,7 +245,7 @@ def test_renew_subscription_success(
         )
     )
 
-    saved = uow.subscription.get(
+    saved = await uow.subscription.get(
         active_subscription.subscription_id
     )
 
@@ -259,14 +264,15 @@ def test_renew_subscription_success(
     )
 
 
-def test_renew_subscription_allows_past_due(
+@pytest.mark.asyncio
+async def test_renew_subscription_allows_past_due(
     uow,
     event_publisher,
     idempotency_store,
     past_due_subscription,
     now,
 ):
-    uow.subscription.save(past_due_subscription)
+    await uow.subscription.save(past_due_subscription)
 
     next_period_start = (
         past_due_subscription.current_period_end
@@ -279,7 +285,7 @@ def test_renew_subscription_allows_past_due(
         idempotency_store=idempotency_store,
     )
 
-    result = service.renew_subscription(
+    result = await service.renew_subscription(
         RenewSubscriptionCommand(
             subscription_id=past_due_subscription.subscription_id,
             next_period_start=next_period_start,
@@ -296,14 +302,15 @@ def test_renew_subscription_allows_past_due(
     )
 
 
-def test_renew_subscription_raises_for_canceled_subscription(
+@pytest.mark.asyncio
+async def test_renew_subscription_raises_for_canceled_subscription(
     uow,
     event_publisher,
     idempotency_store,
     canceled_subscription,
     now,
 ):
-    uow.subscription.save(canceled_subscription)
+    await uow.subscription.save(canceled_subscription)
 
     service = SubscriptionApplicationService(
         uow=uow,
@@ -312,7 +319,7 @@ def test_renew_subscription_raises_for_canceled_subscription(
     )
 
     with pytest.raises(InvalidSubscriptionStatus):
-        service.renew_subscription(
+        await service.renew_subscription(
             RenewSubscriptionCommand(
                 subscription_id=canceled_subscription.subscription_id,
                 next_period_start=now,
@@ -325,13 +332,14 @@ def test_renew_subscription_raises_for_canceled_subscription(
     assert event_publisher.events == []
 
 
-def test_get_subscription_success(
+@pytest.mark.asyncio
+async def test_get_subscription_success(
     uow,
     event_publisher,
     idempotency_store,
     active_subscription,
 ):
-    uow.subscription.save(active_subscription)
+    await uow.subscription.save(active_subscription)
 
     service = SubscriptionApplicationService(
         uow=uow,
@@ -339,7 +347,7 @@ def test_get_subscription_success(
         idempotency_store=idempotency_store,
     )
 
-    result = service.get_subscription(
+    result = await service.get_subscription(
         active_subscription.subscription_id
     )
 
@@ -355,7 +363,8 @@ def test_get_subscription_success(
     assert result.status == active_subscription.status
 
 
-def test_get_subscription_raises_when_not_found(
+@pytest.mark.asyncio
+async def test_get_subscription_raises_when_not_found(
     uow,
     event_publisher,
     idempotency_store,
@@ -369,17 +378,18 @@ def test_get_subscription_raises_when_not_found(
     )
 
     with pytest.raises(SubscriptionNotFound):
-        service.get_subscription(subscription_id)
+        await service.get_subscription(subscription_id)
 
 
-def test_grant_subscription_credits_success(
+@pytest.mark.asyncio
+async def test_grant_subscription_credits_success(
     uow,
     event_publisher,
     idempotency_store,
     active_subscription,
     now,
 ):
-    uow.subscription.save(active_subscription)
+    await uow.subscription.save(active_subscription)
 
     service = SubscriptionApplicationService(
         uow=uow,
@@ -389,7 +399,7 @@ def test_grant_subscription_credits_success(
 
     request_id = RequestId("req-sub-grant-1")
 
-    result = service.grant_subscription_credits(
+    result = await service.grant_subscription_credits(
         GrantSubscriptionCreditsCommand(
             subscription_id=active_subscription.subscription_id,
             request_id=request_id,
@@ -397,7 +407,7 @@ def test_grant_subscription_credits_success(
         )
     )
 
-    saved = uow.subscription.get(
+    saved = await uow.subscription.get(
         active_subscription.subscription_id
     )
 
@@ -435,7 +445,8 @@ def test_grant_subscription_credits_success(
     assert idem_key in idempotency_store.data
 
 
-def test_grant_subscription_credits_raises_duplicate_period_grant(
+@pytest.mark.asyncio
+async def test_grant_subscription_credits_raises_duplicate_period_grant(
     uow,
     event_publisher,
     idempotency_store,
@@ -445,7 +456,7 @@ def test_grant_subscription_credits_raises_duplicate_period_grant(
     active_subscription.last_granted_period_start = (
         active_subscription.current_period_start
     )
-    uow.subscription.save(active_subscription)
+    await uow.subscription.save(active_subscription)
 
     service = SubscriptionApplicationService(
         uow=uow,
@@ -454,7 +465,7 @@ def test_grant_subscription_credits_raises_duplicate_period_grant(
     )
 
     with pytest.raises(DuplicatePeriodGrant):
-        service.grant_subscription_credits(
+        await service.grant_subscription_credits(
             GrantSubscriptionCreditsCommand(
                 subscription_id=active_subscription.subscription_id,
                 request_id=RequestId("req-sub-grant-2"),
@@ -467,14 +478,15 @@ def test_grant_subscription_credits_raises_duplicate_period_grant(
     assert event_publisher.events == []
 
 
-def test_grant_subscription_credits_raises_when_same_request_replayed(
+@pytest.mark.asyncio
+async def test_grant_subscription_credits_raises_when_same_request_replayed(
     uow,
     event_publisher,
     idempotency_store,
     active_subscription,
     now,
 ):
-    uow.subscription.save(active_subscription)
+    await uow.subscription.save(active_subscription)
 
     service = SubscriptionApplicationService(
         uow=uow,
@@ -488,22 +500,23 @@ def test_grant_subscription_credits_raises_when_same_request_replayed(
         now=now,
     )
 
-    service.grant_subscription_credits(cmd)
+    await service.grant_subscription_credits(cmd)
 
     with pytest.raises(IdempotencyConflict):
-        service.grant_subscription_credits(cmd)
+        await service.grant_subscription_credits(cmd)
 
     assert len(uow.credit_grant.items) == 1
 
 
-def test_grant_subscription_credits_raises_when_request_id_reused_with_different_payload(
+@pytest.mark.asyncio
+async def test_grant_subscription_credits_raises_when_request_id_reused_with_different_payload(
     uow,
     event_publisher,
     idempotency_store,
     active_subscription,
     now,
 ):
-    uow.subscription.save(active_subscription)
+    await uow.subscription.save(active_subscription)
 
     other_subscription = type(active_subscription)(
         subscription_id=SubscriptionId.new(),
@@ -516,7 +529,7 @@ def test_grant_subscription_credits_raises_when_request_id_reused_with_different
         provider_subscription_id="prov_sub_other",
         last_granted_period_start=None,
     )
-    uow.subscription.save(other_subscription)
+    await uow.subscription.save(other_subscription)
 
     service = SubscriptionApplicationService(
         uow=uow,
@@ -526,7 +539,7 @@ def test_grant_subscription_credits_raises_when_request_id_reused_with_different
 
     request_id = RequestId("req-sub-grant-4")
 
-    service.grant_subscription_credits(
+    await service.grant_subscription_credits(
         GrantSubscriptionCreditsCommand(
             subscription_id=active_subscription.subscription_id,
             request_id=request_id,
@@ -535,7 +548,7 @@ def test_grant_subscription_credits_raises_when_request_id_reused_with_different
     )
 
     with pytest.raises(IdempotencyConflict):
-        service.grant_subscription_credits(
+        await service.grant_subscription_credits(
             GrantSubscriptionCreditsCommand(
                 subscription_id=other_subscription.subscription_id,
                 request_id=request_id,

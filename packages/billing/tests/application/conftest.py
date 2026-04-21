@@ -22,13 +22,13 @@ class FakeSubscriptionRepository:
     def __init__(self) -> None:
         self.by_id: dict[str, Subscription] = {}
 
-    def get(
+    async def get(
         self,
         subscription_id: SubscriptionId,
     ) -> Subscription | None:
         return self.by_id.get(str(subscription_id))
 
-    def get_active_for_user(
+    async def get_active_for_user(
         self,
         user_id: UserId,
     ) -> Subscription | None:
@@ -43,7 +43,7 @@ class FakeSubscriptionRepository:
 
         return None
 
-    def save(
+    async def save(
         self,
         subscription: Subscription,
     ) -> None:
@@ -56,7 +56,7 @@ class FakeCreditGrantRepository(CreditGrantWriter):
     def __init__(self) -> None:
         self.items: list[object] = []
 
-    def save(self, grant: object) -> None:
+    async def save(self, grant: object) -> None:
         self.items.append(grant)
 
 
@@ -89,10 +89,10 @@ class FakeUnitOfWork(SubscriptionApplicationUnitOfWork):
         self.committed = False
         self.rollback_called = False
 
-    def commit(self) -> None:
+    async def commit(self) -> None:
         self.committed = True
 
-    def rollback(self) -> None:
+    async def rollback(self) -> None:
         self.rollback_called = True
 
 
