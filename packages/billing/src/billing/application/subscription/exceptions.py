@@ -1,4 +1,9 @@
-class SubscriptionApplicationError(Exception):
+from billing.application.shared.exceptions import (
+    ApplicationError,
+)
+
+
+class SubscriptionApplicationError(ApplicationError):
     """Base exception for subscription application services."""
 
     pass

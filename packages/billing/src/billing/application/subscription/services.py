@@ -1,6 +1,10 @@
 import hashlib
 import json
 
+from billing.application.shared.interfaces import (
+    EventPublisher,
+    IdempotencyStore,
+)
 from billing.application.subscription.commands import (
     CancelSubscriptionCommand,
     CreateSubscriptionCommand,
@@ -19,8 +23,6 @@ from billing.application.subscription.exceptions import (
     SubscriptionNotFound,
 )
 from billing.application.subscription.interfaces import (
-    EventPublisher,
-    IdempotencyStore,
     SubscriptionApplicationUnitOfWork,
 )
 from billing.domain.credits.value_objects import GrantId
@@ -50,17 +52,18 @@ class SubscriptionApplicationService:
         self.event_publisher = event_publisher
         self.idempotency_store = idempotency_store
 
-    def create_subscription(
+    async def create_subscription(
         self,
         cmd: CreateSubscriptionCommand,
     ) -> SubscriptionDTO:
         now = cmd.now or utc_now()
 
         existing = (
-            self.uow.subscription.get_active_for_user(
+            await self.uow.subscription.get_active_for_user(
                 cmd.user_id
             )
         )
+
         if existing is not None:
             raise ActiveSubscriptionAlreadyExists(
                 f"User {cmd.user_id} already has an active subscription"
@@ -76,20 +79,24 @@ class SubscriptionApplicationService:
             provider_subscription_id=cmd.provider_subscription_id,
         )
 
-        self.uow.subscription.save(result.subscription)
+        await self.uow.subscription.save(
+            result.subscription
+        )
         self._publish(result.event)
-        self.uow.commit()
+        await self.uow.commit()
 
         return to_subscription_dto(result.subscription)
 
-    def cancel_subscription(
+    async def cancel_subscription(
         self,
         cmd: CancelSubscriptionCommand,
     ) -> SubscriptionDTO:
         now = cmd.now or utc_now()
 
-        subscription = self._get_subscription_or_raise(
-            cmd.subscription_id
+        subscription = (
+            await self._get_subscription_or_raise(
+                cmd.subscription_id
+            )
         )
         result = cancel_subscription(
             subscription=subscription,
@@ -97,20 +104,24 @@ class SubscriptionApplicationService:
             immediate=cmd.immediate,
         )
 
-        self.uow.subscription.save(result.subscription)
+        await self.uow.subscription.save(
+            result.subscription
+        )
         self._publish(result.event)
-        self.uow.commit()
+        await self.uow.commit()
 
         return to_subscription_dto(result.subscription)
 
-    def renew_subscription(
+    async def renew_subscription(
         self,
         cmd: RenewSubscriptionCommand,
     ) -> SubscriptionDTO:
         now = cmd.now or utc_now()
 
-        subscription = self._get_subscription_or_raise(
-            cmd.subscription_id
+        subscription = (
+            await self._get_subscription_or_raise(
+                cmd.subscription_id
+            )
         )
         result = renew_subscription(
             subscription=subscription,
@@ -119,20 +130,24 @@ class SubscriptionApplicationService:
             now=now,
         )
 
-        self.uow.subscription.save(result.subscription)
+        await self.uow.subscription.save(
+            result.subscription
+        )
         self._publish(result.event)
-        self.uow.commit()
+        await self.uow.commit()
 
         return to_subscription_dto(result.subscription)
 
-    def grant_subscription_credits(
+    async def grant_subscription_credits(
         self,
         cmd: GrantSubscriptionCreditsCommand,
     ) -> SubscriptionGrantDTO:
         now = cmd.now or utc_now()
 
-        subscription = self._get_subscription_or_raise(
-            cmd.subscription_id
+        subscription = (
+            await self._get_subscription_or_raise(
+                cmd.subscription_id
+            )
         )
 
         if (
@@ -163,13 +178,15 @@ class SubscriptionApplicationService:
             now=now,
         )
 
-        self.uow.subscription.save(result.subscription)
+        await self.uow.subscription.save(
+            result.subscription
+        )
 
         # NOTE:
         # This service only handles subscription application flow.
         # Persisting the credit grant belongs to credits application/infra.
         # For now we only emit the event and return the grant DTO.
-        self.uow.credit_grant.save(result.grant)
+        await self.uow.credit_grant.save(result.grant)
         self._publish(result.event)
 
         if (
@@ -181,24 +198,27 @@ class SubscriptionApplicationService:
                 self._grant_fingerprint(cmd),
             )
 
-        self.uow.commit()
+        await self.uow.commit()
 
         return to_subscription_grant_dto(result)
 
-    def get_subscription(
+    async def get_subscription(
         self,
         subscription_id: SubscriptionId,
     ) -> SubscriptionDTO:
-        subscription = self._get_subscription_or_raise(
-            subscription_id
+        subscription = (
+            await self._get_subscription_or_raise(
+                subscription_id
+            )
         )
+
         return to_subscription_dto(subscription)
 
-    def _get_subscription_or_raise(
+    async def _get_subscription_or_raise(
         self,
         subscription_id: SubscriptionId,
     ) -> Subscription:
-        subscription = self.uow.subscription.get(
+        subscription = await self.uow.subscription.get(
             subscription_id
         )
 

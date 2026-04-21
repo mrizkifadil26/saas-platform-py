@@ -1,4 +1,4 @@
-from packages.db.src.db.session import SessionLocal
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from billing.domain.shared.ids import UserId
 from billing.domain.subscription.entities import (
@@ -19,18 +19,23 @@ from .models import (
     SubscriptionModel,
 )
 
+from db.repositories.app import AsyncRepository
+
 
 class SqlAlchemySubscriptionRepository(
-    SubscriptionRepository
+    AsyncRepository,
+    SubscriptionRepository,
 ):
-    def __init__(self, session: SessionLocal) -> None:
+    def __init__(self, session: AsyncSession) -> None:
         super().__init__(session)
 
     def get(
-        self, subscription_id: SubscriptionId
+        self,
+        subscription_id: SubscriptionId,
     ) -> Subscription | None:
-        model = self.session.get(
-            SubscriptionModel, str(subscription_id)
+        model = self.db.get(
+            SubscriptionModel,
+            str(subscription_id),
         )
         if not model:
             return None
@@ -41,7 +46,7 @@ class SqlAlchemySubscriptionRepository(
         self, user_id: UserId
     ) -> Subscription | None:
         model = (
-            self.session.query(SubscriptionModel)
+            self.db.query(SubscriptionModel)
             .filter_by(
                 user_id=str(user_id),
                 status="active",
@@ -58,7 +63,7 @@ class SqlAlchemySubscriptionRepository(
         return to_domain(model)
 
     def save(self, subscription: Subscription) -> None:
-        model = self.session.get(
+        model = self.db.get(
             SubscriptionModel,
             str(subscription.subscription_id),
         )
@@ -69,6 +74,6 @@ class SqlAlchemySubscriptionRepository(
                     subscription.subscription_id
                 ),
             )
-            self.session.add(model)
+            self.db.add(model)
 
         copy_to_model(subscription, model)
