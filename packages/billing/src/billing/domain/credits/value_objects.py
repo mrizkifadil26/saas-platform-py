@@ -7,10 +7,6 @@ from billing.domain.credits.exceptions import (
     InvalidCreditsAmount,
 )
 
-# Credits = NewType("Credits", int)
-# GrantId = NewType("GrantId", str)
-# ConsumptionId = NewType("ConsumptionId", str)
-
 
 @dataclass(frozen=True, slots=True)
 class Credits:

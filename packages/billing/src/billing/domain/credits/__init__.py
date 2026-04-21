@@ -3,15 +3,27 @@ from .domain_services import (
     consume_credits,
 )
 from .entities import (
-    ConsumptionAllocation,
     CreditConsumption,
     CreditGrant,
 )
+from .events import (
+    CreditsConsumed,
+)
+from .value_objects import (
+    ConsumptionAllocation,
+    ConsumptionId,
+    Credits,
+    GrantId,
+)
 
 __all__ = [
+    "ConsumeCreditsResult",
     "ConsumptionAllocation",
+    "ConsumptionId",
     "CreditConsumption",
     "CreditGrant",
-    "ConsumeCreditsResult",
+    "Credits",
+    "CreditsConsumed",
+    "GrantId",
     "consume_credits",
 ]

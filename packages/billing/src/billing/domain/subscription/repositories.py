@@ -11,17 +11,19 @@ from billing.domain.subscription.value_objects import (
 
 class SubscriptionRepository(ABC):
     @abstractmethod
-    def get(
+    async def get(
         self, subscription_id: SubscriptionId
     ) -> Subscription | None:
         raise NotImplementedError
 
     @abstractmethod
-    def get_active_for_user(
+    async def get_active_for_user(
         self, user_id: UserId
     ) -> Subscription | None:
         raise NotImplementedError
 
     @abstractmethod
-    def save(self, subscription: Subscription) -> None:
+    async def save(
+        self, subscription: Subscription
+    ) -> None:
         raise NotImplementedError

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import StrEnum
 from uuid import UUID, uuid4
 
 
@@ -14,3 +15,7 @@ class PaygPurchaseId:
 
     def __str__(self) -> str:
         return str(self.value)
+
+
+class CreditGrantSource(StrEnum):
+    PAYG = "payg"

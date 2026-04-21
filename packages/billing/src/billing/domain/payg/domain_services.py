@@ -9,8 +9,11 @@ from billing.domain.payg.catalogs import (
     get_payg_pack,
 )
 from billing.domain.payg.entities import PaygPurchase
-from billing.domain.payg.events import PaygCreditsGranted
-from billing.domain.payg.value_objects import PaygPurchaseId
+from billing.domain.payg.events import PaygCreditsPurchased
+from billing.domain.payg.value_objects import (
+    CreditGrantSource,
+    PaygPurchaseId,
+)
 from billing.domain.shared.ids import RequestId, UserId
 from billing.domain.shared.value_objects import PlanCode
 
@@ -20,7 +23,7 @@ class CreatePaygPurchaseResult:
     purchase: PaygPurchase
     grant: CreditGrant
     pack: PaygPack
-    event: PaygCreditsGranted
+    event: PaygCreditsPurchased
 
 
 def create_payg_purchase(
@@ -33,20 +36,9 @@ def create_payg_purchase(
     request_id: RequestId | None = None,
     metadata: dict[str, str] | None = None,
 ) -> CreatePaygPurchaseResult:
-    # now = now or utc_now()
-
-    # if (
-    #     request_id is not None
-    #     and used_request_ids is not None
-    #     and str(request_id) in used_request_ids
-    # ):
-    #     raise IdempotencyConflict(
-    #         f"Request {request_id} already processed"
-    #     )
-
     pack = get_payg_pack(plan_code)
-
     clean_metadata = dict(metadata or {})
+    expires_at = now + timedelta(days=PAYG_EXPIRY_DAYS)
 
     purchase = PaygPurchase(
         purchase_id=purchase_id,
@@ -57,8 +49,6 @@ def create_payg_purchase(
         request_id=request_id,
         metadata=clean_metadata,
     )
-
-    expires_at = now + timedelta(days=PAYG_EXPIRY_DAYS)
 
     # Grant the credits
     grant = CreditGrant(
@@ -74,31 +64,13 @@ def create_payg_purchase(
         metadata={
             **clean_metadata,
             "plan_code": str(pack.code),
+            "purchase_id": str(purchase.purchase_id),
+            "grant_source": CreditGrantSource.PAYG.value,
         },
     )
 
-    # Mark request ID as used
-    # if (
-    #     request_id is not None
-    #     and used_request_ids is not None
-    # ):
-    #     used_request_ids.add(str(request_id))
-
-    # Build the wallet
-    # wallet = build_wallet(
-    #     user_id=user_id,
-    #     grants=grants,
-    #     now=now,
-    # )
-
-    # event = BillingEvent(
-    #     event_type="payg_credits_granted",
-    #     user_id=wallet.user_id,
-    #     credits=plan.credits_grant,
-    #     plan_code=plan.code,
-    #     request_id=request_id,
-    # )
-    event = PaygCreditsGranted(
+    purchase_event = PaygCreditsPurchased(
+        purchase_id=str(purchase.purchase_id),
         user_id=user_id,
         plan_code=plan_code,
         credits=pack.credits,
@@ -111,5 +83,5 @@ def create_payg_purchase(
         purchase=purchase,
         grant=grant,
         pack=pack,
-        event=event,
+        event=purchase_event,
     )

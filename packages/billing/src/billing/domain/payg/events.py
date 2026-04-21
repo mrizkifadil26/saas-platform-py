@@ -7,7 +7,8 @@ from billing.domain.shared.value_objects import PlanCode
 
 
 @dataclass(frozen=True, slots=True)
-class PaygCreditsGranted:
+class PaygCreditsPurchased:
+    purchase_id: str
     user_id: UserId
     plan_code: PlanCode
     credits: Credits
