@@ -31,7 +31,16 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
 line-length = 60
-select = ["I", "F401", "F822", "F403", "F405", "RUF"]
+
+[tool.ruff.lint]
+select = [
+    "I",    # import sorting (isort replacement)
+    "F401", # unused imports
+    "F822", # undefined name in __all__
+    "F403", # import * usage
+    "F405", # name from import * not defined
+    "RUF",  # Ruff-specific rules
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
