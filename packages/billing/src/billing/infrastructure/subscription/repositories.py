@@ -1,3 +1,4 @@
+from db.repositories.app.base import AsyncRepository
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from billing.domain.shared.ids import UserId
@@ -18,8 +19,6 @@ from billing.infrastructure.subscription.mappers import (
 from .models import (
     SubscriptionModel,
 )
-
-from db.repositories.app import AsyncRepository
 
 
 class SqlAlchemySubscriptionRepository(

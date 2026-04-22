@@ -10,7 +10,6 @@ from billing.infrastructure.subscription.dependencies import (
     get_subscription_uow,
 )
 
-
 router = APIRouter()
 
 

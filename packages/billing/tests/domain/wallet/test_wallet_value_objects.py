@@ -37,5 +37,7 @@ def test_billing_summary_preserves_wallet_snapshot_fields(
     assert summary.subscription_credits == Credits(100)
     assert summary.payg_credits == Credits(50)
     assert summary.subscription_status == "active"
-    assert summary.subscription_plan_code == "sub_pro_monthly"
+    assert (
+        summary.subscription_plan_code == "sub_pro_monthly"
+    )
     assert summary.current_period_end == now

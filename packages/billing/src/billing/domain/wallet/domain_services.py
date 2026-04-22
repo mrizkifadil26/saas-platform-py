@@ -57,7 +57,10 @@ def get_billing_summary(
     now: datetime,
 ) -> BillingSummary:
     # now = now or utc_now()
-    if subscription is not None and subscription.user_id != user_id:
+    if (
+        subscription is not None
+        and subscription.user_id != user_id
+    ):
         subscription = None
 
     wallet = build_wallet(

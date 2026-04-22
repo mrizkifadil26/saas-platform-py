@@ -1,3 +1,4 @@
+from db.uow.base import AsyncUnitOfWork
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from billing.application.subscription.interfaces import (
@@ -10,8 +11,6 @@ from billing.domain.subscription.repositories import (
 from billing.infrastructure.subscription.repositories import (
     SqlAlchemySubscriptionRepository,
 )
-
-from db.uow.base import AsyncUnitOfWork
 
 
 class SubscriptionUnitOfWork(

@@ -7,7 +7,9 @@ from billing.domain.credits.value_objects import (
 )
 from billing.domain.shared.ids import UserId
 from billing.domain.shared.value_objects import PlanCode
-from billing.domain.subscription.entities import Subscription
+from billing.domain.subscription.entities import (
+    Subscription,
+)
 from billing.domain.wallet.domain_services import (
     build_wallet,
     get_billing_summary,
@@ -158,10 +160,11 @@ def test_get_billing_summary_returns_wallet_totals_and_subscription_snapshot(
     assert summary.subscription_credits == Credits(100)
     assert summary.payg_credits == Credits(50)
     assert summary.subscription_status == "active"
-    assert summary.subscription_plan_code == "sub_pro_monthly"
     assert (
-        summary.current_period_end
-        == now + timedelta(days=30)
+        summary.subscription_plan_code == "sub_pro_monthly"
+    )
+    assert summary.current_period_end == now + timedelta(
+        days=30
     )
 
 

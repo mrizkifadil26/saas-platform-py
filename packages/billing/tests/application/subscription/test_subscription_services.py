@@ -71,6 +71,7 @@ async def test_create_subscription_success(
         event_publisher.events[0], SubscriptionCreated
     )
 
+
 @pytest.mark.asyncio
 async def test_create_subscription_raises_when_active_subscription_exists(
     uow,
@@ -146,6 +147,7 @@ async def test_cancel_subscription_at_period_end_success(
     )
     assert event_publisher.events[0].immediate is False
 
+
 @pytest.mark.asyncio
 async def test_cancel_subscription_immediately_success(
     uow,
@@ -186,7 +188,6 @@ async def test_cancel_subscription_immediately_success(
         event_publisher.events[0], SubscriptionCanceled
     )
     assert event_publisher.events[0].immediate is True
-
 
 
 @pytest.mark.asyncio
