@@ -14,14 +14,6 @@ class SubscriptionStatus(str, Enum):
     EXPIRED = "expired"
 
 
-class PurchaseStatus(str, Enum):
-    PENDING = "pending"
-    PAID = "paid"
-    FAILED = "failed"
-    REFUNDED = "refunded"
-    CANCELED = "canceled"
-
-
 class CreditSource(str, Enum):
     SUBSCRIPTION = "subscription"
     PAYG = "payg"
