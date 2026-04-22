@@ -6,16 +6,15 @@ from billing.domain.credits.entities import (
     CreditGrant,
 )
 from billing.domain.credits.events import (
-    CreditGrantAdded,
-    CreditGrantExpired,
     CreditsConsumed,
+    CreditsExpired,
+    CreditsGranted,
 )
 from billing.domain.credits.exceptions import (
     DuplicateReference,
     InsufficientCredits,
 )
 from billing.domain.credits.value_objects import (
-    ConsumptionId,
     CreditAccountId,
     Credits,
     GrantId,
@@ -49,7 +48,7 @@ class CreditAccount:
 
     def total_available(self, at: datetime) -> Credits:
         total = sum(
-            int(grant.remaining_credits)
+            int(grant.available_credits)
             for grant in self.grants
             if grant.is_active_at(at)
         )
@@ -81,6 +80,7 @@ class CreditAccount:
 
         grant = CreditGrant(
             grant_id=grant_id,
+            user_id=self.user_id,
             source=source,
             total_credits=credits,
             consumed_credits=Credits(0),
@@ -89,22 +89,24 @@ class CreditAccount:
             expires_at=expires_at,
         )
         self.grants.append(grant)
-        self._events.append(
-            CreditGrantAdded(
-                account_id=self.id,
-                user_id=self.user_id,
-                grant_id=grant.grant_id,
-                source=grant.source,
-                credits=grant.total_credits,
-                expires_at=grant.expires_at,
-            )
+
+        event = CreditsGranted(
+            # account_id=self.id,
+            user_id=self.user_id,
+            grant_id=grant.grant_id,
+            source=grant.source,
+            credits=grant.total_credits,
+            reference_id=grant.reference_id,
+            expires_at=grant.expires_at,
         )
+        self._events.append(event)
+
         return grant
 
     def consume(
         self,
         *,
-        consumption_id: ConsumptionId,
+        consumption_id_factory,
         product_code: ProductCode,
         credits: Credits,
         consumed_at: datetime,
@@ -128,15 +130,14 @@ class CreditAccount:
                 break
 
             spend = min(
-                int(grant.remaining_credits), remaining
+                int(grant.available_credits), remaining
             )
             if spend <= 0:
                 continue
 
             grant.consume(Credits(spend), consumed_at)
-
             consumption = CreditConsumption(
-                consumption_id=consumption_id,
+                consumption_id=consumption_id_factory,
                 grant_id=grant.grant_id,
                 product_code=product_code,
                 credits=Credits(spend),
@@ -152,17 +153,16 @@ class CreditAccount:
                 "failed to allocate full consumption"
             )
 
-        self._events.append(
-            CreditsConsumed(
-                account_id=self.id,
-                user_id=self.user_id,
-                consumption_id=consumptions[
-                    0
-                ].consumption_id,
-                product_code=product_code,
-                credits=credits,
-            )
+        event = CreditsConsumed(
+            # account_id=self.id,
+            user_id=self.user_id,
+            consumption_id=consumptions[0].consumption_id,
+            product_code=product_code,
+            reference_id=reference_id,
+            credits=credits,
         )
+
+        self._events.append(event)
         return consumptions
 
     def expire_available_grants(
@@ -174,21 +174,23 @@ class CreditAccount:
                 continue
             if at < grant.expires_at:
                 continue
-            if int(grant.remaining_credits) <= 0:
+            if int(grant.available_credits) <= 0:
                 continue
 
-            remaining = grant.remaining_credits
+            remaining = grant.available_credits
             grant.consume(remaining, at)
             expired.append(grant)
 
-            self._events.append(
-                CreditGrantExpired(
-                    account_id=self.id,
-                    user_id=self.user_id,
-                    grant_id=grant.grant_id,
-                    credits=remaining,
-                )
+            event = CreditsExpired(
+                # account_id=self.id,
+                user_id=self.user_id,
+                grant_id=grant.grant_id,
+                expired_credits=remaining,
+                expired_at=at,
             )
+
+            self._events.append(event)
+
         return expired
 
     def _ordered_active_grants(

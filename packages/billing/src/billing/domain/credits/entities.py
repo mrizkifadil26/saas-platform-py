@@ -10,6 +10,7 @@ from billing.domain.credits.events import (
 )
 from billing.domain.credits.exceptions import (
     GrantNotActive,
+    GrantNotAvailable,
     InsufficientCredits,
     InvalidCreditsAmount,
 )
@@ -99,7 +100,7 @@ class CreditGrant:
         granted_at: datetime,
         expires_at: datetime | None = None,
         request_id: RequestId | None = None,
-    ) -> "CreditGrant":
+    ) -> CreditGrant:
         grant = cls(
             grant_id=grant_id,
             user_id=user_id,
@@ -136,65 +137,82 @@ class CreditGrant:
         return True
 
     def consume(
-        self,
-        *,
-        consumption_id: ConsumptionId,
-        product_code: ProductCode,
-        credits: Credits,
-        consumed_at: datetime,
-        reference_id: ReferenceId,
-        request_id: RequestId | None = None,
-    ) -> CreditConsumption:
+        self, credits: Credits, at: datetime
+    ) -> None:
         if int(credits) <= 0:
             raise InvalidCreditsAmount(
-                "consumption credits must be positive"
+                "consumption must be positive"
             )
-        if not self.is_active_at(consumed_at):
-            raise GrantNotActive(
-                "credit grant is not active at requested time"
-            )
+        if not self.is_active_at(at):
+            raise GrantNotAvailable("grant is not active")
         if int(credits) > int(self.available_credits):
             raise InsufficientCredits(
-                "requested credits exceed grant available credits"
+                "not enough remaining credits in grant"
             )
-
         self.consumed_credits = Credits(
             int(self.consumed_credits) + int(credits)
         )
-        if int(self.available_credits) == 0:
-            self.status = GrantStatus.FULLY_CONSUMED
 
-        consumption = CreditConsumption(
-            consumption_id=consumption_id,
-            grant_id=self.grant_id,
-            # user_id=self.user_id,
-            product_code=product_code,
-            credits=credits,
-            consumed_at=consumed_at,
-            reference_id=reference_id,
-            request_id=request_id,
-        )
-        self._events.append(
-            CreditsConsumed(
-                consumption_id=consumption.consumption_id,
-                # grant_id=self.grant_id,
-                user_id=self.user_id,
-                product_code=consumption.product_code,
-                credits=consumption.credits,
-                reference_id=consumption.reference_id,
-                request_id=consumption.request_id,
-            )
-        )
+    # def consume(
+    #     self,
+    #     *,
+    #     consumption_id: ConsumptionId,
+    #     product_code: ProductCode,
+    #     credits: Credits,
+    #     consumed_at: datetime,
+    #     reference_id: ReferenceId,
+    #     request_id: RequestId | None = None,
+    # ) -> CreditConsumption:
+    #     if int(credits) <= 0:
+    #         raise InvalidCreditsAmount(
+    #             "consumption credits must be positive"
+    #         )
+    #     if not self.is_active_at(consumed_at):
+    #         raise GrantNotActive(
+    #             "credit grant is not active at requested time"
+    #         )
+    #     if int(credits) > int(self.available_credits):
+    #         raise InsufficientCredits(
+    #             "requested credits exceed grant available credits"
+    #         )
 
-        return consumption
-        # self.remaining_credits = (
-        #     self.remaining_credits - credits
-        # )
+    #     self.consumed_credits = Credits(
+    #         int(self.consumed_credits) + int(credits)
+    #     )
+    #     if int(self.available_credits) == 0:
+    #         self.status = GrantStatus.FULLY_CONSUMED
 
-        # return ConsumptionAllocation(
-        #     grant_id=self.grant_id,
-        #     credits=amount,
-        # )
+    #     consumption = CreditConsumption(
+    #         consumption_id=consumption_id,
+    #         grant_id=self.grant_id,
+    #         # user_id=self.user_id,
+    #         product_code=product_code,
+    #         credits=credits,
+    #         consumed_at=consumed_at,
+    #         reference_id=reference_id,
+    #         request_id=request_id,
+    #     )
+
+    #     event = CreditsConsumed(
+    #         consumption_id=consumption.consumption_id,
+    #         # grant_id=self.grant_id,
+    #         user_id=self.user_id,
+    #         product_code=consumption.product_code,
+    #         credits=consumption.credits,
+    #         reference_id=consumption.reference_id,
+    #         request_id=consumption.request_id,
+    #     )
+    #     self._events.append(event)
+
+    #     return consumption
+    # self.remaining_credits = (
+    #     self.remaining_credits - credits
+    # )
+
+    # return ConsumptionAllocation(
+    #     grant_id=self.grant_id,
+    #     credits=amount,
+    # )
 
     # def is_expired(self, now: datetime) -> bool:
     #     return (
