@@ -35,3 +35,30 @@ class LedgerEntryType(str, Enum):
     GRANT = "grant"
     CONSUME = "consume"
     EXPIRE = "expire"
+    ADJUST = "adjust"
+    REVERSE = "reverse"
+    RESERVE = "reserve"
+    RELEASE = "release"
+
+
+class UsageMetric(str, Enum):
+    REQUEST = "request"
+    TOKEN = "token"
+    MINUTE = "minute"
+    IMAGE = "image"
+    GB = "gb"
+
+
+class GrantStatus(str, Enum):
+    ACTIVE = "active"
+    FULLY_CONSUMED = "fully_consumed"
+    EXPIRED = "expired"
+    REVERSED = "reversed"
+
+
+class PurchaseStatus(str, Enum):
+    PENDING = "pending"
+    PAID = "paid"
+    FAILED = "failed"
+    REFUNDED = "refunded"
+    CANCELED = "canceled"
