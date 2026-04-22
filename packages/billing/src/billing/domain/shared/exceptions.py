@@ -1,4 +1,10 @@
-class BillingDomainError(Exception):
-    """Base exception for billing domain."""
+class DomainError(Exception):
+    """Base exception for all domain-level errors."""
 
-    pass
+
+class ValidationError(DomainError):
+    """Exception raised for validation errors in the domain."""
+
+
+class NotFoundError(DomainError):
+    """Exception raised when an entity is not found in the domain."""
