@@ -1,17 +1,7 @@
-from dataclasses import dataclass
 
 from billing.domain.credits.value_objects import Credits
 from billing.domain.payg.exceptions import UnknownPaygPack
 from billing.domain.shared.value_objects import PlanCode
-
-
-@dataclass(frozen=True)
-class PaygPack:
-    code: PlanCode
-    credits: Credits
-    price_cents: int
-    currency: str = "usd"
-
 
 CATALOG: dict[str, PaygPack] = {
     "payg_10_usd": PaygPack(
