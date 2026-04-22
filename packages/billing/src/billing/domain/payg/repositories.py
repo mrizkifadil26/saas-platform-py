@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from billing.domain.payg.entities import PaygPurchase
+from billing.domain.payg.aggregates import PaygPurchase
 from billing.domain.payg.value_objects import PaygPurchaseId
 
 

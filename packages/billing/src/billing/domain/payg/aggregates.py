@@ -5,7 +5,7 @@ from datetime import datetime
 
 from billing.domain.payg.events import (
     PaygPurchaseCreated,
-    PaygPurchasePaid,
+    PaygPurchaseMarkedPaid,
 )
 from billing.domain.payg.exceptions import (
     PurchaseStateError,
@@ -76,9 +76,25 @@ class PaygPurchase:
         self.status = PurchaseStatus.PAID
         self.paid_at = paid_at
         self._events.append(
-            PaygPurchasePaid(
+            PaygPurchaseMarkedPaid(
                 purchase_id=self.purchase_id,
                 user_id=self.user_id,
                 pack_code=self.pack_code,
+                amount=self.amount,
+                paid_at=self.paid_at,
             )
         )
+
+    def mark_failed(self) -> None:
+        if self.status != PurchaseStatus.PENDING:
+            raise PurchaseStateError(
+                "only pending payg purchases can be marked failed"
+            )
+        self.status = PurchaseStatus.FAILED
+
+    def cancel(self) -> None:
+        if self.status != PurchaseStatus.PENDING:
+            raise PurchaseStateError(
+                "only pending payg purchases can be canceled"
+            )
+        self.status = PurchaseStatus.CANCELED
