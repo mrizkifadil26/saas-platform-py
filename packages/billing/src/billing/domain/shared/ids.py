@@ -1,9 +1,10 @@
 from dataclasses import dataclass
+from typing import NewType
 from uuid import UUID
 
+ReferenceId = NewType("ReferenceId", str)
 
-# UserId = NewType("UserId", str)
-@dataclass(frozen=True, slots=True)
+
 class UserId:
     value: UUID | str
 
