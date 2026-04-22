@@ -31,7 +31,7 @@ requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
-line-length = 60
+line-length = 88
 
 [tool.ruff.lint]
 select = [
