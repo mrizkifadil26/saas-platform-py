@@ -2,78 +2,135 @@ from dataclasses import dataclass, field
 from datetime import datetime
 
 from billing.domain.credits.exceptions import (
+    GrantNotAvailable,
+    InsufficientCredits,
     InvalidCreditsAmount,
 )
 from billing.domain.credits.value_objects import (
-    ConsumptionAllocation,
     ConsumptionId,
     Credits,
     GrantId,
+    ProductCode,
 )
 from billing.domain.shared.enums import CreditSource
-from billing.domain.shared.ids import RequestId, UserId
-from billing.domain.shared.value_objects import (
-    PlanCode,
+from billing.domain.shared.ids import (
+    ReferenceId,
+    RequestId,
 )
 
 
-@dataclass(eq=True, slots=True)
+@dataclass(slots=True)
 class CreditGrant:
     grant_id: GrantId
-    user_id: UserId
+    # user_id: UserId
+    # granted_credits: Credits
+    # remaining_credits: Credits
+    # created_at: datetime
     source: CreditSource
-    granted_credits: Credits
-    remaining_credits: Credits
-    created_at: datetime
+    total_credits: Credits
+    consumed_credits: Credits
+    reference_id: ReferenceId
+    granted_at: datetime
     expires_at: datetime | None = None
-    request_id: RequestId | None = None
-    plan_code: PlanCode | None = None
+    # request_id: RequestId | None = None
+    # plan_code: PlanCode | None = None
     metadata: dict[str, str] = field(default_factory=dict)
 
-    def is_expired(self, now: datetime) -> bool:
-        return (
+    def __post_init__(self) -> None:
+        if int(self.total_credits) <= 0:
+            raise InvalidCreditsAmount(
+                "grant must be positive"
+            )
+        if int(self.consumed_credits) < 0:
+            raise InvalidCreditsAmount(
+                "consumed credits cannot be negative"
+            )
+        if int(self.consumed_credits) > int(
+            self.total_credits
+        ):
+            raise InvalidCreditsAmount(
+                "consumed credits cannot exceed total"
+            )
+
+    @property
+    def remaining_credits(self) -> Credits:
+        return Credits(
+            int(self.total_credits)
+            - int(self.consumed_credits)
+        )
+
+    def is_active_at(self, at: datetime) -> bool:
+        if int(self.remaining_credits) <= 0:
+            return False
+        if (
             self.expires_at is not None
-            and self.expires_at < now
-        )
-
-    def is_depleted(self) -> bool:
-        return self.remaining_credits.is_zero()
-
-    def is_active(self, now: datetime) -> bool:
-        return (
-            not self.is_expired(now)
-            and not self.is_depleted()
-        )
+            and at >= self.expires_at
+        ):
+            return False
+        return True
 
     def consume(
-        self, amount: Credits
-    ) -> ConsumptionAllocation:
-        if int(amount) <= 0:
+        self,
+        credits: Credits,
+        at: datetime,
+    ) -> None:
+        if int(credits) <= 0:
             raise InvalidCreditsAmount(
-                f"Consumed credits must be positive, got {amount}"
+                f"Consumed credits must be positive, got {credits}"
+            )
+        if not self.is_active_at(at):
+            raise GrantNotAvailable("grant is not active")
+
+        if int(credits) > int(self.remaining_credits):
+            raise InsufficientCredits(
+                "not enough remaining credits in grant"
             )
 
-        if int(amount) > int(self.remaining_credits):
-            raise InvalidCreditsAmount(
-                f"Cannot consume more credits than remaining, got {amount}, remaining: {self.remaining_credits}"
-            )
-
-        self.remaining_credits = (
-            self.remaining_credits - amount
+        self.consumed_credits = Credits(
+            int(self.consumed_credits) + int(credits)
         )
+        # self.remaining_credits = (
+        #     self.remaining_credits - credits
+        # )
 
-        return ConsumptionAllocation(
-            grant_id=self.grant_id,
-            credits=amount,
-        )
+        # return ConsumptionAllocation(
+        #     grant_id=self.grant_id,
+        #     credits=amount,
+        # )
+
+    # def is_expired(self, now: datetime) -> bool:
+    #     return (
+    #         self.expires_at is not None
+    #         and self.expires_at < now
+    #     )
+
+    # def is_depleted(self) -> bool:
+    #     return self.remaining_credits.is_zero()
+
+    # def is_active(self, now: datetime) -> bool:
+    #     return (
+    #         not self.is_expired(now)
+    #         and not self.is_depleted()
+    #     )
 
 
-@dataclass(eq=True, slots=True)
+# @dataclass(eq=True, slots=True)
+@dataclass(frozen=True, slots=True)
 class CreditConsumption:
+    # user_id: UserId
+    # cost: Credits
+    # allocations: tuple[ConsumptionAllocation, ...]
+    # metadata: dict[str, str] = field(default_factory=dict)
     consumption_id: ConsumptionId
-    user_id: UserId
-    cost: Credits
-    created_at: datetime
-    allocations: tuple[ConsumptionAllocation, ...]
+    grant_id: GrantId
+    product_code: ProductCode
+    credits: Credits
+    consumed_at: datetime
+    reference_id: ReferenceId
     request_id: RequestId | None = None
-    metadata: dict[str, str] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if int(self.credits) <= 0:
+            raise InvalidCreditsAmount(
+                "consumption credits must be positive"
+            )

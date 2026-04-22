@@ -19,3 +19,14 @@ class InvalidCreditsAmount(CreditsDomainError):
     """Raised when an invalid credits amount is provided (e.g., negative)."""
 
     pass
+
+
+class DuplicateReference(CreditsDomainError):
+    """Raised when a grant with the same reference ID already exists."""
+
+    pass
+
+class GrantNotAvailable(CreditsDomainError):
+    """Raised when a grant is not active or has no remaining credits."""
+
+    pass
