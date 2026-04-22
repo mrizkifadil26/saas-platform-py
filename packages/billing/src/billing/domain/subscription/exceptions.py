@@ -17,3 +17,7 @@ class InvalidSubscriptionStatus(SubscriptionDomainError):
 
 class DuplicatePeriodGrant(SubscriptionDomainError):
     """Raised when a subscription period grant is duplicated."""
+
+
+class InvalidBillingPeriod(SubscriptionDomainError):
+    """Raised when the billing period is invalid."""
