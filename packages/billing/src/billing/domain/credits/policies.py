@@ -1,28 +1,46 @@
-from datetime import datetime
-
 from billing.domain.credits.entities import CreditGrant
+from billing.domain.credits.value_objects import Credits
+from billing.domain.shared.enums import CreditSource
 
 
-def grant_priority(
-    grant: CreditGrant,
-) -> tuple[int, datetime, datetime]:
-    source_value = getattr(
-        grant.source, "value", grant.source
-    )
+def sort_spendable_grants(
+    grants: list[CreditGrant], at
+) -> list[CreditGrant]:
+    """
+    Consumption priority:
+    1. active only
+    2. earliest expiry first
+    3. subscription before payg when same expiry
+    4. oldest grant first
+    """
+    active = [
+        grant for grant in grants if grant.is_active_at(at)
+    ]
 
-    source_rank = {
-        "subscription": 0,
-        "payg": 1,
-        "promotion": 2,
-        "compensation": 3,
-    }.get(str(source_value), 99)
+    def priority(grant: CreditGrant) -> tuple:
+        expiry_rank = grant.expires_at is None
+        source_rank = (
+            0
+            if grant.source == CreditSource.SUBSCRIPTION
+            else 1
+        )
+        expiry_value = grant.expires_at
+        return (
+            expiry_rank,
+            expiry_value,
+            source_rank,
+            grant.granted_at,
+        )
 
-    expiry_sort = grant.expires_at or datetime.max.replace(
-        tzinfo=grant.created_at.tzinfo
-    )
+    return sorted(active, key=priority)
 
-    return (
-        source_rank,
-        expiry_sort,
-        grant.created_at,
-    )
+
+def total_available_credits(
+    grants: list[CreditGrant], at
+) -> Credits:
+    total = 0
+    for grant in grants:
+        if grant.is_active_at(at):
+            total += int(grant.available_credits)
+
+    return Credits(total)
