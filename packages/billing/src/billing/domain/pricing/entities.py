@@ -1,8 +1,22 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from billing.domain.credits.value_objects import Credits
-from billing.domain.shared.enums import BillingInterval
+from billing.domain.credits.value_objects import (
+    Credits,
+    ProductCode,
+)
+from billing.domain.payg.value_objects import (
+    Money,
+    PackCode,
+)
+from billing.domain.pricing.exceptions import (
+    InvalidPlanConfiguration,
+    PricingNotFound,
+)
+from billing.domain.shared.enums import (
+    BillingInterval,
+    UsageMetric,
+)
 from billing.domain.shared.value_objects import PlanCode
 
 
@@ -13,14 +27,19 @@ class SubscriptionPlan:
     interval: BillingInterval
     price: Money
     included_credits: Credits
+    active: bool = True
 
     def __post_init__(self) -> None:
         if not self.name.strip():
-            raise DomainInvariantError(
+            raise InvalidPlanConfiguration(
                 "plan name cannot be blank"
             )
+        if self.price.is_negative():
+            raise InvalidPlanConfiguration(
+                "plan price cannot be negative"
+            )
         if int(self.included_credits) < 0:
-            raise DomainInvariantError(
+            raise InvalidPlanConfiguration(
                 "included credits cannot be negative"
             )
 
@@ -32,37 +51,40 @@ class PaygPack:
     price: Money
     credits: Credits
     expires_in_days: int
+    active: bool = True
 
     def __post_init__(self) -> None:
         if not self.name.strip():
-            raise DomainInvariantError(
+            raise InvalidPlanConfiguration(
                 "pack name cannot be blank"
             )
+        if self.price.is_negative():
+            raise InvalidPlanConfiguration(
+                "pack price cannot be negative"
+            )
         if int(self.credits) <= 0:
-            raise DomainInvariantError(
+            raise InvalidPlanConfiguration(
                 "pack credits must be positive"
             )
         if self.expires_in_days <= 0:
-            raise DomainInvariantError(
-                "expires_in_days must be positive"
+            raise InvalidPlanConfiguration(
+                "pack expiry days must be positive"
             )
 
 
 @dataclass(frozen=True, slots=True)
 class UsagePriceRule:
     product_code: ProductCode
+    metric: UsageMetric
     credits_per_unit: Credits
     effective_from: datetime
     effective_to: datetime | None = None
 
-    def calculate_cost(self, quantity: int) -> Credits:
-        if quantity < 0:
-            raise DomainInvariantError(
-                "quantity cannot be negative"
+    def __post_init__(self) -> None:
+        if int(self.credits_per_unit) < 0:
+            raise InvalidPlanConfiguration(
+                "credits_per_unit cannot be negative"
             )
-        return Credits(
-            int(self.credits_per_unit) * quantity
-        )
 
     def is_effective_at(self, at: datetime) -> bool:
         if at < self.effective_from:
@@ -73,3 +95,54 @@ class UsagePriceRule:
         ):
             return False
         return True
+
+    def calculate_cost(self, quantity: int) -> Credits:
+        if quantity < 0:
+            raise InvalidPlanConfiguration(
+                "quantity cannot be negative"
+            )
+        return Credits(
+            int(self.credits_per_unit) * quantity
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class PricingCatalog:
+    subscription_plans: tuple[SubscriptionPlan, ...]
+    payg_packs: tuple[PaygPack, ...]
+    usage_rules: tuple[UsagePriceRule, ...]
+
+    def get_plan(self, code: PlanCode) -> SubscriptionPlan:
+        for plan in self.subscription_plans:
+            if plan.code == code and plan.active:
+                return plan
+
+        raise PricingNotFound(
+            f"active plan not found: {code}"
+        )
+
+    def get_pack(self, code: PackCode) -> PaygPack:
+        for pack in self.payg_packs:
+            if pack.code == code and pack.active:
+                return pack
+        raise PricingNotFound(
+            f"active payg pack not found: {code}"
+        )
+
+    def get_usage_rule(
+        self, product_code: ProductCode, at: datetime
+    ) -> UsagePriceRule:
+        matches = [
+            rule
+            for rule in self.usage_rules
+            if rule.product_code == product_code
+            and rule.is_effective_at(at)
+        ]
+        if not matches:
+            raise PricingNotFound(
+                f"usage rule not found for product: {product_code}"
+            )
+        matches.sort(
+            key=lambda r: r.effective_from, reverse=True
+        )
+        return matches[0]

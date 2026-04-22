@@ -2,7 +2,7 @@ from typing import Protocol
 
 from billing.domain.credits.value_objects import ProductCode
 from billing.domain.payg.value_objects import PackCode
-from billing.domain.pricing.models import (
+from billing.domain.pricing.entities import (
     PaygPack,
     SubscriptionPlan,
     UsagePriceRule,
