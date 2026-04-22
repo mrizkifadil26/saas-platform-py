@@ -3,33 +3,41 @@ from datetime import datetime
 
 from billing.domain.credits.value_objects import (
     ConsumptionId,
-    CreditAccountId,
     Credits,
     GrantId,
     ProductCode,
 )
 from billing.domain.shared.enums import CreditSource
 from billing.domain.shared.events import DomainEvent
-from billing.domain.shared.ids import UserId
+from billing.domain.shared.ids import (
+    ReferenceId,
+    RequestId,
+    UserId,
+)
 
 
 @dataclass(frozen=True, slots=True)
-class CreditGrantAdded(DomainEvent):
-    account_id: CreditAccountId
-    user_id: UserId
+class CreditsGranted(DomainEvent):
+    # account_id: CreditAccountId
     grant_id: GrantId
+    user_id: UserId
     source: CreditSource
     credits: Credits
     expires_at: datetime | None
+    reference_id: ReferenceId
+    request_id: RequestId | None = None
 
 
 @dataclass(frozen=True, slots=True)
 class CreditsConsumed(DomainEvent):
-    account_id: CreditAccountId
+    # account_id: CreditAccountId
     user_id: UserId
     consumption_id: ConsumptionId
     product_code: ProductCode
     credits: Credits
+    reference_id: ReferenceId
+    request_id: RequestId | None = None
+
     # cost: Credits
     # allocations: tuple[ConsumptionAllocation, ...]
     # occurred_at: datetime
@@ -38,8 +46,8 @@ class CreditsConsumed(DomainEvent):
 
 
 @dataclass(frozen=True, slots=True)
-class CreditGrantExpired(DomainEvent):
-    account_id: CreditAccountId
-    user_id: UserId
+class CreditsExpired(DomainEvent):
     grant_id: GrantId
-    credits: Credits
+    user_id: UserId
+    expired_credits: Credits
+    expired_at: datetime

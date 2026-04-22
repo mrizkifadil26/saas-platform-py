@@ -1,21 +1,47 @@
 from typing import Protocol
 
-from billing.domain.credits.aggregates import CreditAccount
+from billing.domain.credits.entities import (
+    CreditConsumption,
+    CreditGrant,
+)
+from billing.domain.credits.value_objects import GrantId
 from billing.domain.shared.ids import UserId
 
 
-class CreditAccountRepository(Protocol):
+class CreditGrantRepository(Protocol):
     async def get(
-        self, account_id: CreditAccountId
-    ) -> CreditAccount | None: ...
-
-    async def get_by_user_id(
+        self, grant_id: GrantId
+    ) -> CreditGrant | None: ...
+    async def save(self, grant: CreditGrant) -> None: ...
+    async def list_for_user(
         self, user_id: UserId
-    ) -> CreditAccount | None: ...
+    ) -> list[CreditGrant]: ...
+    async def exists_by_reference(
+        self, reference_id: str
+    ) -> bool: ...
 
+
+class CreditConsumptionRepository(Protocol):
     async def save(
-        self, account: CreditAccount
+        self, consumption: CreditConsumption
     ) -> None: ...
+    async def exists_by_reference(
+        self, reference_id: str
+    ) -> bool: ...
+
+
+# class CreditAccountRepository(Protocol):
+#     async def get(
+#         self, account_id: CreditAccountId
+#     ) -> CreditAccount | None: ...
+
+#     async def get_by_user_id(
+#         self, user_id: UserId
+#     ) -> CreditAccount | None: ...
+
+#     async def save(
+#         self, account: CreditAccount
+#     ) -> None: ...
 
 
 # class CreditConsumptionRepository(ABC):

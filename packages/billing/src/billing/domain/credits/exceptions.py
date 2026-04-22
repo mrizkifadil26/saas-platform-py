@@ -26,7 +26,14 @@ class DuplicateReference(CreditsDomainError):
 
     pass
 
+
 class GrantNotAvailable(CreditsDomainError):
     """Raised when a grant is not active or has no remaining credits."""
+
+    pass
+
+
+class GrantNotActive(CreditsDomainError):
+    """Raised when a grant is not active."""
 
     pass
