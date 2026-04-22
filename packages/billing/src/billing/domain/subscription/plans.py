@@ -1,43 +1,41 @@
-from dataclasses import dataclass
+from decimal import Decimal
 
 from billing.domain.credits.value_objects import Credits
+from billing.domain.payg.value_objects import Money
+from billing.domain.pricing.entities import SubscriptionPlan
+from billing.domain.shared.enums import BillingInterval
 from billing.domain.shared.value_objects import PlanCode
 from billing.domain.subscription.exceptions import (
     UnknownPlan,
 )
 
-
-@dataclass(frozen=True)
-class SubscriptionPlan:
-    code: PlanCode
-    tier: str
-    billing_interval: str
-    credits_grant: Credits
-    price_cents: int
-    currency: str = "usd"
-
-
 CATALOG: dict[str, SubscriptionPlan] = {
     "sub_basic_monthly": SubscriptionPlan(
         code=PlanCode("sub_basic_monthly"),
-        tier="basic",
-        billing_interval="month",
-        credits_grant=Credits(1000),
-        price_cents=9900,
+        name="Basic Monthly",
+        interval=BillingInterval.MONTH,
+        included_credits=Credits(1000),
+        price=Money(
+            amount=Decimal("99.00"), currency="USD"
+        ),
     ),
     "sub_pro_monthly": SubscriptionPlan(
         code=PlanCode("sub_pro_monthly"),
-        tier="pro",
-        billing_interval="month",
-        credits_grant=Credits(5000),
-        price_cents=29900,
+        name="Pro Monthly",
+        interval=BillingInterval.MONTH,
+        included_credits=Credits(5000),
+        price=Money(
+            amount=Decimal("299.00"), currency="USD"
+        ),
     ),
     "sub_enterprise_monthly": SubscriptionPlan(
         code=PlanCode("sub_enterprise_monthly"),
-        tier="enterprise",
-        billing_interval="month",
-        credits_grant=Credits(20000),
-        price_cents=99900,
+        name="Enterprise Monthly",
+        interval=BillingInterval.MONTH,
+        included_credits=Credits(20000),
+        price=Money(
+            amount=Decimal("999.00"), currency="USD"
+        ),
     ),
 }
 
