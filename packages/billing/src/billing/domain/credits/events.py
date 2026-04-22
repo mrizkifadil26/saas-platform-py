@@ -7,8 +7,8 @@ from billing.domain.credits.value_objects import (
     GrantId,
     ProductCode,
 )
+from billing.domain.shared.domain_event import DomainEvent
 from billing.domain.shared.enums import CreditSource
-from billing.domain.shared.events import DomainEvent
 from billing.domain.shared.ids import (
     ReferenceId,
     RequestId,

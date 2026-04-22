@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 
 from billing.domain.credits.value_objects import Credits
-from billing.domain.shared.events import DomainEvent
+from billing.domain.shared.domain_event import DomainEvent
 from billing.domain.shared.ids import RequestId, UserId
 from billing.domain.shared.value_objects import PlanCode
 from billing.domain.subscription.value_objects import (

@@ -7,7 +7,7 @@ from billing.domain.payg.value_objects import (
     PackCode,
     PaygPurchaseId,
 )
-from billing.domain.shared.events import DomainEvent
+from billing.domain.shared.domain_event import DomainEvent
 from billing.domain.shared.ids import RequestId, UserId
 
 # @dataclass(frozen=True, slots=True)
