@@ -6,14 +6,6 @@ class BillingInterval(str, Enum):
     YEAR = "year"
 
 
-class SubscriptionStatus(str, Enum):
-    PENDING = "pending"
-    ACTIVE = "active"
-    PAST_DUE = "past_due"
-    CANCELED = "canceled"
-    EXPIRED = "expired"
-
-
 class CreditSource(str, Enum):
     SUBSCRIPTION = "subscription"
     PAYG = "payg"

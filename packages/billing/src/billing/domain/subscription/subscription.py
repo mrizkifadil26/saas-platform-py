@@ -1,0 +1,333 @@
+from __future__ import annotations
+
+from dataclasses import dataclass, field, replace
+from datetime import datetime
+from operator import is_
+from typing import Any
+
+from billing.domain.shared.aggregate_root import AggregateRoot
+from billing.domain.shared.ids import UserId
+from billing.domain.subscription.exceptions import (
+    InvalidSubscriptionStateError,
+    SubscriptionAlreadyCanceledError,
+)
+from billing.domain.subscription.subscription_events import (
+    SubscriptionCanceled,
+    SubscriptionChanged,
+    SubscriptionRenewed,
+)
+from billing.domain.subscription.subscription_item import SubscriptionItem
+from billing.domain.subscription.subscription_status import SubscriptionStatus
+from billing.domain.value_objects.billing_period import BillingPeriod
+from billing.domain.value_objects.credits import Credits
+from billing.domain.value_objects.plan_id import PlanId
+from billing.domain.value_objects.subscription_id import SubscriptionId
+from billing.domain.value_objects.subscription_item_id import SubscriptionItemId
+
+
+@dataclass(frozen=True, slots=True)
+class Subscription(AggregateRoot):
+    subscription_id: SubscriptionId
+    # TODO: should use customer_id instead of user_id later
+    user_id: UserId
+    plan_id: PlanId
+    status: SubscriptionStatus
+    billing_period: BillingPeriod
+
+    items: tuple[SubscriptionItem, ...] = field(default_factory=tuple)
+
+    cancel_at_period_end: bool = False
+    provider_subscription_id: str | None = None
+    last_granted_period_start: datetime | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self):
+        if (
+            self.last_granted_period_start is not None
+            and self.last_granted_period_start.tzinfo is None
+        ):
+            raise ValueError("last_granted_period_start must be timezone-aware")
+
+        item_ids: set[SubscriptionItemId] = set()
+        for item in self.items:
+            if item.item_id in item_ids:
+                raise ValueError(f"Duplicate SubscriptionItemId: {item.item_id}")
+
+            item_ids.add(item.item_id)
+
+        object.__setattr__(self, "items", tuple(self.items))
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        subscription_id: SubscriptionId,
+        # TODO: should use customer_id instead of user_id later
+        user_id: UserId,
+        plan_id: PlanId,
+        billing_period: BillingPeriod,
+        items: list[SubscriptionItem] | None = None,
+        provider_subscription_id: str | None = None,
+        trial: bool = False,
+        metadata: dict[str, Any] | None = None,
+        occurred_at: datetime | None = None,
+    ) -> Subscription:
+        status = SubscriptionStatus.TRIALING if trial else SubscriptionStatus.ACTIVE
+        return cls(
+            subscription_id=subscription_id,
+            user_id=user_id,
+            plan_id=plan_id,
+            status=status,
+            billing_period=billing_period,
+            items=tuple(items) if items else tuple(),
+            provider_subscription_id=provider_subscription_id,
+        )
+
+    @property
+    def current_period_start(self) -> datetime:
+        return self.billing_period.start_at
+
+    @property
+    def current_period_end(self) -> datetime:
+        return self.billing_period.end_at
+
+    def is_active_for_usage(self, at: datetime) -> bool:
+        if at.tzinfo is None:
+            raise ValueError("at must be timezone-aware")
+
+        if not self.status.is_activeish:
+            return False
+
+        return self.billing_period.contains(at)
+
+    def can_be_canceled(self) -> bool:
+        return not self.status.is_terminal
+
+    def cancel(
+        self,
+        *,
+        immediate: bool = False,
+        occurred_at: datetime | None = None,
+    ) -> Subscription:
+        if self.status == SubscriptionStatus.CANCELED:
+            raise SubscriptionAlreadyCanceledError(
+                f"Subscription {self.subscription_id} is already canceled"
+            )
+
+        if self.status == SubscriptionStatus.EXPIRED:
+            raise InvalidSubscriptionStateError(
+                f"Cannot cancel subscription {self.subscription_id} because it is expired"
+            )
+
+        updated_subscription = (
+            replace(
+                self,
+                status=SubscriptionStatus.CANCELED,
+                cancel_at_period_end=False,
+            )
+            if immediate
+            else replace(self, cancel_at_period_end=True)
+        )
+
+        return updated_subscription._record(
+            SubscriptionCanceled(
+                subscription_id=self.subscription_id,
+                immediate=immediate,
+                occurred_at=occurred_at or self.billing_period.start_at,
+            )
+        )
+
+    def uncancel(self) -> Subscription:
+        if self.status.is_terminal:
+            raise InvalidSubscriptionStateError(
+                f"Cannot uncancel subscription {self.subscription_id} because it is in terminal status {self.status}"
+            )
+
+        return replace(
+            self,
+            cancel_at_period_end=False,
+        )
+
+    def mark_past_due(self) -> Subscription:
+        if self.status not in {
+            SubscriptionStatus.ACTIVE,
+            SubscriptionStatus.TRIALING,
+        }:
+            raise InvalidSubscriptionStateError(
+                f"Cannot mark subscription {self.subscription_id} as past due because it is not active or trialing (status: {self.status})"
+            )
+
+        return replace(self, status=SubscriptionStatus.PAST_DUE)
+
+    def pause(self) -> Subscription:
+        if self.status not in {
+            SubscriptionStatus.ACTIVE,
+            SubscriptionStatus.PAST_DUE,
+            SubscriptionStatus.TRIALING,
+        }:
+            raise InvalidSubscriptionStateError(
+                f"Cannot pause subscription {self.subscription_id} because it is not active or past due (status: {self.status})"
+            )
+
+        return replace(self, status=SubscriptionStatus.PAUSED)
+
+    def resume(self) -> Subscription:
+        if self.status != SubscriptionStatus.PAUSED:
+            raise InvalidSubscriptionStateError(
+                f"Cannot resume subscription {self.subscription_id} because it is not paused (status: {self.status})"
+            )
+
+        return replace(self, status=SubscriptionStatus.ACTIVE)
+
+    def expire(self) -> Subscription:
+        if self.status == SubscriptionStatus.EXPIRED:
+            return self
+
+        return replace(self, status=SubscriptionStatus.EXPIRED)
+
+    def can_renew(self) -> bool:
+        return self.status.can_renew()
+
+    def renew(
+        self,
+        next_billing_period: BillingPeriod,
+        *,
+        occurred_at: datetime | None = None,
+    ) -> Subscription:
+        if not self.can_renew():
+            raise InvalidSubscriptionStateError(
+                f"Cannot renew subscription {self.subscription_id} because it is not in a renewable state (status: {self.status})"
+            )
+
+        if self.cancel_at_period_end:
+            raise InvalidSubscriptionStateError(
+                f"Cannot renew subscription {self.subscription_id} because it is set to cancel at period end"
+            )
+
+        if next_billing_period.start_at < self.billing_period.end_at:
+            raise InvalidSubscriptionStateError(
+                f"Cannot renew subscription {self.subscription_id} because the next billing period {next_billing_period} does not start after the current billing period {self.billing_period}"
+            )
+
+        updated_subscription = replace(
+            self,
+            status=SubscriptionStatus.ACTIVE,
+            billing_period=next_billing_period,
+        )
+
+        return updated_subscription._record(
+            SubscriptionRenewed(
+                subscription_id=self.subscription_id,
+                previous_period_start=self.billing_period.start_at,
+                previous_period_end=self.billing_period.end_at,
+                new_period_start=next_billing_period.start_at,
+                new_period_end=next_billing_period.end_at,
+                occurred_at=occurred_at or next_billing_period.start_at,
+            )
+        )
+
+    def change_plan(
+        self,
+        new_plan_id: PlanId,
+        *,
+        occurred_at: datetime | None = None,
+    ) -> Subscription:
+        if self.status.is_terminal:
+            raise InvalidSubscriptionStateError(
+                f"Cannot change plan for subscription {self.subscription_id} because it is in terminal status {self.status}"
+            )
+
+        if new_plan_id == self.plan_id:
+            raise InvalidSubscriptionStateError(
+                f"Cannot change to the same plan for subscription {self.subscription_id} (plan_id: {self.plan_id})"
+            )
+
+        updated_subcription = replace(self, plan_id=new_plan_id)
+
+        return updated_subcription._record(
+            SubscriptionChanged(
+                subscription_id=self.subscription_id,
+                previous_plan_id=self.plan_id,
+                new_plan_id=new_plan_id,
+                occurred_at=occurred_at
+                or datetime.now(tz=self.billing_period.start_at.tzinfo),
+            )
+        )
+
+    def add_item(
+        self,
+        item: SubscriptionItem,
+    ) -> Subscription:
+        return self
+
+    def remove_item(
+        self,
+        item_id: SubscriptionItemId,
+    ) -> Subscription:
+        return self
+
+    def update_item_quantity(
+        self,
+        item_id: SubscriptionItemId,
+        new_quantity: int,
+    ) -> Subscription:
+        return self
+
+    def has_grant_for_current_period(self) -> bool:
+        return self.last_granted_period_start == self.current_period_start
+
+    def can_grant_recurring_credits(self) -> bool:
+        return (
+            self.status == SubscriptionStatus.ACTIVE
+            and not self.has_grant_for_current_period()
+        )
+
+    def mark_credits_granted_for_current_period(
+        self,
+        credits: Credits,
+    ) -> Subscription:
+        if credits.is_zero():
+            raise ValueError("credits must be greater than zero")
+
+        if self.status != SubscriptionStatus.ACTIVE:
+            raise InvalidSubscriptionStateError(
+                f"Cannot mark credits as granted for subscription {self.subscription_id} because it is not active"
+            )
+
+        if not self.can_grant_recurring_credits():
+            raise InvalidSubscriptionStateError(
+                f"Cannot mark credits as granted for subscription {self.subscription_id} because it is not active or credits have already been granted for the current period"
+            )
+
+        return replace(
+            self,
+            last_granted_period_start=self.current_period_start,
+        )
+
+    def should_end_now(self, at: datetime) -> bool:
+        if at.tzinfo is None:
+            raise ValueError("at must be timezone-aware")
+
+        if self.status.is_terminal:
+            return False
+
+        return self.cancel_at_period_end and at >= self.billing_period.end_at
+
+    def _record(self, event: object) -> Subscription:
+        """
+        Thin adapter to record events in both cases:
+        1. If the class inherits from a base class that has a record_event method,
+           it will use that method to record the event.
+        2. If not, it will store the events in a local _events list.
+
+        This allows us to keep the Subscription class decoupled from any specific event recording implementation.
+        """
+        if hasattr(super(), "record_event"):
+            super().record_event(event)  # type: ignore[misc]
+            return self
+
+        events = list(getattr(self, "_events", []))
+        events.append(event)
+        object.__setattr__(self, "_events", events)
+
+        return self
