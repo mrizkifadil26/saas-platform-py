@@ -1,25 +1,25 @@
 from billing.shared.exceptions import ApplicationError
 
 
-class SubscriptionApplicationError(ApplicationError):
+class SubscriptionError(ApplicationError):
     """Base exception for subscription application services."""
 
     pass
 
 
-class SubscriptionNotFound(SubscriptionApplicationError):
+class SubscriptionNotFound(SubscriptionError):
     """Raised when a subscription cannot be found."""
 
     pass
 
 
-class ActiveSubscriptionAlreadyExists(SubscriptionApplicationError):
+class ActiveSubscriptionAlreadyExists(SubscriptionError):
     """Raised when a subscription already exists for a user and plan."""
 
     pass
 
 
-class IdempotencyConflict(SubscriptionApplicationError):
+class IdempotencyConflict(SubscriptionError):
     """Raised when a request has already been processed."""
 
     pass

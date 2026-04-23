@@ -1,10 +1,10 @@
-from .commands import (
+from .subscription_commands import (
     CancelSubscriptionCommand,
     CreateSubscriptionCommand,
     GrantSubscriptionCreditsCommand,
     RenewSubscriptionCommand,
 )
-from .dto import SubscriptionDTO, SubscriptionGrantDTO
+from .subscription_dto import SubscriptionDTO, SubscriptionGrantDTO
 from .exceptions import (
     ActiveSubscriptionAlreadyExists,
     IdempotencyConflict,

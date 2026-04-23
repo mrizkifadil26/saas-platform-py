@@ -14,13 +14,13 @@ from billing.shared.application.interfaces import (
     IdempotencyStore,
 )
 from billing.shared.domain.time import utc_now
-from billing.subscription.application.commands import (
+from billing.subscription.application.subscription_commands import (
     CancelSubscriptionCommand,
     CreateSubscriptionCommand,
     GrantSubscriptionCreditsCommand,
     RenewSubscriptionCommand,
 )
-from billing.subscription.application.dto import (
+from billing.subscription.application.subscription_dto import (
     SubscriptionDTO,
     SubscriptionGrantDTO,
     to_subscription_dto,
