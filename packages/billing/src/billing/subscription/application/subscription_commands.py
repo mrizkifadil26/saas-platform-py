@@ -20,8 +20,8 @@ class CreateSubscriptionCommand:
     # TODO: should use customer_id instead of user_id
     user_id: str
     plan_id: str
-    current_period_start: datetime
-    current_period_end: datetime
+    period_start: datetime
+    period_end: datetime
     items: tuple[CreateSubscriptionItemCommand, ...] = ()
     provider_subscription_id: str | None = None
     trial: bool = False

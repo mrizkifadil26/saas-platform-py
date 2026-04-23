@@ -15,11 +15,11 @@ from billing.subscription.application.subscription_dto import (
 )
 from billing.subscription.application.subscription_mappers import SubscriptionMapper
 from billing.subscription.application.subscription_queries import GetSubscriptionQuery
+from billing.subscription.application.subscription_uow import SubscriptionUnitOfWork
 from billing.subscription.domain.subscription_factory import SubscriptionFactory
 from billing.subscription.domain.value_objects.billing_period import BillingPeriod
 from billing.subscription.domain.value_objects.plan_id import PlanId
 from billing.subscription.domain.value_objects.subscription_id import SubscriptionId
-from billing.subscription.infrastructure.uow import SubscriptionUnitOfWork
 
 
 class CreateSubscriptionHandler:
@@ -57,8 +57,8 @@ class CreateSubscriptionHandler:
             # TODO: should implement customer_id than user_id
             user_id=UserId(command.user_id),
             plan_id=PlanId(command.plan_id),
-            period_start=command.current_period_start,
-            period_end=command.current_period_end,
+            period_start=command.period_start,
+            period_end=command.period_end,
             items=items,
             provider_subscription_id=command.provider_subscription_id,
             trial=command.trial,
@@ -228,9 +228,10 @@ class GetSubscriptionHandler:
         self._uow = uow
 
     def handle(self, query: GetSubscriptionQuery) -> SubscriptionDTO:
+        subscription_id = SubscriptionId(query.subscription_id)
         with self._uow:
-            subscription = self._uow.subscriptions.get_by_id(
-                query.subscription_id,
+            subscription = self._uow.subscriptions.get(
+                subscription_id,
             )
             if subscription is None:
                 raise SubscriptionNotFound(
