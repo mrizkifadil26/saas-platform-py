@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from billing.domain.credits.value_objects import ProductCode
-from billing.domain.value_objects.feature_code import FeatureCode
-from billing.domain.value_objects.subscription_item_id import SubscriptionItemId
+from billing.subscription.domain.value_objects.feature_code import FeatureCode
+from billing.subscription.domain.value_objects.product_code import ProductCode
+from billing.subscription.domain.value_objects.subscription_item_id import (
+    SubscriptionItemId,
+)
 
 
 @dataclass(frozen=True, slots=True)

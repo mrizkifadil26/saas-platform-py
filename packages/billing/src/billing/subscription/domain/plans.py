@@ -1,35 +1,35 @@
 from decimal import Decimal
+from typing import NewType
 
-from billing.domain.payg.value_objects import Money
-from billing.domain.pricing.entities import SubscriptionPlan
-from billing.domain.shared.enums import BillingInterval
-from billing.domain.shared.value_objects import PlanCode
-from billing.domain.subscription.exceptions import (
-    UnknownPlan,
-)
-from billing.domain.value_objects.credits import Credits
+from billing.credits.domain.value_objects.credits import Credits
+from billing.pricing.domain.entities import SubscriptionPlan
+from billing.shared.domain.enums import BillingInterval
+from billing.shared.domain.value_objects.currency import Currency
+from billing.shared.domain.value_objects.money import Money
 
-CATALOG: dict[str, SubscriptionPlan] = {
-    "sub_basic_monthly": SubscriptionPlan(
+PlanCode = NewType("PlanCode", str)
+
+CATALOG: dict[PlanCode, SubscriptionPlan] = {
+    PlanCode("sub_basic_monthly"): SubscriptionPlan(
         code=PlanCode("sub_basic_monthly"),
         name="Basic Monthly",
         interval=BillingInterval.MONTH,
         included_credits=Credits(1000),
-        price=Money(amount=Decimal("99.00"), currency="USD"),
+        price=Money(amount=Decimal("99.00"), currency=Currency.USD),
     ),
-    "sub_pro_monthly": SubscriptionPlan(
+    PlanCode("sub_pro_monthly"): SubscriptionPlan(
         code=PlanCode("sub_pro_monthly"),
         name="Pro Monthly",
         interval=BillingInterval.MONTH,
         included_credits=Credits(5000),
-        price=Money(amount=Decimal("299.00"), currency="USD"),
+        price=Money(amount=Decimal("299.00"), currency=Currency.USD),
     ),
-    "sub_enterprise_monthly": SubscriptionPlan(
+    PlanCode("sub_enterprise_monthly"): SubscriptionPlan(
         code=PlanCode("sub_enterprise_monthly"),
         name="Enterprise Monthly",
         interval=BillingInterval.MONTH,
         included_credits=Credits(20000),
-        price=Money(amount=Decimal("999.00"), currency="USD"),
+        price=Money(amount=Decimal("999.00"), currency=Currency.USD),
     ),
 }
 
@@ -37,8 +37,9 @@ CATALOG: dict[str, SubscriptionPlan] = {
 def get_subscription_plan(
     code: PlanCode,
 ) -> SubscriptionPlan:
-    p = CATALOG.get(str(code))
+    p = CATALOG.get(code)
     if not p:
-        raise UnknownPlan(str(code))
+        # TODO: should we raise a domain-specific exception here?
+        raise ValueError(str(code))
 
     return p

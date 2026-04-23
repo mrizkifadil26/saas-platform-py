@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from billing.domain.shared.domain_event import DomainEvent
-from billing.domain.shared.ids import UserId
-from billing.domain.value_objects.plan_id import PlanId
-from billing.domain.value_objects.subscription_id import SubscriptionId
+from billing.shared.domain.domain_event import DomainEvent
+from billing.shared.domain.value_objects.user_id import UserId
+from billing.subscription.domain.value_objects.plan_id import PlanId
+from billing.subscription.domain.value_objects.subscription_id import SubscriptionId
 
 
 @dataclass(frozen=True, slots=True)

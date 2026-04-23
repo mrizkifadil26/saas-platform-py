@@ -1,4 +1,4 @@
-from billing.exceptions import DomainError
+from billing.shared.exceptions import DomainError
 
 
 class SubscriptionError(DomainError):
