@@ -1,6 +1,0 @@
-from typing import Protocol
-
-
-class SupportsCommitRollback(Protocol):
-    async def commit(self) -> None: ...
-    async def rollback(self) -> None: ...
