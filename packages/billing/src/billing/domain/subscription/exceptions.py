@@ -1,23 +1,25 @@
-from billing.domain.shared.exceptions import (
-    BillingDomainError,
-)
+from billing.exceptions import DomainError
 
 
-class SubscriptionDomainError(BillingDomainError):
+class SubscriptionError(DomainError):
     """Base exception for subscription domain errors."""
 
 
-class UnknownPlan(SubscriptionDomainError):
-    """Raised when an unknown subscription plan code is used."""
+class InvalidSubscriptionStateError(SubscriptionError):
+    """Raised when an operation is attempted on a subscription in an invalid state."""
 
 
-class InvalidSubscriptionStatus(SubscriptionDomainError):
-    """Raised when an invalid subscription status is encountered."""
+class InvalidSubscriptionPeriodError(SubscriptionError):
+    """Raised when the subscription period is invalid."""
 
 
-class DuplicatePeriodGrant(SubscriptionDomainError):
-    """Raised when a subscription period grant is duplicated."""
+class SubscriptionAlreadyCanceledError(SubscriptionError):
+    """Raised when an attempt is made to cancel an already canceled subscription."""
 
 
-class InvalidBillingPeriod(SubscriptionDomainError):
-    """Raised when the billing period is invalid."""
+class RecurringCreditsAlreadyGrantedError(SubscriptionError):
+    """Raised when an attempt is made to grant recurring credits that have already been granted."""
+
+
+class InvalidSubscriptionItemError(SubscriptionError):
+    """Raised when an invalid subscription item is encountered."""
