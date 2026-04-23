@@ -1,44 +1,41 @@
 import hashlib
 import json
 
-from billing.application.subscription.commands import (
-    CancelSubscriptionCommand,
-    CreateSubscriptionCommand,
-    GrantSubscriptionCreditsCommand,
-    RenewSubscriptionCommand,
-)
-from billing.application.subscription.dto import (
-    SubscriptionDTO,
-    SubscriptionGrantDTO,
-    to_subscription_dto,
-    to_subscription_grant_dto,
-)
-from billing.application.subscription.exceptions import (
-    ActiveSubscriptionAlreadyExists,
-    IdempotencyConflict,
-    SubscriptionNotFound,
-)
-from billing.application.subscription.interfaces import (
-    SubscriptionApplicationUnitOfWork,
-)
-from billing.domain.credits.value_objects import GrantId
-from billing.domain.shared.time import utc_now
-from billing.domain.subscription.domain_services import (
+from billing.subscription.domain.domain_services import (
     cancel_subscription,
     create_subscription,
     grant_subscription_credits,
     renew_subscription,
 )
-from billing.domain.subscription.entities import (
-    Subscription,
-)
-from billing.domain.subscription.value_objects import (
-    SubscriptionId,
-)
 
+from billing.credits.domain.value_objects.ids import GrantId
 from billing.shared.application.interfaces import (
     EventPublisher,
     IdempotencyStore,
+)
+from billing.shared.domain.time import utc_now
+from billing.subscription.application.commands import (
+    CancelSubscriptionCommand,
+    CreateSubscriptionCommand,
+    GrantSubscriptionCreditsCommand,
+    RenewSubscriptionCommand,
+)
+from billing.subscription.application.dto import (
+    SubscriptionDTO,
+    SubscriptionGrantDTO,
+    to_subscription_dto,
+    to_subscription_grant_dto,
+)
+from billing.subscription.application.exceptions import (
+    ActiveSubscriptionAlreadyExists,
+    IdempotencyConflict,
+    SubscriptionNotFound,
+)
+from billing.subscription.application.interfaces import (
+    SubscriptionApplicationUnitOfWork,
+)
+from billing.subscription.domain.value_objects.subscription_id import (
+    SubscriptionId,
 )
 
 
@@ -59,11 +56,7 @@ class SubscriptionApplicationService:
     ) -> SubscriptionDTO:
         now = cmd.now or utc_now()
 
-        existing = (
-            await self.uow.subscription.get_active_for_user(
-                cmd.user_id
-            )
-        )
+        existing = await self.uow.subscription.get_active_for_user(cmd.user_id)
 
         if existing is not None:
             raise ActiveSubscriptionAlreadyExists(
@@ -80,9 +73,7 @@ class SubscriptionApplicationService:
             provider_subscription_id=cmd.provider_subscription_id,
         )
 
-        await self.uow.subscription.save(
-            result.subscription
-        )
+        await self.uow.subscription.save(result.subscription)
         self._publish(result.event)
         await self.uow.commit()
 
@@ -94,20 +85,14 @@ class SubscriptionApplicationService:
     ) -> SubscriptionDTO:
         now = cmd.now or utc_now()
 
-        subscription = (
-            await self._get_subscription_or_raise(
-                cmd.subscription_id
-            )
-        )
+        subscription = await self._get_subscription_or_raise(cmd.subscription_id)
         result = cancel_subscription(
             subscription=subscription,
             now=now,
             immediate=cmd.immediate,
         )
 
-        await self.uow.subscription.save(
-            result.subscription
-        )
+        await self.uow.subscription.save(result.subscription)
         self._publish(result.event)
         await self.uow.commit()
 
@@ -119,11 +104,7 @@ class SubscriptionApplicationService:
     ) -> SubscriptionDTO:
         now = cmd.now or utc_now()
 
-        subscription = (
-            await self._get_subscription_or_raise(
-                cmd.subscription_id
-            )
-        )
+        subscription = await self._get_subscription_or_raise(cmd.subscription_id)
         result = renew_subscription(
             subscription=subscription,
             next_period_start=cmd.next_period_start,
@@ -131,9 +112,7 @@ class SubscriptionApplicationService:
             now=now,
         )
 
-        await self.uow.subscription.save(
-            result.subscription
-        )
+        await self.uow.subscription.save(result.subscription)
         self._publish(result.event)
         await self.uow.commit()
 
@@ -145,16 +124,9 @@ class SubscriptionApplicationService:
     ) -> SubscriptionGrantDTO:
         now = cmd.now or utc_now()
 
-        subscription = (
-            await self._get_subscription_or_raise(
-                cmd.subscription_id
-            )
-        )
+        subscription = await self._get_subscription_or_raise(cmd.subscription_id)
 
-        if (
-            cmd.request_id is not None
-            and self.idempotency_store is not None
-        ):
+        if cmd.request_id is not None and self.idempotency_store is not None:
             key = self._idempotency_key_for_grant(cmd)
             fingerprint = self._grant_fingerprint(cmd)
 
@@ -179,9 +151,7 @@ class SubscriptionApplicationService:
             now=now,
         )
 
-        await self.uow.subscription.save(
-            result.subscription
-        )
+        await self.uow.subscription.save(result.subscription)
 
         # NOTE:
         # This service only handles subscription application flow.
@@ -190,10 +160,7 @@ class SubscriptionApplicationService:
         await self.uow.credit_grant.save(result.grant)
         self._publish(result.event)
 
-        if (
-            cmd.request_id is not None
-            and self.idempotency_store is not None
-        ):
+        if cmd.request_id is not None and self.idempotency_store is not None:
             self.idempotency_store.save(
                 self._idempotency_key_for_grant(cmd),
                 self._grant_fingerprint(cmd),
@@ -207,11 +174,7 @@ class SubscriptionApplicationService:
         self,
         subscription_id: SubscriptionId,
     ) -> SubscriptionDTO:
-        subscription = (
-            await self._get_subscription_or_raise(
-                subscription_id
-            )
-        )
+        subscription = await self._get_subscription_or_raise(subscription_id)
 
         return to_subscription_dto(subscription)
 
@@ -219,14 +182,10 @@ class SubscriptionApplicationService:
         self,
         subscription_id: SubscriptionId,
     ) -> Subscription:
-        subscription = await self.uow.subscription.get(
-            subscription_id
-        )
+        subscription = await self.uow.subscription.get(subscription_id)
 
         if subscription is None:
-            raise SubscriptionNotFound(
-                f"Subscription {subscription_id} not found"
-            )
+            raise SubscriptionNotFound(f"Subscription {subscription_id} not found")
 
         return subscription
 

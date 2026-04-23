@@ -1,10 +1,8 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from billing.domain.credits.value_objects import Credits
-from billing.domain.subscription.value_objects import (
-    SubscriptionStatus,
-)
+from billing.credits.domain.value_objects.credits import Credits
+from billing.subscription.domain.subscription_status import SubscriptionStatus
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,15 +47,11 @@ def to_subscription_grant_dto(
     result,
 ) -> SubscriptionGrantDTO:
     return SubscriptionGrantDTO(
-        subscription_id=str(
-            result.subscription.subscription_id
-        ),
+        subscription_id=str(result.subscription.subscription_id),
         user_id=str(result.subscription.user_id),
         plan_code=str(result.plan.code),
         grant_id=str(result.grant.grant_id),
         credits=result.grant.granted_credits,
         expires_at=result.grant.expires_at,
-        request_id=str(result.grant.request_id)
-        if result.grant.request_id
-        else None,
+        request_id=str(result.grant.request_id) if result.grant.request_id else None,
     )

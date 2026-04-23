@@ -1,14 +1,15 @@
 from collections.abc import AsyncIterator
 
-from billing.infrastructure.subscription.uow import (
-    SubscriptionUnitOfWork,
-)
 from db.config import AppDBSettings
 from db.engines import (
     make_app_engine,
     make_app_sessionmaker,
 )
 from db.sessions import get_app_session
+
+from billing.subscription.infrastructure.uow import (
+    SubscriptionUnitOfWork,
+)
 
 cfg = AppDBSettings(
     database_url="postgresql+asyncpg://user:pass@localhost:5432/app",
@@ -21,8 +22,6 @@ engine = make_app_engine(cfg)
 sessionmaker = make_app_sessionmaker(engine)
 
 
-async def get_subscription_uow() -> AsyncIterator[
-    SubscriptionUnitOfWork
-]:
+async def get_subscription_uow() -> AsyncIterator[SubscriptionUnitOfWork]:
     async for session in get_app_session(sessionmaker):
         yield SubscriptionUnitOfWork(session)

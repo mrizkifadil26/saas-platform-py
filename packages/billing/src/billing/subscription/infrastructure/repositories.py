@@ -1,19 +1,11 @@
-from billing.domain.shared.ids import UserId
-from billing.domain.subscription.entities import (
-    Subscription,
-)
-from billing.domain.subscription.subscription_repository import (
-    SubscriptionRepository,
-)
-from billing.domain.subscription.value_objects import (
-    SubscriptionId,
-)
-from billing.infrastructure.subscription.mappers import (
-    copy_to_model,
-    to_domain,
-)
 from db.repositories.app.base import AsyncRepository
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from billing.shared.domain.value_objects.user_id import UserId
+from billing.subscription.domain.subscription import Subscription
+from billing.subscription.domain.subscription_repository import SubscriptionRepository
+from billing.subscription.domain.value_objects.subscription_id import SubscriptionId
+from billing.subscription.infrastructure.mappers import copy_to_model, to_domain
 
 from .models import (
     SubscriptionModel,
@@ -40,18 +32,14 @@ class SqlAlchemySubscriptionRepository(
 
         return to_domain(model)
 
-    def get_active_for_user(
-        self, user_id: UserId
-    ) -> Subscription | None:
+    def get_active_for_user(self, user_id: UserId) -> Subscription | None:
         model = (
             self.db.query(SubscriptionModel)
             .filter_by(
                 user_id=str(user_id),
                 status="active",
             )
-            .order_by(
-                SubscriptionModel.current_period_end.desc()
-            )
+            .order_by(SubscriptionModel.current_period_end.desc())
             .first()
         )
 
@@ -68,9 +56,7 @@ class SqlAlchemySubscriptionRepository(
 
         if model is None:
             model = SubscriptionModel(
-                subscription_id=str(
-                    subscription.subscription_id
-                ),
+                subscription_id=str(subscription.subscription_id),
             )
             self.db.add(model)
 

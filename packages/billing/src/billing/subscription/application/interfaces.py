@@ -1,9 +1,7 @@
 from typing import Protocol
 
-from billing.domain.credits.entities import CreditGrant
-from billing.domain.subscription.subscription_repository import (
-    SubscriptionRepository,
-)
+from billing.credits.domain.entities import CreditGrant
+from billing.subscription.domain.subscription_repository import SubscriptionRepository
 
 
 class CreditGrantWriter(Protocol):

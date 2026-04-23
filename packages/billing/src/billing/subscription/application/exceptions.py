@@ -1,6 +1,4 @@
-from billing.shared.application.exceptions import (
-    ApplicationError,
-)
+from billing.shared.exceptions import ApplicationError
 
 
 class SubscriptionApplicationError(ApplicationError):
@@ -15,9 +13,7 @@ class SubscriptionNotFound(SubscriptionApplicationError):
     pass
 
 
-class ActiveSubscriptionAlreadyExists(
-    SubscriptionApplicationError
-):
+class ActiveSubscriptionAlreadyExists(SubscriptionApplicationError):
     """Raised when a subscription already exists for a user and plan."""
 
     pass
