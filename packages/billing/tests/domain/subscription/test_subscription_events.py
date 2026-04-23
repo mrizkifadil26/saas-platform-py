@@ -3,7 +3,7 @@ from datetime import timedelta
 from billing.domain.credits.value_objects import Credits
 from billing.domain.shared.ids import UserId
 from billing.domain.shared.value_objects import PlanCode
-from billing.domain.subscription.events import (
+from billing.domain.subscription.subscription_events import (
     SubscriptionCanceled,
     SubscriptionCreated,
     SubscriptionCreditsGranted,

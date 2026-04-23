@@ -1,5 +1,4 @@
 import pytest
-
 from billing.domain.credits.value_objects import Credits
 from billing.domain.payg.catalogs import (
     PaygPack,

@@ -1,7 +1,6 @@
 # packages/billing/tests/domain/shared/test_value_objects.py
 
 import pytest
-
 from billing.domain.shared.value_objects import PlanCode
 
 

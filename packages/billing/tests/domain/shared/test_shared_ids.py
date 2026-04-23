@@ -1,7 +1,6 @@
 # packages/billing/tests/domain/shared/test_ids.py
 
 import pytest
-
 from billing.domain.shared.ids import RequestId, UserId
 
 

@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 
 import pytest
-
 from billing.application.subscription.interfaces import (
     CreditGrantWriter,
     EventPublisher,

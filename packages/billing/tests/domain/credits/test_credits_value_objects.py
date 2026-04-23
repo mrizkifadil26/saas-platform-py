@@ -1,7 +1,6 @@
 # packages/billing/tests/domain/credits/test_value_objects.py
 
 import pytest
-
 from billing.domain.credits.exceptions import (
     InvalidCreditsAmount,
 )

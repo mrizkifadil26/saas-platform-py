@@ -3,7 +3,6 @@
 from datetime import timedelta
 
 import pytest
-
 from billing.domain.credits.entities import (
     CreditConsumption,
     CreditGrant,

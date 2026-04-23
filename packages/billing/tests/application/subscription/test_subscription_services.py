@@ -1,7 +1,6 @@
 from datetime import timedelta
 
 import pytest
-
 from billing.application.subscription.commands import (
     CancelSubscriptionCommand,
     CreateSubscriptionCommand,
@@ -17,15 +16,15 @@ from billing.application.subscription.services import (
     SubscriptionApplicationService,
 )
 from billing.domain.shared.ids import RequestId
-from billing.domain.subscription.events import (
+from billing.domain.subscription.exceptions import (
+    DuplicatePeriodGrant,
+    InvalidSubscriptionStatus,
+)
+from billing.domain.subscription.subscription_events import (
     SubscriptionCanceled,
     SubscriptionCreated,
     SubscriptionCreditsGranted,
     SubscriptionRenewed,
-)
-from billing.domain.subscription.exceptions import (
-    DuplicatePeriodGrant,
-    InvalidSubscriptionStatus,
 )
 from billing.domain.subscription.value_objects import (
     SubscriptionId,

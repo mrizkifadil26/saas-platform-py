@@ -10,6 +10,7 @@ from billing.domain.shared.value_objects import PlanCode
 from billing.domain.subscription.entities import (
     Subscription,
 )
+
 from billing.domain.wallet.domain_services import (
     build_wallet,
     get_billing_summary,

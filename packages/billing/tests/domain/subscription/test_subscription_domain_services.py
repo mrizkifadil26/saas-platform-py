@@ -1,7 +1,6 @@
 from datetime import timedelta
 
 import pytest
-
 from billing.domain.shared.ids import UserId
 from billing.domain.shared.value_objects import PlanCode
 from billing.domain.subscription.domain_services import (

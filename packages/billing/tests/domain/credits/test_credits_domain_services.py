@@ -1,7 +1,6 @@
 from datetime import timedelta
 
 import pytest
-
 from billing.domain.credits.domain_services import (
     consume_credits,
 )

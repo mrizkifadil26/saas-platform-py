@@ -1,5 +1,4 @@
 import pytest
-
 from billing.domain.credits.value_objects import Credits
 from billing.domain.shared.value_objects import PlanCode
 from billing.domain.subscription.exceptions import (
