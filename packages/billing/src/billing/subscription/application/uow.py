@@ -1,25 +1,14 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
+
+from db import AbstractUoW
 
 from billing.subscription.domain.subscription_repository import SubscriptionRepository
 
 
-class SubscriptionUnitOfWork(ABC):
-    subscriptions: SubscriptionRepository
-
+class AbstractSubscriptionUoW(AbstractUoW):
+    @property
     @abstractmethod
-    async def __enter__(self) -> SubscriptionUnitOfWork:
-        raise NotImplementedError
-
-    @abstractmethod
-    async def __exit__(self, exc_type, exc, tb) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    async def commit(self) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    async def rollback(self) -> None:
+    def subscriptions(self) -> SubscriptionRepository:
         raise NotImplementedError
