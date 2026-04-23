@@ -1,34 +1,49 @@
+from __future__ import annotations
+
 import pytest
-from db.uow.base import AsyncUnitOfWork
 
 
-class FakeSession:
+class FakeUnitOfWork:
     def __init__(self):
         self.committed = False
         self.rolled_back = False
 
-    async def commit(self):
+    async def __aenter__(self) -> FakeUnitOfWork:
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        if exc_type is not None:
+            await self.rollback()
+        else:
+            await self.commit()
+
+    async def commit(self) -> None:
         self.committed = True
 
-    async def rollback(self):
+    async def rollback(self) -> None:
         self.rolled_back = True
 
 
 @pytest.mark.asyncio
-async def test_uow_commit():
-    session = FakeSession()
-    uow = AsyncUnitOfWork(session)
+async def test_transaction_mtest_uow_commits_when_block_succeedsanager_commits_when_no_exception() -> (
+    None
+):
+    uow = FakeUnitOfWork()
 
-    await uow.commit()
+    async with uow:
+        pass
 
-    assert session.committed is True
+    assert uow.committed is True
+    assert uow.rolled_back is False
 
 
 @pytest.mark.asyncio
-async def test_uow_rollback():
-    session = FakeSession()
-    uow = AsyncUnitOfWork(session)
+async def test_uow_rolls_back_when_block_fails() -> None:
+    uow = FakeUnitOfWork()
 
-    await uow.rollback()
+    with pytest.raises(RuntimeError):
+        async with uow:
+            raise RuntimeError("fail")
 
-    assert session.rolled_back is True
+    assert uow.committed is False
+    assert uow.rolled_back is True
