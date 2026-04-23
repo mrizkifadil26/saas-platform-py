@@ -8,7 +8,7 @@ from db.config.settings import ProductDBSettings
 
 def create_product_engine(cfg: ProductDBSettings) -> AsyncEngine:
     return create_async_engine(
-        cfg.db_url,
+        cfg.url,
         pool_pre_ping=True,
         pool_size=cfg.pool_size,
         max_overflow=cfg.max_overflow,
