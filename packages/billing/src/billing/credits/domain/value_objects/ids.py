@@ -44,9 +44,7 @@ class CreditBalance:
 
     def __post_init__(self):
         if self.amount.value < 0:
-            raise InvalidCreditsAmount(
-                "Credit balance cannot be negative"
-            )
+            raise InvalidCreditsAmount("Credit balance cannot be negative")
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,9 +53,7 @@ class CreditAccountId:
 
     def __post_init__(self) -> None:
         if not self.value.strip():
-            raise ValueError(
-                "CreditAccountId cannot be blank"
-            )
+            raise ValueError("CreditAccountId cannot be blank")
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,9 +62,7 @@ class CreditGrantId:
 
     def __post_init__(self) -> None:
         if not self.value.strip():
-            raise ValueError(
-                "CreditGrantId cannot be blank"
-            )
+            raise ValueError("CreditGrantId cannot be blank")
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,9 +71,7 @@ class CreditConsumptionId:
 
     def __post_init__(self) -> None:
         if not self.value.strip():
-            raise ValueError(
-                "CreditConsumptionId cannot be blank"
-            )
+            raise ValueError("CreditConsumptionId cannot be blank")
 
 
 @dataclass(frozen=True, slots=True)
@@ -88,9 +80,7 @@ class LedgerEntryId:
 
     def __post_init__(self) -> None:
         if not self.value.strip():
-            raise ValueError(
-                "LedgerEntryId cannot be blank"
-            )
+            raise ValueError("LedgerEntryId cannot be blank")
 
 
 @dataclass(frozen=True, slots=True)

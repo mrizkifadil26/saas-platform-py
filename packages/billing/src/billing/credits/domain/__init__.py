@@ -12,9 +12,9 @@ from .events import (
 from .value_objects import (
     ConsumptionAllocation,
     ConsumptionId,
-    Credits,
     GrantId,
 )
+from .value_objects.credits import Credits
 
 __all__ = [
     "ConsumeCreditsResult",
