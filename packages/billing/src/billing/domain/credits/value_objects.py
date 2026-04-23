@@ -8,37 +8,6 @@ from billing.domain.credits.exceptions import (
 )
 
 
-@dataclass(frozen=True, slots=True)
-class Credits:
-    value: int
-
-    def __post_init__(self):
-        if self.value < 0:
-            raise InvalidCreditsAmount(
-                "Credits must be non-negative"
-            )
-
-    def __int__(self) -> int:
-        return self.value
-
-    def is_zero(self) -> bool:
-        return self.value == 0
-
-    def __add__(self, other: Credits) -> Credits:
-        return Credits(self.value + other.value)
-
-    def __sub__(self, other: Credits) -> Credits:
-        result = self.value - other.value
-        if result < 0:
-            raise InvalidCreditsAmount(
-                "Insufficient credits"
-            )
-
-        return Credits(result)
-
-    def __str__(self) -> str:
-        return str(self.value)
-
 
 @dataclass(frozen=True, slots=True)
 class GrantId:
