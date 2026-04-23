@@ -8,16 +8,16 @@ from billing.shared.application.event_publisher import EventPublisher
 from billing.shared.application.id_generator import IdGenerator
 from billing.shared.infrastructure.services.system_clock import SystemClock
 from billing.shared.infrastructure.services.uuid_generator import UUIDGenerator
-from billing.subscription.application.subscription_commands import (
+from billing.subscription.application.commands import (
     CreateSubscriptionCommand,
     CreateSubscriptionItemCommand,
 )
-from billing.subscription.application.subscription_dto import SubscriptionDTO
-from billing.subscription.application.subscription_handlers import (
+from billing.subscription.application.dto import SubscriptionDTO
+from billing.subscription.application.handlers import (
     CreateSubscriptionHandler,
 )
-from billing.subscription.infrastructure.persistence.sqlalchemy.sqlalchemy_uow import (
-    SQLAlchemyUnitOfWork,
+from billing.subscription.infrastructure.persistence.sqlalchemy.sql_subscription_uow import (
+    SQLSubscriptionUoW,
 )
 
 router = APIRouter(prefix="/subscriptions", tags=["subscriptions"])
@@ -68,8 +68,8 @@ def get_session_factory():
 
 def get_uow(
     session_factory=Depends(get_session_factory),
-) -> SQLAlchemyUnitOfWork:
-    return SQLAlchemyUnitOfWork(session_factory)
+) -> SQLSubscriptionUoW:
+    return SQLSubscriptionUoW(session_factory)
 
 
 def get_clock() -> SystemClock:
@@ -122,7 +122,7 @@ def to_response(dto: SubscriptionDTO) -> SubscriptionResponse:
 async def create_subscription(
     request: CreateSubscriptionRequest,
     # uow=Depends(get_subscription_uow),
-    uow: Annotated[SQLAlchemyUnitOfWork, Depends(get_uow)],
+    uow: Annotated[SQLSubscriptionUoW, Depends(get_uow)],
     clock: Annotated[SystemClock, Depends(get_clock)],
     id_generator: Annotated[IdGenerator, Depends(get_id_generator)],
     event_publisher: Annotated[EventPublisher, Depends(get_event_publisher)],

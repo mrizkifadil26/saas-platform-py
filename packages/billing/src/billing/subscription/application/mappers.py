@@ -1,7 +1,7 @@
-from billing.subscription.application.subscription_commands import (
+from billing.subscription.application.commands import (
     CreateSubscriptionItemCommand,
 )
-from billing.subscription.application.subscription_dto import (
+from billing.subscription.application.dto import (
     SubscriptionDTO,
     SubscriptionItemDTO,
 )

@@ -3,19 +3,19 @@ from billing.shared.application.event_publisher import EventPublisher
 from billing.shared.application.id_generator import IdGenerator
 from billing.shared.domain.value_objects.user_id import UserId
 from billing.subscription.application._event_utils import pull_events
-from billing.subscription.application.exceptions import SubscriptionNotFound
-from billing.subscription.application.subscription_commands import (
+from billing.subscription.application.commands import (
     CancelSubscriptionCommand,
     ChangeSubscriptionPlanCommand,
     CreateSubscriptionCommand,
     RenewSubscriptionCommand,
 )
-from billing.subscription.application.subscription_dto import (
+from billing.subscription.application.dto import (
     SubscriptionDTO,
 )
-from billing.subscription.application.subscription_mappers import SubscriptionMapper
-from billing.subscription.application.subscription_queries import GetSubscriptionQuery
-from billing.subscription.application.subscription_uow import SubscriptionUnitOfWork
+from billing.subscription.application.exceptions import SubscriptionNotFound
+from billing.subscription.application.mappers import SubscriptionMapper
+from billing.subscription.application.queries import GetSubscriptionQuery
+from billing.subscription.application.uow import SubscriptionUnitOfWork
 from billing.subscription.domain.subscription_factory import SubscriptionFactory
 from billing.subscription.domain.value_objects.billing_period import BillingPeriod
 from billing.subscription.domain.value_objects.plan_id import PlanId

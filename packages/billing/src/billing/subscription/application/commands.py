@@ -1,11 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from billing.shared.domain.value_objects.request_id import RequestId
-from billing.shared.domain.value_objects.user_id import UserId
-from billing.subscription.domain.plans import PlanCode
-from billing.subscription.domain.value_objects.subscription_id import SubscriptionId
-
 
 @dataclass(frozen=True, slots=True)
 class CreateSubscriptionItemCommand:

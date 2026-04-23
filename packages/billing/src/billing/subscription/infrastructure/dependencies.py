@@ -7,8 +7,8 @@ from db.engines import (
 )
 from db.sessions import get_app_session
 
-from billing.subscription.infrastructure.persistence.sqlalchemy.sqlalchemy_uow import (
-    SQLAlchemyUnitOfWork,
+from billing.subscription.infrastructure.persistence.sqlalchemy.sql_subscription_uow import (
+    SQLSubscriptionUoW,
 )
 
 cfg = AppDBSettings(
@@ -22,6 +22,6 @@ engine = make_app_engine(cfg)
 sessionmaker = make_app_sessionmaker(engine)
 
 
-async def get_subscription_uow() -> AsyncIterator[SQLAlchemyUnitOfWork]:
+async def get_subscription_uow() -> AsyncIterator[SQLSubscriptionUoW]:
     async for session in get_app_session(sessionmaker):
-        yield SQLAlchemyUnitOfWork(session)
+        yield SQLSubscriptionUoW(session)

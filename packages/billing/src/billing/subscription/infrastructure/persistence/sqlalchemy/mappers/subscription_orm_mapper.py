@@ -6,10 +6,10 @@ from billing.subscription.domain.subscription_status import SubscriptionStatus
 from billing.subscription.domain.value_objects.billing_period import BillingPeriod
 from billing.subscription.domain.value_objects.plan_id import PlanId
 from billing.subscription.domain.value_objects.subscription_id import SubscriptionId
-from billing.subscription.infrastructure.persistence.sqlalchemy.subscription_item_model import (
+from billing.subscription.infrastructure.persistence.sqlalchemy.models.subscription_item_model import (
     SubscriptionItemModel,
 )
-from billing.subscription.infrastructure.persistence.sqlalchemy.subscription_model import (
+from billing.subscription.infrastructure.persistence.sqlalchemy.models.subscription_model import (
     SubscriptionModel,
 )
 

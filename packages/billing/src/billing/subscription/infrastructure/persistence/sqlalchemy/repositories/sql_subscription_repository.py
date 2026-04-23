@@ -2,20 +2,18 @@ from db.repositories.app.base import AsyncRepository
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from billing.shared.domain.value_objects.user_id import UserId
-from billing.subscription.domain import subscription
 from billing.subscription.domain.subscription import Subscription
 from billing.subscription.domain.subscription_repository import SubscriptionRepository
-from billing.subscription.domain.value_objects.subscription_id import SubscriptionId
-from billing.subscription.infrastructure.persistence.sqlalchemy.subscription_orm_mapper import (
+from billing.subscription.infrastructure.persistence.sqlalchemy.mappers.subscription_orm_mapper import (
     SubscriptionORMMapper,
 )
 
-from .subscription_model import (
+from ..models.subscription_model import (
     SubscriptionModel,
 )
 
 
-class SqlAlchemySubscriptionRepository(
+class SQLSubscriptionRepository(
     AsyncRepository,
     SubscriptionRepository,
 ):

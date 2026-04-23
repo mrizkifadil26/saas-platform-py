@@ -1,9 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from billing.credits.domain.value_objects.credits import Credits
-from billing.subscription.domain.subscription_status import SubscriptionStatus
-
 
 @dataclass(frozen=True, slots=True)
 class SubscriptionItemDTO:
