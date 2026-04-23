@@ -1,9 +1,13 @@
-from db import Base
+from db import AppBase
 from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from billing.subscription.infrastructure.persistence.sqlalchemy.models.subscription_model import (
+    SubscriptionModel,
+)
 
-class SubscriptionItemModel(Base):
+
+class SubscriptionItemModel(AppBase):
     __tablename__ = "subscription_items"
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
@@ -18,4 +22,6 @@ class SubscriptionItemModel(Base):
     feature_code: Mapped[str] = mapped_column(String(64), nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
 
-    subscription = relationship("SubscriptionModel", back_populates="items")
+    subscription: Mapped[SubscriptionModel] = relationship(
+        back_populates="items",
+    )

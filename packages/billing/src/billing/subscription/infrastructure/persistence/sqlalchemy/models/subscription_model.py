@@ -1,11 +1,11 @@
 from datetime import datetime
 
-from db.models.base import Base
+from db import AppBase
 from sqlalchemy import Boolean, DateTime, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
-class SubscriptionModel(Base):
+class SubscriptionModel(AppBase):
     __tablename__ = "subscriptions"
 
     subscription_id: Mapped[str] = mapped_column(String(36), primary_key=True)
