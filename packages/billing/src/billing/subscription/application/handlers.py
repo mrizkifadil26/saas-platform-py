@@ -15,7 +15,7 @@ from billing.subscription.application.dto import (
 from billing.subscription.application.exceptions import SubscriptionNotFound
 from billing.subscription.application.mappers import SubscriptionMapper
 from billing.subscription.application.queries import GetSubscriptionQuery
-from billing.subscription.application.uow import SubscriptionUnitOfWork
+from billing.subscription.application.uow import AbstractSubscriptionUoW
 from billing.subscription.domain.subscription_factory import SubscriptionFactory
 from billing.subscription.domain.value_objects.billing_period import BillingPeriod
 from billing.subscription.domain.value_objects.plan_id import PlanId
@@ -26,7 +26,7 @@ class CreateSubscriptionHandler:
     def __init__(
         self,
         *,
-        uow: SubscriptionUnitOfWork,
+        uow: AbstractSubscriptionUoW,
         id_generator: IdGenerator,
         clock: Clock,
         event_publisher: EventPublisher,
@@ -40,7 +40,7 @@ class CreateSubscriptionHandler:
         # self.subscription_repository = subscription_repository
         # self.idempotency_store = idempotency_store
 
-    def handle(
+    async def handle(
         self,
         command: CreateSubscriptionCommand,
     ) -> SubscriptionDTO:
@@ -64,9 +64,9 @@ class CreateSubscriptionHandler:
             trial=command.trial,
         )
 
-        with self._uow:
-            self._uow.subscriptions.save(subscription)
-            self._uow.commit()
+        async with self._uow:
+            await self._uow.subscriptions.save(subscription)
+            await self._uow.commit()
 
         # self.idempotency_store.store(command.idempotency_key)
 
@@ -80,7 +80,7 @@ class RenewSubscriptionHandler:
     def __init__(
         self,
         *,
-        uow: SubscriptionUnitOfWork,
+        uow: AbstractSubscriptionUoW,
         clock: Clock,
         event_publisher: EventPublisher,
         # idempotency_store: IdempotencyStore,
@@ -91,7 +91,7 @@ class RenewSubscriptionHandler:
 
         # self.idempotency_store = idempotency_store
 
-    def handle(
+    async def handle(
         self,
         command: RenewSubscriptionCommand,
     ) -> SubscriptionDTO:
@@ -100,8 +100,8 @@ class RenewSubscriptionHandler:
         # raise ValueError("Duplicate request")
         subscription_id = SubscriptionId(command.subscription_id)
 
-        with self._uow:
-            subscription = self._uow.subscriptions.get(subscription_id)
+        async with self._uow:
+            subscription = await self._uow.subscriptions.get(subscription_id)
             if subscription is None:
                 raise SubscriptionNotFound(
                     f"Subscription not found: {command.subscription_id}"
@@ -117,8 +117,8 @@ class RenewSubscriptionHandler:
                 occurred_at=self._clock.now(),
             )
 
-            self._uow.subscriptions.save(updated_subscription)
-            self._uow.commit()
+            await self._uow.subscriptions.save(updated_subscription)
+            await self._uow.commit()
 
         # self.idempotency_store.store(command.idempotency_key)
 
@@ -132,7 +132,7 @@ class ChangeSubscriptionPlanHandler:
     def __init__(
         self,
         *,
-        uow: SubscriptionUnitOfWork,
+        uow: AbstractSubscriptionUoW,
         clock: Clock,
         event_publisher: EventPublisher,
         # idempotency_store: IdempotencyStore,
@@ -143,7 +143,7 @@ class ChangeSubscriptionPlanHandler:
 
         # self.idempotency_store = idempotency_store
 
-    def handle(
+    async def handle(
         self,
         command: ChangeSubscriptionPlanCommand,
     ) -> SubscriptionDTO:
@@ -153,8 +153,8 @@ class ChangeSubscriptionPlanHandler:
         subscription_id = SubscriptionId(command.subscription_id)
         new_plan_id = PlanId(command.new_plan_id)
 
-        with self._uow:
-            subscription = self._uow.subscriptions.get(subscription_id)
+        async with self._uow:
+            subscription = await self._uow.subscriptions.get(subscription_id)
             if subscription is None:
                 raise SubscriptionNotFound(
                     f"Subscription not found: {command.subscription_id}"
@@ -165,8 +165,8 @@ class ChangeSubscriptionPlanHandler:
                 occurred_at=self._clock.now(),
             )
 
-            self._uow.subscriptions.save(updated_subscription)
-            self._uow.commit()
+            await self._uow.subscriptions.save(updated_subscription)
+            await self._uow.commit()
 
         # self.idempotency_store.store(command.idempotency_key)
 
@@ -180,7 +180,7 @@ class CancelSubscriptionHandler:
     def __init__(
         self,
         *,
-        uow: SubscriptionUnitOfWork,
+        uow: AbstractSubscriptionUoW,
         clock: Clock,
         event_publisher: EventPublisher,
         # idempotency_store: IdempotencyStore,
@@ -191,7 +191,7 @@ class CancelSubscriptionHandler:
 
         # self.idempotency_store = idempotency_store
 
-    def handle(
+    async def handle(
         self,
         command: CancelSubscriptionCommand,
     ) -> SubscriptionDTO:
@@ -200,8 +200,8 @@ class CancelSubscriptionHandler:
         # raise ValueError("Duplicate request")
         subscription_id = SubscriptionId(command.subscription_id)
 
-        with self._uow:
-            subscription = self._uow.subscriptions.get(subscription_id)
+        async with self._uow:
+            subscription = await self._uow.subscriptions.get(subscription_id)
             if subscription is None:
                 raise SubscriptionNotFound(
                     f"Subscription not found: {command.subscription_id}"
@@ -212,8 +212,8 @@ class CancelSubscriptionHandler:
                 occurred_at=self._clock.now(),
             )
 
-            self._uow.subscriptions.save(updated_subscription)
-            self._uow.commit()
+            await self._uow.subscriptions.save(updated_subscription)
+            await self._uow.commit()
 
         # self.idempotency_store.store(command.idempotency_key)
 
@@ -224,13 +224,17 @@ class CancelSubscriptionHandler:
 
 
 class GetSubscriptionHandler:
-    def __init__(self, *, uow: SubscriptionUnitOfWork) -> None:
+    def __init__(
+        self,
+        *,
+        uow: AbstractSubscriptionUoW,
+    ) -> None:
         self._uow = uow
 
-    def handle(self, query: GetSubscriptionQuery) -> SubscriptionDTO:
+    async def handle(self, query: GetSubscriptionQuery) -> SubscriptionDTO:
         subscription_id = SubscriptionId(query.subscription_id)
-        with self._uow:
-            subscription = self._uow.subscriptions.get(
+        async with self._uow:
+            subscription = await self._uow.subscriptions.get(
                 subscription_id,
             )
             if subscription is None:

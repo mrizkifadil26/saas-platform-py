@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import Annotated
 
+from db.app_db.engine import AppDBSettings, create_app_engine
+from db.app_db.session import create_app_session_factory
 from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel, Field
 
@@ -16,8 +18,8 @@ from billing.subscription.application.dto import SubscriptionDTO
 from billing.subscription.application.handlers import (
     CreateSubscriptionHandler,
 )
-from billing.subscription.infrastructure.persistence.sqlalchemy.sql_subscription_uow import (
-    SQLSubscriptionUoW,
+from billing.subscription.infrastructure.persistence.sqlalchemy.uow import (
+    SubscriptionUoW,
 )
 
 router = APIRouter(prefix="/subscriptions", tags=["subscriptions"])
@@ -63,13 +65,15 @@ class SubscriptionResponse(BaseModel):
 
 def get_session_factory():
     # Replace with config injection later.
-    return build_session_factory("sqlite:///./billing.db")
+    cfg = AppDBSettings("TEST_DB_URL")
+    engine = create_app_engine(cfg)
+    return create_app_session_factory(engine)
 
 
 def get_uow(
     session_factory=Depends(get_session_factory),
-) -> SQLSubscriptionUoW:
-    return SQLSubscriptionUoW(session_factory)
+) -> SubscriptionUoW:
+    return SubscriptionUoW(session_factory)
 
 
 def get_clock() -> SystemClock:
@@ -121,8 +125,7 @@ def to_response(dto: SubscriptionDTO) -> SubscriptionResponse:
 )
 async def create_subscription(
     request: CreateSubscriptionRequest,
-    # uow=Depends(get_subscription_uow),
-    uow: Annotated[SQLSubscriptionUoW, Depends(get_uow)],
+    uow: Annotated[SubscriptionUoW, Depends(get_uow)],
     clock: Annotated[SystemClock, Depends(get_clock)],
     id_generator: Annotated[IdGenerator, Depends(get_id_generator)],
     event_publisher: Annotated[EventPublisher, Depends(get_event_publisher)],
@@ -144,7 +147,7 @@ async def create_subscription(
     #         provider_subscription_id=payload.get("provider_subscription_id"),
     #     )
     # )
-    dto = handler.handle(
+    dto = await handler.handle(
         CreateSubscriptionCommand(
             # TODO: should replace it with customer_id
             user_id=request.user_id,
