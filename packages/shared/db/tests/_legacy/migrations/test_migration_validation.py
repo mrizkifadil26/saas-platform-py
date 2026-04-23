@@ -25,7 +25,7 @@ from alembic.script import ScriptDirectory
 
 # ---- Import your Base.metadata (DeclarativeBase) ----
 # Adjust import if your Base lives elsewhere.
-from db.models.base import Base
+from db.app_db.base import Base
 from packages.shared.db.tests._legacy.migrations._alembic_utils import (
     alembic_config,
     assert_safe_test_db,
