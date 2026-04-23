@@ -2,12 +2,15 @@ from db.repositories.app.base import AsyncRepository
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from billing.shared.domain.value_objects.user_id import UserId
+from billing.subscription.domain import subscription
 from billing.subscription.domain.subscription import Subscription
 from billing.subscription.domain.subscription_repository import SubscriptionRepository
 from billing.subscription.domain.value_objects.subscription_id import SubscriptionId
-from billing.subscription.infrastructure.mappers import copy_to_model, to_domain
+from billing.subscription.infrastructure.persistence.sqlalchemy.subscription_orm_mapper import (
+    SubscriptionORMMapper,
+)
 
-from .models import (
+from .subscription_model import (
     SubscriptionModel,
 )
 
@@ -18,19 +21,21 @@ class SqlAlchemySubscriptionRepository(
 ):
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(session)
+        # self._session = session
 
     def get(
         self,
-        subscription_id: SubscriptionId,
+        subscription_id: str,
     ) -> Subscription | None:
         model = self.db.get(
             SubscriptionModel,
-            str(subscription_id),
+            # str(subscription_id),
+            subscription_id,
         )
-        if not model:
+        if model is None:
             return None
 
-        return to_domain(model)
+        return SubscriptionORMMapper.to_domain(model)
 
     def get_active_for_user(self, user_id: UserId) -> Subscription | None:
         model = (
@@ -46,18 +51,26 @@ class SqlAlchemySubscriptionRepository(
         if model is None:
             return None
 
-        return to_domain(model)
+        return SubscriptionORMMapper.to_domain(model)
 
     def save(self, subscription: Subscription) -> None:
-        model = self.db.get(
+        existing = self.db.get(
             SubscriptionModel,
             str(subscription.subscription_id),
         )
 
-        if model is None:
-            model = SubscriptionModel(
-                subscription_id=str(subscription.subscription_id),
-            )
+        if existing is None:
+            model = SubscriptionORMMapper.to_model(subscription)
+            # model = SubscriptionModel(
+            #     subscription_id=str(subscription.subscription_id),
+            # )
             self.db.add(model)
+            return
 
-        copy_to_model(subscription, model)
+        SubscriptionORMMapper.update_model(existing, subscription)
+
+
+def delete(self, subscription: Subscription) -> None:
+    existing = self._session.get(SubscriptionModel, subscription.subscription_id)
+    if existing is not None:
+        self._session.delete(existing)
