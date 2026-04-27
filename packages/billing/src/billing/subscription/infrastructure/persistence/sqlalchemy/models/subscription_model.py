@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from db import AppBase
+from db.app_db import AppBase
 from sqlalchemy import Boolean, DateTime, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 

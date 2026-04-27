@@ -2,10 +2,16 @@ import json
 
 from billing.shared.domain.value_objects.user_id import UserId
 from billing.subscription.domain.subscription import Subscription
+from billing.subscription.domain.subscription_item import SubscriptionItem
 from billing.subscription.domain.subscription_status import SubscriptionStatus
 from billing.subscription.domain.value_objects.billing_period import BillingPeriod
+from billing.subscription.domain.value_objects.feature_code import FeatureCode
 from billing.subscription.domain.value_objects.plan_id import PlanId
+from billing.subscription.domain.value_objects.product_code import ProductCode
 from billing.subscription.domain.value_objects.subscription_id import SubscriptionId
+from billing.subscription.domain.value_objects.subscription_item_id import (
+    SubscriptionItemId,
+)
 from billing.subscription.infrastructure.persistence.sqlalchemy.models.subscription_item_model import (
     SubscriptionItemModel,
 )
@@ -30,15 +36,24 @@ class SubscriptionORMMapper:
             provider_subscription_id=model.provider_subscription_id,
             last_granted_period_start=model.last_granted_period_start,
             metadata=json.loads(model.metadata_json) if model.metadata_json else {},
+            items=tuple(
+                SubscriptionItem(
+                    item_id=SubscriptionItemId(item.id),
+                    product_code=ProductCode(item.product_code),
+                    feature_code=FeatureCode(item.feature_code),
+                    quantity=item.quantity,
+                )
+                for item in model.items
+            ),
         )
 
     @staticmethod
     def to_model(domain: Subscription) -> SubscriptionModel:
         model = SubscriptionModel(
-            subscription_id=domain.subscription_id,
+            subscription_id=str(domain.subscription_id),
             # TODO: should use customer_id than user_id
-            user_id=domain.user_id,
-            plan_id=domain.plan_id,
+            user_id=str(domain.user_id),
+            plan_id=str(domain.plan_id),
             status=domain.status.value,
             current_period_start=domain.billing_period.start_at,
             current_period_end=domain.billing_period.end_at,
@@ -50,10 +65,10 @@ class SubscriptionORMMapper:
 
         model.items = [
             SubscriptionItemModel(
-                id=item.item_id,
-                subscription_id=domain.subscription_id,
-                product_code=item.product_code,
-                feature_code=item.feature_code,
+                id=str(item.item_id),
+                subscription_id=str(domain.subscription_id),
+                product_code=str(item.product_code),
+                feature_code=str(item.feature_code),
                 quantity=item.quantity,
             )
             for item in domain.items
@@ -81,10 +96,10 @@ class SubscriptionORMMapper:
         model.items.extend(
             [
                 SubscriptionItemModel(
-                    id=item.item_id,
-                    subscription_id=domain.subscription_id,
-                    product_code=item.product_code,
-                    feature_code=item.feature_code,
+                    id=str(item.item_id),
+                    subscription_id=str(domain.subscription_id),
+                    product_code=str(item.product_code),
+                    feature_code=str(item.feature_code),
                     quantity=item.quantity,
                 )
                 for item in domain.items

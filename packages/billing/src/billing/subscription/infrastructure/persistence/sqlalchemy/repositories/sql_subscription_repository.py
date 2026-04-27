@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from db.repositories import SQLAlchemyRepository
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,7 +18,7 @@ from billing.subscription.infrastructure.persistence.sqlalchemy.models.subscript
 
 
 class SQLSubscriptionRepository(
-    SQLAlchemyRepository[Subscription, str, SubscriptionModel],
+    SQLAlchemyRepository[Subscription, SubscriptionId, SubscriptionModel],
     SubscriptionRepository,
 ):
     def __init__(self, session: AsyncSession) -> None:
@@ -32,19 +34,18 @@ class SQLSubscriptionRepository(
     def _to_model(self, entity: Subscription) -> SubscriptionModel:
         return SubscriptionORMMapper.to_model(entity)
 
-    # async def get(
-    #     self,
-    #     subscription_id: str,
-    # ) -> Subscription | None:
-    #     model = self._session.get(
-    #         SubscriptionModel,
-    #         # str(subscription_id),
-    #         subscription_id,
-    #     )
-    #     if model is None:
-    #         return None
+    async def get(
+        self,
+        entity_id: SubscriptionId,
+    ) -> Subscription | None:
+        model = await self._session.get(
+            SubscriptionModel,
+            str(entity_id),
+        )
+        if model is None:
+            return None
 
-    #     return SubscriptionORMMapper.to_domain(model)
+        return self._to_domain(model)
 
     async def save(self, entity: Subscription) -> None:
         existing = await self._session.get(
@@ -60,7 +61,7 @@ class SQLSubscriptionRepository(
         SubscriptionORMMapper.update_model(existing, entity)
 
     async def delete(self, entity: Subscription) -> None:
-        existing = self._session.get(
+        existing = await self._session.get(
             SubscriptionModel,
             str(entity.subscription_id),
         )
@@ -94,7 +95,10 @@ class SQLSubscriptionRepository(
 
         return self._to_domain(model)
 
-    async def find_due_for_renewal(self) -> list[Subscription]:
+    async def find_due_for_renewal(
+        self,
+        now: datetime,
+    ) -> list[Subscription]:
         stmt = select(SubscriptionModel).where(
             SubscriptionModel.status.in_(
                 [
@@ -103,6 +107,7 @@ class SQLSubscriptionRepository(
                 ]
             ),
             SubscriptionModel.cancel_at_period_end.is_(False),
+            SubscriptionModel.current_period_end <= now,
         )
 
         result = await self._session.execute(stmt)

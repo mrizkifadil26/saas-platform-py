@@ -7,7 +7,7 @@ from db import AbstractUoW
 from billing.subscription.domain.subscription_repository import SubscriptionRepository
 
 
-class AbstractSubscriptionUoW(AbstractUoW):
+class BillingUoW(AbstractUoW):
     @property
     @abstractmethod
     def subscriptions(self) -> SubscriptionRepository:

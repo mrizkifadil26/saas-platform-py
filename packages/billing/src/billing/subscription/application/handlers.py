@@ -1,8 +1,8 @@
 from billing.shared.application.clock import Clock
 from billing.shared.application.event_publisher import EventPublisher
 from billing.shared.application.id_generator import IdGenerator
+from billing.shared.application.uow import BillingUoW
 from billing.shared.domain.value_objects.user_id import UserId
-from billing.subscription.application._event_utils import pull_events
 from billing.subscription.application.commands import (
     CancelSubscriptionCommand,
     ChangeSubscriptionPlanCommand,
@@ -15,7 +15,6 @@ from billing.subscription.application.dto import (
 from billing.subscription.application.exceptions import SubscriptionNotFound
 from billing.subscription.application.mappers import SubscriptionMapper
 from billing.subscription.application.queries import GetSubscriptionQuery
-from billing.subscription.application.uow import AbstractSubscriptionUoW
 from billing.subscription.domain.subscription_factory import SubscriptionFactory
 from billing.subscription.domain.value_objects.billing_period import BillingPeriod
 from billing.subscription.domain.value_objects.plan_id import PlanId
@@ -26,7 +25,7 @@ class CreateSubscriptionHandler:
     def __init__(
         self,
         *,
-        uow: AbstractSubscriptionUoW,
+        uow: BillingUoW,
         id_generator: IdGenerator,
         clock: Clock,
         event_publisher: EventPublisher,
@@ -62,15 +61,15 @@ class CreateSubscriptionHandler:
             items=items,
             provider_subscription_id=command.provider_subscription_id,
             trial=command.trial,
+            occurred_at=self._clock.now(),
         )
 
         async with self._uow:
             await self._uow.subscriptions.save(subscription)
-            await self._uow.commit()
 
         # self.idempotency_store.store(command.idempotency_key)
 
-        events = pull_events(subscription)
+        events = subscription.pull_domain_events()
         self._event_publisher.publish(events)
 
         return SubscriptionMapper.domain_to_dto(subscription)
@@ -80,7 +79,7 @@ class RenewSubscriptionHandler:
     def __init__(
         self,
         *,
-        uow: AbstractSubscriptionUoW,
+        uow: BillingUoW,
         clock: Clock,
         event_publisher: EventPublisher,
         # idempotency_store: IdempotencyStore,
@@ -118,21 +117,20 @@ class RenewSubscriptionHandler:
             )
 
             await self._uow.subscriptions.save(updated_subscription)
-            await self._uow.commit()
 
         # self.idempotency_store.store(command.idempotency_key)
 
-        events = pull_events(updated_subscription)
+        events = updated_subscription.pull_domain_events()
         self._event_publisher.publish(events)
 
-        return SubscriptionMapper.domain_to_dto(subscription)
+        return SubscriptionMapper.domain_to_dto(updated_subscription)
 
 
 class ChangeSubscriptionPlanHandler:
     def __init__(
         self,
         *,
-        uow: AbstractSubscriptionUoW,
+        uow: BillingUoW,
         clock: Clock,
         event_publisher: EventPublisher,
         # idempotency_store: IdempotencyStore,
@@ -166,21 +164,20 @@ class ChangeSubscriptionPlanHandler:
             )
 
             await self._uow.subscriptions.save(updated_subscription)
-            await self._uow.commit()
 
         # self.idempotency_store.store(command.idempotency_key)
 
-        events = pull_events(updated_subscription)
+        events = updated_subscription.pull_domain_events()
         self._event_publisher.publish(events)
 
-        return SubscriptionMapper.domain_to_dto(subscription)
+        return SubscriptionMapper.domain_to_dto(updated_subscription)
 
 
 class CancelSubscriptionHandler:
     def __init__(
         self,
         *,
-        uow: AbstractSubscriptionUoW,
+        uow: BillingUoW,
         clock: Clock,
         event_publisher: EventPublisher,
         # idempotency_store: IdempotencyStore,
@@ -213,11 +210,10 @@ class CancelSubscriptionHandler:
             )
 
             await self._uow.subscriptions.save(updated_subscription)
-            await self._uow.commit()
 
         # self.idempotency_store.store(command.idempotency_key)
 
-        events = pull_events(updated_subscription)
+        events = updated_subscription.pull_domain_events()
         self._event_publisher.publish(events)
 
         return SubscriptionMapper.domain_to_dto(updated_subscription)
@@ -227,7 +223,7 @@ class GetSubscriptionHandler:
     def __init__(
         self,
         *,
-        uow: AbstractSubscriptionUoW,
+        uow: BillingUoW,
     ) -> None:
         self._uow = uow
 

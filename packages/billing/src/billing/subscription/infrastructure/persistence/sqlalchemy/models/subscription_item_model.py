@@ -1,4 +1,4 @@
-from db import AppBase
+from db.app_db import AppBase
 from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -13,7 +13,7 @@ class SubscriptionItemModel(AppBase):
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
     subscription_id: Mapped[str] = mapped_column(
         String(64),
-        ForeignKey("subscriptions.id", ondelete="CASCADE"),
+        ForeignKey("subscriptions.subscription_id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
