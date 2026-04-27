@@ -15,6 +15,7 @@ from billing.subscription.domain.subscription_events import (
     SubscriptionCanceled,
     SubscriptionChanged,
     SubscriptionRenewed,
+    SubscriptionStarted,
 )
 from billing.subscription.domain.subscription_item import SubscriptionItem
 from billing.subscription.domain.subscription_status import SubscriptionStatus
@@ -27,7 +28,7 @@ from billing.subscription.domain.value_objects.subscription_item_id import (
 
 
 @dataclass(frozen=True, slots=True)
-class Subscription(AggregateRoot):
+class Subscription(AggregateRoot[SubscriptionId]):
     subscription_id: SubscriptionId
     # TODO: should use customer_id instead of user_id later
     user_id: UserId
@@ -74,7 +75,7 @@ class Subscription(AggregateRoot):
         occurred_at: datetime | None = None,
     ) -> Subscription:
         status = SubscriptionStatus.TRIALING if trial else SubscriptionStatus.ACTIVE
-        return cls(
+        subscription = cls(
             subscription_id=subscription_id,
             user_id=user_id,
             plan_id=plan_id,
@@ -82,7 +83,18 @@ class Subscription(AggregateRoot):
             billing_period=billing_period,
             items=tuple(items) if items else tuple(),
             provider_subscription_id=provider_subscription_id,
+            metadata=metadata or {},
         )
+
+        event = SubscriptionStarted(
+            subscription_id=subscription_id,
+            user_id=user_id,
+            plan_id=plan_id,
+            occurred_at=occurred_at or billing_period.start_at,
+        )
+
+        subscription.record_event(event)
+        return subscription
 
     @property
     def current_period_start(self) -> datetime:
@@ -130,13 +142,14 @@ class Subscription(AggregateRoot):
             else replace(self, cancel_at_period_end=True)
         )
 
-        return updated_subscription._record(
-            SubscriptionCanceled(
-                subscription_id=self.subscription_id,
-                immediate=immediate,
-                occurred_at=occurred_at or self.billing_period.start_at,
-            )
+        event = SubscriptionCanceled(
+            subscription_id=self.subscription_id,
+            immediate=immediate,
+            occurred_at=occurred_at or self.billing_period.start_at,
         )
+        updated_subscription.record_event(event)
+
+        return updated_subscription
 
     def uncancel(self) -> Subscription:
         if self.status.is_terminal:
@@ -216,16 +229,17 @@ class Subscription(AggregateRoot):
             billing_period=next_billing_period,
         )
 
-        return updated_subscription._record(
-            SubscriptionRenewed(
-                subscription_id=self.subscription_id,
-                previous_period_start=self.billing_period.start_at,
-                previous_period_end=self.billing_period.end_at,
-                new_period_start=next_billing_period.start_at,
-                new_period_end=next_billing_period.end_at,
-                occurred_at=occurred_at or next_billing_period.start_at,
-            )
+        event = SubscriptionRenewed(
+            subscription_id=self.subscription_id,
+            previous_period_start=self.billing_period.start_at,
+            previous_period_end=self.billing_period.end_at,
+            new_period_start=next_billing_period.start_at,
+            new_period_end=next_billing_period.end_at,
+            occurred_at=occurred_at or next_billing_period.start_at,
         )
+        updated_subscription.record_event(event)
+
+        return updated_subscription
 
     def change_plan(
         self,
@@ -245,34 +259,54 @@ class Subscription(AggregateRoot):
 
         updated_subcription = replace(self, plan_id=new_plan_id)
 
-        return updated_subcription._record(
-            SubscriptionChanged(
-                subscription_id=self.subscription_id,
-                previous_plan_id=self.plan_id,
-                new_plan_id=new_plan_id,
-                occurred_at=occurred_at
-                or datetime.now(tz=self.billing_period.start_at.tzinfo),
-            )
+        event = SubscriptionChanged(
+            subscription_id=self.subscription_id,
+            previous_plan_id=self.plan_id,
+            new_plan_id=new_plan_id,
+            occurred_at=occurred_at
+            or datetime.now(tz=self.billing_period.start_at.tzinfo),
         )
+        updated_subcription.record_event(event)
+
+        return updated_subcription
 
     def add_item(
         self,
         item: SubscriptionItem,
     ) -> Subscription:
-        return self
+        if any(existing.item_id == item.item_id for existing in self.items):
+            raise ValueError(f"Duplicate SubscriptionItemId: {item.item_id}")
+
+        return replace(self, items=(*self.items, item))
 
     def remove_item(
         self,
         item_id: SubscriptionItemId,
     ) -> Subscription:
-        return self
+        remaining_items = tuple(item for item in self.items if item.item_id != item_id)
+        if len(remaining_items) == len(self.items):
+            raise ValueError(f"SubscriptionItem not found: {item_id}")
+
+        return replace(self, items=remaining_items)
 
     def update_item_quantity(
         self,
         item_id: SubscriptionItemId,
         new_quantity: int,
     ) -> Subscription:
-        return self
+        updated = False
+        items = []
+        for item in self.items:
+            if item.item_id == item_id:
+                items.append(item.change_quantity(new_quantity))
+                updated = True
+            else:
+                items.append(item)
+
+        if not updated:
+            raise ValueError(f"SubscriptionItem not found: {item_id}")
+
+        return replace(self, items=tuple(items))
 
     def has_grant_for_current_period(self) -> bool:
         return self.last_granted_period_start == self.current_period_start
@@ -314,21 +348,9 @@ class Subscription(AggregateRoot):
 
         return self.cancel_at_period_end and at >= self.billing_period.end_at
 
-    def _record(self, event: object) -> Subscription:
-        """
-        Thin adapter to record events in both cases:
-        1. If the class inherits from a base class that has a record_event method,
-           it will use that method to record the event.
-        2. If not, it will store the events in a local _events list.
+    # def _record(self, event: object) -> Subscription:
+    #     events = list(getattr(self, "_events", []))
+    #     events.append(event)
+    #     object.__setattr__(self, "_events", events)
 
-        This allows us to keep the Subscription class decoupled from any specific event recording implementation.
-        """
-        if hasattr(super(), "record_event"):
-            super().record_event(event)  # type: ignore[misc]
-            return self
-
-        events = list(getattr(self, "_events", []))
-        events.append(event)
-        object.__setattr__(self, "_events", events)
-
-        return self
+    #     return self

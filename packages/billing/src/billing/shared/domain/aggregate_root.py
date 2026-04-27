@@ -1,15 +1,19 @@
+from dataclasses import dataclass, field
 from typing import Generic, TypeVar
 
 from billing.shared.domain.domain_event import DomainEvent
-from billing.shared.domain.entity import Entity
 
 IdT = TypeVar("IdT")
 
 
-class AggregateRoot(Entity[IdT], Generic[IdT]):
-    def __init__(self, entity_id: IdT) -> None:
-        super().__init__(entity_id)
-        self._domain_events: list[DomainEvent] = []
+@dataclass(frozen=True, slots=True)
+class AggregateRoot(Generic[IdT]):
+    _domain_events: list[DomainEvent] = field(
+        default_factory=list,
+        init=False,
+        repr=False,
+        compare=False,
+    )
 
     @property
     def domain_events(self) -> tuple[DomainEvent, ...]:
@@ -19,7 +23,7 @@ class AggregateRoot(Entity[IdT], Generic[IdT]):
         self._domain_events.append(event)
 
     def pull_domain_events(self) -> tuple[DomainEvent, ...]:
-        events = self.domain_events
+        events = tuple(self._domain_events)
         self._domain_events.clear()
         return events
 

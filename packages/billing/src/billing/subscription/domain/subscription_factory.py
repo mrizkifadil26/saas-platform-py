@@ -20,6 +20,7 @@ class SubscriptionFactory:
         items: Sequence[SubscriptionItem] | None = None,
         provider_subscription_id: str | None = None,
         trial: bool = False,
+        occurred_at: datetime | None = None,
     ) -> Subscription:
         return Subscription.create(
             subscription_id=subscription_id,
@@ -32,4 +33,5 @@ class SubscriptionFactory:
             items=list(items or []),
             provider_subscription_id=provider_subscription_id,
             trial=trial,
+            occurred_at=occurred_at,
         )
