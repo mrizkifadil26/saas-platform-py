@@ -4,7 +4,7 @@ from typing import NewType
 
 from billing.credits.domain.value_objects.credits import Credits
 from billing.payg.domain.value_objects import PackCode
-from billing.pricing.domain.exceptions import (
+from billing.pricing.exceptions import (
     InvalidPlanConfiguration,
     PricingNotFound,
 )
