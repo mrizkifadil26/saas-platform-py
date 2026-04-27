@@ -5,7 +5,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from enum import StrEnum
 from uuid import UUID, uuid4
 
-from billing.domain.payg.exceptions import InvalidMoney
+from billing.payg.domain.exceptions import InvalidMoney
 
 
 @dataclass(frozen=True, slots=True)

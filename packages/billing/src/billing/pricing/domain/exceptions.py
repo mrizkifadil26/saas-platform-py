@@ -1,9 +1,7 @@
-from billing.domain.shared.exceptions import (
-    BillingDomainError,
-)
+from billing.shared.exceptions import DomainError
 
 
-class PricingError(BillingDomainError):
+class PricingError(DomainError):
     """Base exception for pricing-related errors."""
 
     pass

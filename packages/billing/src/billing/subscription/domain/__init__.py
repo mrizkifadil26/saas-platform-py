@@ -6,7 +6,6 @@ from .exceptions import (
     SubscriptionAlreadyCanceledError,
     SubscriptionError,
 )
-from .plans import SubscriptionPlan, get_subscription_plan
 from .subscription import Subscription
 from .subscription_events import (
     SubscriptionCanceled,
@@ -29,10 +28,8 @@ __all__ = [
     "SubscriptionChanged",
     "SubscriptionError",
     "SubscriptionFactory",
-    "SubscriptionPlan",
     "SubscriptionRenewed",
     "SubscriptionRepository",
     "SubscriptionStarted",
     "SubscriptionStatus",
-    "get_subscription_plan",
 ]

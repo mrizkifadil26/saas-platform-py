@@ -1,9 +1,7 @@
-from billing.domain.shared.exceptions import (
-    BillingDomainError,
-)
+from billing.shared.exceptions import DomainError
 
 
-class PaygDomainError(BillingDomainError):
+class PaygDomainError(DomainError):
     """Base class for all Pay-as-you-go domain errors."""
 
     pass
