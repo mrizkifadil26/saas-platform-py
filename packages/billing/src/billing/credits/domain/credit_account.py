@@ -8,6 +8,7 @@ from billing.credits.domain.credit_balance import CreditBalance
 from billing.credits.domain.credit_grant import CreditGrant
 from billing.credits.domain.credit_ledger_entry import CreditLedgerEntry
 from billing.credits.domain.credit_source_type import CreditSourceType
+from billing.credits.domain.exceptions import CreditBalanceInconsistentError
 from billing.credits.domain.value_objects.credit_account_id import CreditAccountId
 from billing.credits.domain.value_objects.credit_grant_id import CreditGrantId
 from billing.credits.domain.value_objects.credit_ledger_entry_id import (
@@ -103,7 +104,9 @@ class CreditAccount:
 
         for grant in sorted(
             self.grants,
-            key=lambda grant: grant.expires_at or datetime.max.replace(tzinfo=occurred_at.tzinfo),
+            key=lambda grant: (
+                grant.expires_at or datetime.max.replace(tzinfo=occurred_at.tzinfo)
+            ),
         ):
             if remaining_to_consume == 0:
                 updated_grants.append(grant)
@@ -118,7 +121,9 @@ class CreditAccount:
             remaining_to_consume -= consumed
 
         if remaining_to_consume > 0:
-            raise ValueError("Grant balances are inconsistent with reserved balance")
+            raise CreditBalanceInconsistentError(
+                "Grant balances are inconsistent with reserved balance"
+            )
 
         self.grants = updated_grants
 

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from billing.credits.domain.exceptions import InsufficientReservedCreditsError
+
 
 @dataclass(frozen=True, slots=True)
 class CreditBalance:
@@ -29,7 +31,7 @@ class CreditBalance:
             available=self.available - amount,
             reserved=self.reserved + amount,
         )
-    
+
     def consume_reserved(self, amount: int) -> CreditBalance:
         if amount <= 0:
             raise ValueError("Amount to consume cannot be zero or negative")
@@ -47,7 +49,10 @@ class CreditBalance:
             raise ValueError("Amount to release cannot be zero or negative")
 
         if amount > self.reserved:
-            raise ValueError("Cannot release more than reserved balance")
+            raise InsufficientReservedCreditsError(
+                requested=amount,
+                reserved=self.reserved,
+            )
 
         return CreditBalance(
             available=self.available + amount,

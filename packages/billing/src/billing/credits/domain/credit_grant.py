@@ -3,6 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 
+from billing.credits.domain.exceptions import (
+    CreditGrantOverConsumedError,
+    InvalidCreditAmountError,
+)
 from billing.credits.domain.value_objects.credit_account_id import CreditAccountId
 from billing.credits.domain.value_objects.credit_grant_id import CreditGrantId
 
@@ -19,18 +23,20 @@ class CreditGrant:
 
     def __post_init__(self) -> None:
         if self.amount < 0:
-            raise ValueError("Credit grant amount cannot be negative")
+            raise InvalidCreditAmountError("Credit grant amount cannot be negative")
 
         if self.remaining < 0:
-            raise ValueError("Credit grant remaining amount cannot be negative")
+            raise InvalidCreditAmountError(
+                "Credit grant remaining amount cannot be negative"
+            )
 
         if self.remaining > self.amount:
-            raise ValueError(
+            raise InvalidCreditAmountError(
                 "Credit grant remaining amount cannot be greater than the granted amount"
             )
 
         if self.expires_at is not None and self.expires_at <= self.granted_at:
-            raise ValueError(
+            raise InvalidCreditAmountError(
                 "Credit grant expiration date must be after the granted date"
             )
 
@@ -45,7 +51,10 @@ class CreditGrant:
             raise ValueError("Amount to consume cannot be zero or negative")
 
         if amount > self.remaining:
-            raise ValueError("Cannot consume more than the remaining credits")
+            raise CreditGrantOverConsumedError(
+                requested=amount,
+                remaining=self.remaining,
+            )
 
         return CreditGrant(
             id=self.id,
