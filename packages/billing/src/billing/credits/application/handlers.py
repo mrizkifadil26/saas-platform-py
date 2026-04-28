@@ -15,7 +15,6 @@ from billing.credits.application.exceptions import (
 from billing.credits.application.mappers import CreditAccountMapper
 from billing.credits.domain.credit_account import CreditAccount
 from billing.credits.domain.credit_source_type import CreditSourceType
-from billing.credits.domain.credit_source_type import CreditSourceType
 from billing.credits.domain.value_objects.credits import Credits
 from billing.shared.application.clock import Clock
 from billing.shared.application.event_publisher import EventPublisher
