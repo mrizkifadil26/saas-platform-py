@@ -4,16 +4,16 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
-from billing.payg.domain.value_objects import Money
 from billing.pricing.domain.pricing_rule import BillingScheme
 from billing.pricing.domain.value_objects.pricing_key import PricingKey
+from billing.shared.domain.value_objects.money import Money
 
 
 @dataclass(frozen=True, slots=True)
 class PricingSnapshot:
     pricing_rule_id: UUID
     pricing_key: PricingKey
-    unit_price: Money
+    price: Money
     billing_scheme: BillingScheme
     captured_at: datetime
 
@@ -22,9 +22,9 @@ class PricingSnapshot:
             raise ValueError("Quantity must be greater than zero")
 
         if self.billing_scheme == BillingScheme.FLAT:
-            return self.unit_price
+            return self.price
 
         if self.billing_scheme == BillingScheme.PER_UNIT:
-            return self.unit_price * quantity
+            return self.price.multiply(quantity)
 
         raise ValueError(f"Unsupported billing scheme: {self.billing_scheme}")
