@@ -29,7 +29,7 @@ from billing.subscription.domain.value_objects.subscription_id import Subscripti
 
 
 @dataclass(slots=True)
-class CreditAccount(AggregateRoot[SubscriptionId]):
+class CreditAccount(AggregateRoot[CreditAccountId]):
     id: CreditAccountId
     # TODO: later we need to use customer_Id instead of user_id, but for now we can use user_id as a placeholder
     user_id: UserId
