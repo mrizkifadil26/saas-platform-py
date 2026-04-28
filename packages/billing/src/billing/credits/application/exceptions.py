@@ -1,15 +1,17 @@
-from billing.shared.application.exceptions import (
-    ApplicationError,
-)
+from billing.shared.exceptions import ApplicationError
 
 
-class CreditsApplicationError(ApplicationError):
-    """Base exception for credits application errors."""
+class CreditApplicationError(ApplicationError):
+    """Base exception for credit application errors."""
 
 
-class IdempotencyConflictError(CreditsApplicationError):
-    """Raised when a request with the same idempotency key has already been processed."""
+class CreditAccountNotFoundError(CreditApplicationError):
+    """Raised when a credit account cannot be found."""
 
 
-class DuplicateRequestError(CreditsApplicationError):
-    """Raised when a request with the same request ID has already been processed."""
+class CreditAccountAlreadyExistsError(CreditApplicationError):
+    """Raised when creating a duplicate credit account."""
+
+
+class CreditOperationAlreadyProcessedError(CreditApplicationError):
+    """Raised when a credit operation was already processed."""

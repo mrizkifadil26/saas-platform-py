@@ -1,41 +1,53 @@
 from dataclasses import dataclass
 from datetime import datetime
+from uuid import UUID
+
+from billing.credits.domain.credit_source_type import CreditSourceType
+from billing.credits.domain.value_objects.credit_account_id import CreditAccountId
+from billing.credits.domain.value_objects.credit_grant_id import CreditGrantId
+from billing.credits.domain.value_objects.credit_ledger_entry_id import (
+    CreditLedgerEntryId,
+)
+from billing.shared.domain.value_objects.user_id import UserId
 
 
 @dataclass(frozen=True, slots=True)
-class ConsumptionAllocationDTO:
-    grant_id: str
-    credits: int
+class CreditBalanceDTO:
+    available: int
+    reserved: int
+    total: int
 
 
 @dataclass(frozen=True, slots=True)
-class CreditConsumptionDTO:
-    consumption_id: str
-    user_id: str
-    cost: int
-    created_at: datetime
-    allocations: tuple[ConsumptionAllocationDTO, ...]
-    request_id: str | None
-    metadata: dict[str, str]
+class CreditGrantDTO:
+    id: CreditGrantId
+    credit_account_id: CreditAccountId
+    amount: int
+    remaining: int
+    granted_at: datetime
+    expires_at: datetime | None
+    source_id: str | None
 
 
-def to_credit_consumption_dto(
-    consumption,
-) -> CreditConsumptionDTO:
-    return CreditConsumptionDTO(
-        consumption_id=str(consumption.consumption_id),
-        user_id=str(consumption.user_id),
-        cost=int(consumption.cost),
-        created_at=consumption.created_at,
-        allocations=tuple(
-            ConsumptionAllocationDTO(
-                grant_id=str(item.grant_id),
-                credits=int(item.credits),
-            )
-            for item in consumption.allocations
-        ),
-        request_id=str(consumption.request_id)
-        if consumption.request_id is not None
-        else None,
-        metadata=dict(consumption.metadata),
-    )
+@dataclass(frozen=True, slots=True)
+class CreditLedgerEntryDTO:
+    id: CreditLedgerEntryId
+    credit_account_id: CreditAccountId
+    amount: int
+    balance_after_available: int
+    balance_after_reserved: int
+    source_type: CreditSourceType
+    source_id: str | None
+    description: str | None
+    occurred_at: datetime
+
+
+
+@dataclass(frozen=True, slots=True)
+class CreditAccountDTO:
+    id: CreditAccountId
+    # TODO: should use customer_id instead of user_id
+    user_id: UserId
+    balance: CreditBalanceDTO
+    grants: tuple[CreditGrantDTO, ...]
+    ledger_entries: tuple[CreditLedgerEntryDTO, ...]
