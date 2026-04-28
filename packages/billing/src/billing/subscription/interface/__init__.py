@@ -1,4 +1,4 @@
-from billing.subscription.interfaces.router import router
+from billing.subscription.interface.router import router
 
 __all__ = [
     "router",

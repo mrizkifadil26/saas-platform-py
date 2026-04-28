@@ -1,9 +1,8 @@
-from billing.subscription.interfaces.schemas import (
+from billing.subscription.application.dto import SubscriptionDTO
+from billing.subscription.interface.schemas import (
     SubscriptionItemResponse,
     SubscriptionResponse,
 )
-
-from billing.subscription.application.dto import SubscriptionDTO
 
 
 def to_response(dto: SubscriptionDTO) -> SubscriptionResponse:

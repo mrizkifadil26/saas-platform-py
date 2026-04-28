@@ -1,11 +1,5 @@
 from typing import Annotated
 
-from billing.subscription.interfaces.dependencies import get_create_subscription_handler
-from billing.subscription.interfaces.mappers import to_response
-from billing.subscription.interfaces.schemas import (
-    CreateSubscriptionRequest,
-    SubscriptionResponse,
-)
 from fastapi import APIRouter, Depends, status
 
 from billing.subscription.application.commands import (
@@ -14,6 +8,12 @@ from billing.subscription.application.commands import (
 )
 from billing.subscription.application.handlers import (
     CreateSubscriptionHandler,
+)
+from billing.subscription.interface.dependencies import get_create_subscription_handler
+from billing.subscription.interface.mappers import to_response
+from billing.subscription.interface.schemas import (
+    CreateSubscriptionRequest,
+    SubscriptionResponse,
 )
 
 router = APIRouter(
