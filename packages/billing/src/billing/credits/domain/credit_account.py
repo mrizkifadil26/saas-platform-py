@@ -226,7 +226,7 @@ class CreditAccount(AggregateRoot[CreditAccountId]):
             else:
                 updated_grants.append(grant)
 
-        if expired_amount == 0:
+        if expired_amount.is_zero():
             self.grants = updated_grants
             return Credits.zero()
 
