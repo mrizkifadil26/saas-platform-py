@@ -7,8 +7,8 @@ from dataclasses import dataclass
 class Credits:
     amount: int
 
-    def __post_init__(self):
-        if not isinstance(self.amount, int):
+    def __post_init__(self) -> None:
+        if isinstance(self.amount, bool) or not isinstance(self.amount, int):
             raise TypeError("Credits amount must be an integer")
 
         if self.amount < 0:
@@ -34,12 +34,6 @@ class Credits:
             )
 
         return Credits(self.amount - other.amount)
-
-    def consume(self, amount: Credits) -> Credits:
-        return self - amount
-
-    def grant(self, amount: Credits) -> Credits:
-        return self + amount
 
     def min(self, other: Credits) -> Credits:
         return Credits(min(self.amount, other.amount))
