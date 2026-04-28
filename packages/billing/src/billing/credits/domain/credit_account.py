@@ -14,6 +14,7 @@ from billing.credits.domain.value_objects.credit_grant_id import CreditGrantId
 from billing.credits.domain.value_objects.credit_ledger_entry_id import (
     CreditLedgerEntryId,
 )
+from billing.credits.domain.value_objects.credits import Credits
 from billing.shared.domain.value_objects.user_id import UserId
 
 
@@ -36,14 +37,14 @@ class CreditAccount:
         return cls(
             id=id,
             user_id=user_id,
-            balance=CreditBalance(available=0, reserved=0),
+            balance=CreditBalance.zero(),
         )
 
     def grant(
         self,
         *,
         grant_id: CreditGrantId,
-        amount: int,
+        amount: Credits,
         occurred_at: datetime,
         expires_at: datetime | None = None,
         source_type: CreditSourceType = CreditSourceType.SUBSCRIPTION_GRANT,
@@ -64,7 +65,7 @@ class CreditAccount:
         self.balance = self.balance.add(amount)
 
         self._record_entry(
-            amount=amount,
+            amount=int(amount),
             source_type=source_type,
             source_id=source_id,
             description=description,
@@ -74,7 +75,7 @@ class CreditAccount:
     def reserve(
         self,
         *,
-        amount: int,
+        amount: Credits,
         occurred_at: datetime,
         source_id: str | None = None,
         description: str | None = None,
@@ -82,7 +83,7 @@ class CreditAccount:
         self.balance = self.balance.reserve(amount)
 
         self._record_entry(
-            amount=-amount,
+            amount=-int(amount),
             source_type=CreditSourceType.RESERVATION,
             source_id=source_id,
             description=description,
@@ -92,7 +93,7 @@ class CreditAccount:
     def consume_reserved(
         self,
         *,
-        amount: int,
+        amount: Credits,
         occurred_at: datetime,
         source_id: str | None = None,
         description: str | None = None,
@@ -120,7 +121,7 @@ class CreditAccount:
             updated_grants.append(grant.consume(consumed))
             remaining_to_consume -= consumed
 
-        if remaining_to_consume > 0:
+        if remaining_to_consume.is_positive():
             raise CreditBalanceInconsistentError(
                 "Grant balances are inconsistent with reserved balance"
             )
@@ -128,7 +129,7 @@ class CreditAccount:
         self.grants = updated_grants
 
         self._record_entry(
-            amount=-amount,
+            amount=-int(amount),
             source_type=CreditSourceType.USAGE_CONSUMPTION,
             source_id=source_id,
             description=description,
@@ -138,7 +139,7 @@ class CreditAccount:
     def release_reserved(
         self,
         *,
-        amount: int,
+        amount: Credits,
         occurred_at: datetime,
         source_id: str | None = None,
         description: str | None = None,
@@ -146,7 +147,7 @@ class CreditAccount:
         self.balance = self.balance.release_reserved(amount)
 
         self._record_entry(
-            amount=amount,
+            amount=int(amount),
             source_type=CreditSourceType.RESERVATION_RELEASE,
             source_id=source_id,
             description=description,

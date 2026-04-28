@@ -5,7 +5,7 @@ class CreditError(DomainError):
     """Base exception for credit-related errors."""
 
 
-class InvalidCreditAmountError(CreditError):
+class InvalidCreditsAmountError(CreditError):
     """Raised when an invalid credit amount is provided (e.g., negative amount)."""
 
 
@@ -48,3 +48,11 @@ class CreditGrantOverConsumedError(CreditError):
 
 class CreditBalanceInconsistentError(CreditError):
     """Raised when balance and grant state are inconsistent."""
+
+
+class CreditLedgerEntryError(CreditError):
+    """Base exception for credit ledger entry errors."""
+
+
+class InvalidCreditLedgerEntryError(CreditLedgerEntryError):
+    """Raised when a credit ledger entry is invalid."""
