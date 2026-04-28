@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from uuid import UUID
+from uuid import uuid4
 
 from billing.credits.domain.credit_balance import CreditBalance
 from billing.credits.domain.credit_events import (
@@ -261,7 +261,7 @@ class CreditAccount(AggregateRoot[CreditAccountId]):
     ) -> None:
         entry = CreditLedgerEntry(
             # TODO: generate a proper UUID for the ledger entry
-            id=CreditLedgerEntryId(UUID(int=0).hex),
+            id=CreditLedgerEntryId(uuid4().hex),
             credit_account_id=self.id,
             amount=amount,
             balance_after_available=self.balance.available,
