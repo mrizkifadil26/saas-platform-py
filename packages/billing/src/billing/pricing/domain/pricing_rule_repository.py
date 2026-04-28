@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from datetime import datetime
 
-from billing.pricing.domain.pricing_key import PricingKey
 from billing.pricing.domain.pricing_rule import PricingRule
+from billing.pricing.domain.value_objects.pricing_key import PricingKey
 from billing.shared.domain.repository import Repository
 
 

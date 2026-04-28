@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 
+# TODO: should this inherit from BaseId? or should it be a separate value object?
 @dataclass(frozen=True, slots=True)
 class PricingKey:
     value: str

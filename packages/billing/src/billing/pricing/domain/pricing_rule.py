@@ -5,8 +5,8 @@ from datetime import datetime
 from enum import StrEnum
 from uuid import UUID
 
-from billing.pricing.domain.price import Price
-from billing.pricing.domain.pricing_key import PricingKey
+from billing.pricing.domain.value_objects.pricing_key import PricingKey
+from billing.shared.domain.value_objects.money import Money
 
 
 class BillingScheme(StrEnum):
@@ -18,7 +18,7 @@ class BillingScheme(StrEnum):
 class PricingRule:
     id: UUID
     pricing_key: PricingKey
-    price: Price
+    price: Money
     billing_scheme: BillingScheme
     active_from: datetime
     active_until: datetime | None = None
@@ -36,7 +36,7 @@ class PricingRule:
 
         return True
 
-    def calculate_price(self, quantity: int = 1) -> Price:
+    def calculate_price(self, quantity: int = 1) -> Money:
         if quantity <= 0:
             raise ValueError("Quantity must be greater than zero")
 
