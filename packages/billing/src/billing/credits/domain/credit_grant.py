@@ -39,10 +39,7 @@ class CreditGrant:
             )
 
     def is_expired_at(self, at: datetime) -> bool:
-        if self.expires_at is None:
-            return False
-
-        return at >= self.expires_at
+        return self.expires_at is not None and at >= self.expires_at
 
     def consume(self, amount: Credits) -> CreditGrant:
         if amount.is_zero():
