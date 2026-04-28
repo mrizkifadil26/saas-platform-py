@@ -24,7 +24,6 @@ from billing.shared.infrastructure.persistence.sqlalchemy.uow import (
 )
 from billing.shared.infrastructure.services.system_clock import SystemClock
 from billing.shared.infrastructure.services.uuid_generator import UUIDGenerator
-from billing.subscription.application.handlers import CreateSubscriptionHandler
 
 
 class SimpleEventPublisher(EventPublisher):
@@ -53,20 +52,6 @@ def get_uow(
     ],
 ) -> BillingUoW:
     return SQLAlchemyBillingUoW(session_factory)
-
-
-def get_create_subscription_handler(
-    uow: Annotated[BillingUoW, Depends(get_uow)],
-    id_generator: Annotated[IdGenerator, Depends(get_id_generator)],
-    clock: Annotated[Clock, Depends(get_clock)],
-    event_publisher: Annotated[EventPublisher, Depends(get_event_publisher)],
-) -> CreateSubscriptionHandler:
-    return CreateSubscriptionHandler(
-        uow=uow,
-        id_generator=id_generator,
-        clock=clock,
-        event_publisher=event_publisher,
-    )
 
 
 def get_create_credit_account_handler(
