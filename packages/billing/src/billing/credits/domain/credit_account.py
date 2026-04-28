@@ -5,6 +5,13 @@ from datetime import datetime
 from uuid import UUID
 
 from billing.credits.domain.credit_balance import CreditBalance
+from billing.credits.domain.credit_events import (
+    CreditsExpired,
+    CreditsGranted,
+    CreditsReserved,
+    ReservedCreditsConsumed,
+    ReservedCreditsReleased,
+)
 from billing.credits.domain.credit_grant import CreditGrant
 from billing.credits.domain.credit_ledger_entry import CreditLedgerEntry
 from billing.credits.domain.credit_source_type import CreditSourceType
@@ -15,11 +22,13 @@ from billing.credits.domain.value_objects.credit_ledger_entry_id import (
     CreditLedgerEntryId,
 )
 from billing.credits.domain.value_objects.credits import Credits
+from billing.shared.domain.aggregate_root import AggregateRoot
 from billing.shared.domain.value_objects.user_id import UserId
+from billing.subscription.domain.value_objects.subscription_id import SubscriptionId
 
 
 @dataclass(slots=True)
-class CreditAccount:
+class CreditAccount(AggregateRoot[SubscriptionId]):
     id: CreditAccountId
     # TODO: later we need to use customer_Id instead of user_id, but for now we can use user_id as a placeholder
     user_id: UserId
@@ -72,6 +81,18 @@ class CreditAccount:
             occurred_at=occurred_at,
         )
 
+        event = CreditsGranted(
+            credit_account_id=self.id,
+            grant_id=grant_id,
+            amount=int(amount),
+            source_type=source_type,
+            source_id=source_id,
+            expires_at=expires_at,
+            occurred_at=occurred_at,
+        )
+
+        self.record_event(event)
+
     def reserve(
         self,
         *,
@@ -89,6 +110,15 @@ class CreditAccount:
             description=description,
             occurred_at=occurred_at,
         )
+
+        event = CreditsReserved(
+            credit_account_id=self.id,
+            amount=int(amount),
+            source_id=source_id,
+            occurred_at=occurred_at,
+        )
+
+        self.record_event(event)
 
     def consume_reserved(
         self,
@@ -136,6 +166,14 @@ class CreditAccount:
             occurred_at=occurred_at,
         )
 
+        event = ReservedCreditsConsumed(
+            credit_account_id=self.id,
+            amount=int(amount),
+            source_id=source_id,
+            occurred_at=occurred_at,
+        )
+        self.record_event(event)
+
     def release_reserved(
         self,
         *,
@@ -153,6 +191,15 @@ class CreditAccount:
             description=description,
             occurred_at=occurred_at,
         )
+
+        event = ReservedCreditsReleased(
+            credit_account_id=self.id,
+            amount=int(amount),
+            source_id=source_id,
+            occurred_at=occurred_at,
+        )
+
+        self.record_event(event)
 
     def _record_entry(
         self,

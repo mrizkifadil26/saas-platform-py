@@ -28,7 +28,7 @@ class CreditsGranted(DomainEvent):
 
 @dataclass(frozen=True, slots=True)
 class CreditsReserved(DomainEvent):
-    account_id: CreditAccountId
+    credit_account_id: CreditAccountId
     # TODO: should use Credits value object instead of int for amount, but for simplicity we can use int for now
     amount: int
     source_id: str | None
@@ -36,7 +36,7 @@ class CreditsReserved(DomainEvent):
 
 @dataclass(frozen=True, slots=True)
 class ReservedCreditsConsumed(DomainEvent):
-    account_id: CreditAccountId
+    credit_account_id: CreditAccountId
     # TODO: should use Credits value object instead of int for amount, but for simplicity we can use int for now
     amount: int
     source_id: str | None
@@ -44,10 +44,10 @@ class ReservedCreditsConsumed(DomainEvent):
 
 @dataclass(frozen=True, slots=True)
 class ReservedCreditsReleased(DomainEvent):
-    account_id: CreditAccountId
+    credit_account_id: CreditAccountId
     # TODO: should use Credits value object instead of int for amount, but for simplicity we can use int for now
     amount: int
-    reference_id: str | None
+    source_id: str | None
 
 
 @dataclass(frozen=True, slots=True)
