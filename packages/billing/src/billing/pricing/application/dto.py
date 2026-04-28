@@ -7,17 +7,11 @@ from uuid import UUID
 
 
 @dataclass(frozen=True, slots=True)
-class PriceDTO:
-    amount: Decimal
-    currency: str
-
-
-@dataclass(frozen=True, slots=True)
 class PricingRuleDTO:
     id: UUID
     pricing_key: str
-    amount: Decimal
-    currency: str
+    unit_amount: Decimal
+    currency_code: str
     billing_scheme: str
     active_from: datetime
     active_until: datetime | None
@@ -28,6 +22,6 @@ class PricingSnapshotDTO:
     pricing_rule_id: UUID
     pricing_key: str
     unit_amount: Decimal
-    currency: str
+    currency_code: str
     billing_scheme: str
     captured_at: datetime

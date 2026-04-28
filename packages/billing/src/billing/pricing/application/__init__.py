@@ -1,5 +1,4 @@
 from billing.pricing.application.dto import (
-    PriceDTO,
     PricingRuleDTO,
     PricingSnapshotDTO,
 )
@@ -18,7 +17,6 @@ __all__ = [
     "CreatePricingSnapshotQuery",
     "GetPricingRuleHandler",
     "GetPricingRuleQuery",
-    "PriceDTO",
     "PricingCatalog",
     "PricingRuleDTO",
     "PricingSnapshotDTO",

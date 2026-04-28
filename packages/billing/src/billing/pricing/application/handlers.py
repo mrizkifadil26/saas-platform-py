@@ -6,8 +6,8 @@ from billing.pricing.application.queries import (
     CreatePricingSnapshotQuery,
     GetPricingRuleQuery,
 )
-from billing.pricing.domain.pricing_key import PricingKey
 from billing.pricing.domain.pricing_snapshot import PricingSnapshot
+from billing.pricing.domain.value_objects.pricing_key import PricingKey
 from billing.pricing.exceptions import PricingRuleNotFound
 
 
@@ -31,8 +31,8 @@ class GetPricingRuleHandler:
         return PricingRuleDTO(
             id=rule.id,
             pricing_key=str(rule.pricing_key),
-            amount=rule.price.amount,
-            currency=rule.price.currency,
+            unit_amount=rule.price.amount,
+            currency_code=rule.price.currency,
             billing_scheme=rule.billing_scheme.value,
             active_from=rule.active_from,
             active_until=rule.active_until,
@@ -59,7 +59,7 @@ class CreatePricingSnapshotHandler:
         snapshot = PricingSnapshot(
             pricing_rule_id=rule.id,
             pricing_key=rule.pricing_key,
-            unit_price=rule.price,
+            price=rule.price,
             billing_scheme=rule.billing_scheme,
             captured_at=query.at,
         )
@@ -67,8 +67,8 @@ class CreatePricingSnapshotHandler:
         return PricingSnapshotDTO(
             pricing_rule_id=snapshot.pricing_rule_id,
             pricing_key=str(snapshot.pricing_key),
-            unit_amount=snapshot.unit_price.amount,
-            currency=snapshot.unit_price.currency,
+            unit_amount=snapshot.price.amount,
+            currency_code=snapshot.price.currency,
             billing_scheme=snapshot.billing_scheme.value,
             captured_at=snapshot.captured_at,
         )
