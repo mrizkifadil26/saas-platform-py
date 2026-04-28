@@ -3,9 +3,9 @@ from __future__ import annotations
 from datetime import datetime
 
 from billing.pricing.application.interfaces import PricingCatalog
-from billing.pricing.domain.pricing_key import PricingKey
 from billing.pricing.domain.pricing_rule import PricingRule
 from billing.pricing.domain.pricing_rule_repository import PricingRuleRepository
+from billing.pricing.domain.value_objects.pricing_key import PricingKey
 
 
 class RepositoryPricingCatalog(PricingCatalog):

@@ -4,9 +4,9 @@ from datetime import datetime
 
 from db.repositories import SQLAlchemyRepository
 
-from billing.pricing.domain.pricing_key import PricingKey
 from billing.pricing.domain.pricing_rule import PricingRule
 from billing.pricing.domain.pricing_rule_repository import PricingRuleRepository
+from billing.pricing.domain.value_objects.pricing_key import PricingKey
 from billing.pricing.infrastructure.persistence.sqlalchemy.models import (
     PricingRuleModel,
 )

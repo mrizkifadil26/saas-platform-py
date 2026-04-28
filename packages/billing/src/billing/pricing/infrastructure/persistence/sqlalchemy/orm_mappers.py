@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from billing.pricing.domain.price import Price
-from billing.pricing.domain.pricing_key import PricingKey
 from billing.pricing.domain.pricing_rule import BillingScheme, PricingRule
+from billing.pricing.domain.value_objects.pricing_key import PricingKey
 from billing.pricing.infrastructure.persistence.sqlalchemy.models import (
     PricingRuleModel,
 )
 from billing.shared.domain.value_objects.currency import Currency
+from billing.shared.domain.value_objects.money import Money
 
 
 class PricingRuleORMMapper:
@@ -15,7 +15,7 @@ class PricingRuleORMMapper:
         return PricingRule(
             id=model.id,
             pricing_key=PricingKey(model.pricing_key),
-            price=Price(
+            price=Money(
                 amount=model.amount,
                 currency=Currency(model.currency),
             ),
