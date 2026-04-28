@@ -1,39 +1,39 @@
-from billing.domain.shared.exceptions import (
-    BillingDomainError,
-)
+from billing.shared.exceptions import DomainError
 
 
-class CreditsDomainError(BillingDomainError):
-    """Base exception for credits domain."""
+class CreditError(DomainError):
+    """Base exception for credit-related errors."""
 
     pass
 
 
-class InsufficientCredits(CreditsDomainError):
-    """Raised when a wallet does not have enough credits to cover a cost."""
+class InsufficientCreditsError(CreditError):
+    """Raised when an account does not have enough credits for a requested operation."""
 
     pass
 
 
-class InvalidCreditsAmount(CreditsDomainError):
-    """Raised when an invalid credits amount is provided (e.g., negative)."""
+class InvalidCreditAmountError(CreditError):
+    """Raised when an invalid credit amount is provided (e.g., negative amount)."""
 
     pass
 
 
-class DuplicateReference(CreditsDomainError):
-    """Raised when a grant with the same reference ID already exists."""
-
-    pass
+class InsufficientReservedCreditsError(CreditError):
+    """Raised when reserved credits are insufficient."""
 
 
-class GrantNotAvailable(CreditsDomainError):
-    """Raised when a grant is not active or has no remaining credits."""
-
-    pass
+class CreditGrantExpiredError(CreditError):
+    """Raised when an expired credit grant is used."""
 
 
-class GrantNotActive(CreditsDomainError):
-    """Raised when a grant is not active."""
+class CreditGrantNotExpiredError(CreditError):
+    """Raised when attempting to expire a grant that is not yet expired."""
 
-    pass
+
+class CreditGrantOverConsumedError(CreditError):
+    """Raised when consuming more than the remaining credits in a grant."""
+
+
+class CreditBalanceInconsistentError(CreditError):
+    """Raised when balance and grant state are inconsistent."""
