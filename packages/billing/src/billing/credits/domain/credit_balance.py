@@ -54,7 +54,7 @@ class CreditBalance:
             )
 
         return CreditBalance(
-            available=self.available + amount,
+            available=self.available,
             reserved=self.reserved - amount,
         )
 
