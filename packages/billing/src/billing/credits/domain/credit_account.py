@@ -6,6 +6,7 @@ from uuid import UUID
 
 from billing.credits.domain.credit_balance import CreditBalance
 from billing.credits.domain.credit_events import (
+    CreditAccountCreated,
     CreditsExpired,
     CreditsGranted,
     CreditsReserved,
@@ -43,11 +44,19 @@ class CreditAccount(AggregateRoot[SubscriptionId]):
         id: CreditAccountId,
         user_id: UserId,
     ) -> CreditAccount:
-        return cls(
+        account = cls(
             id=id,
             user_id=user_id,
             balance=CreditBalance.zero(),
         )
+
+        event = CreditAccountCreated(
+            credit_account_id=id,
+            user_id=user_id,
+        )
+        account.record_event(event)
+
+        return account
 
     def grant(
         self,
