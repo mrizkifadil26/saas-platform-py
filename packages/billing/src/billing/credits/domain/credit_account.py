@@ -201,6 +201,46 @@ class CreditAccount(AggregateRoot[SubscriptionId]):
 
         self.record_event(event)
 
+    def expire_grants(
+        self,
+        *,
+        occurred_at: datetime,
+        description: str | None = None,
+    ) -> Credits:
+        expired_amount = Credits.zero()
+        updated_grants: list[CreditGrant] = []
+
+        for grant in self.grants:
+            if grant.is_expired_at(occurred_at) and grant.remaining.is_positive():
+                expired_amount = expired_amount + grant.remaining
+                updated_grants.append(grant.expire(at=occurred_at))
+            else:
+                updated_grants.append(grant)
+
+        if expired_amount == 0:
+            self.grants = updated_grants
+            return Credits.zero()
+
+        self.balance = self.balance.subtract_available(expired_amount)
+        self.grants = updated_grants
+
+        self._record_entry(
+            amount=-int(expired_amount),
+            source_type=CreditSourceType.EXPIRATION,
+            source_id=None,
+            description=description,
+            occurred_at=occurred_at,
+        )
+
+        event = CreditsExpired(
+            credit_account_id=self.id,
+            amount=int(expired_amount),
+            occurred_at=occurred_at,
+        )
+        self.record_event(event)
+
+        return expired_amount
+
     def _record_entry(
         self,
         *,

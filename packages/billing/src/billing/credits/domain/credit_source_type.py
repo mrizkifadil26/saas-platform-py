@@ -8,7 +8,7 @@ class CreditSourceType(StrEnum):
     PURCHASE = "purchase"
     # ADMIN_ADJUSTMENT = "admin_adjustment"
     # REFUND = "refund"
-    # EXPIRATION = "expiration"
+    EXPIRATION = "expiration"
     USAGE_CONSUMPTION = "usage_consumption"
     RESERVATION = "reservation"
     RESERVATION_RELEASE = "reservation_release"

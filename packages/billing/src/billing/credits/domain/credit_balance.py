@@ -84,10 +84,10 @@ class CreditBalance:
             reserved=self.reserved,
         )
 
-    def substract_available(self, amount: Credits) -> CreditBalance:
+    def subtract_available(self, amount: Credits) -> CreditBalance:
         if amount.is_zero():
             raise InvalidCreditsAmountError(
-                "Amount to substract cannot be zero or negative"
+                "Amount to subtract cannot be zero or negative"
             )
 
         if amount > self.available:
