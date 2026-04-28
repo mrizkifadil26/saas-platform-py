@@ -13,9 +13,8 @@ from billing.shared.domain.enums import (
     UsageMetric,
 )
 from billing.shared.domain.value_objects.money import Money
+from billing.subscription.domain.plans import PlanCode
 from billing.subscription.domain.value_objects.product_code import ProductCode
-
-PlanCode = NewType("PlanCode", str)
 
 
 @dataclass(frozen=True, slots=True)

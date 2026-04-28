@@ -2,7 +2,7 @@ from decimal import Decimal
 from typing import NewType
 
 from billing.credits.domain.value_objects.credits import Credits
-from billing.pricing.domain.entities import SubscriptionPlan
+from billing.pricing.domain._entities import SubscriptionPlan
 from billing.shared.domain.enums import BillingInterval
 from billing.shared.domain.value_objects.currency import Currency
 from billing.shared.domain.value_objects.money import Money
