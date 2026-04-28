@@ -15,6 +15,8 @@ from billing.credits.application.exceptions import (
 from billing.credits.application.mappers import CreditAccountMapper
 from billing.credits.domain.credit_account import CreditAccount
 from billing.credits.domain.credit_source_type import CreditSourceType
+from billing.credits.domain.value_objects.credit_account_id import CreditAccountId
+from billing.credits.domain.value_objects.credit_grant_id import CreditGrantId
 from billing.credits.domain.value_objects.credits import Credits
 from billing.shared.application.clock import Clock
 from billing.shared.application.event_publisher import EventPublisher
@@ -27,10 +29,12 @@ class CreateCreditAccountHandler:
         self,
         *,
         uow: BillingUoW,
+        id_generator: IdGenerator,
         event_publisher: EventPublisher,
         # idempotency_store: IdempotencyStore,
     ) -> None:
         self._uow = uow
+        self._id_generator = id_generator
         self._event_publisher = event_publisher
 
         # self.idempotency_store = idempotency_store
@@ -48,7 +52,7 @@ class CreateCreditAccountHandler:
                 )
 
             account = CreditAccount.create(
-                id=command.credit_account_id,
+                id=CreditAccountId(self._id_generator.generate()),
                 user_id=command.user_id,
             )
 
@@ -66,10 +70,12 @@ class GrantCreditsHandler:
         self,
         *,
         uow: BillingUoW,
+        id_generator: IdGenerator,
         clock: Clock,
         event_publisher: EventPublisher,
     ) -> None:
         self._uow = uow
+        self._id_generator = id_generator
         self._clock = clock
         self._event_publisher = event_publisher
 
@@ -83,7 +89,7 @@ class GrantCreditsHandler:
                 )
 
             account.grant(
-                grant_id=command.grant_id,
+                grant_id=CreditGrantId(self._id_generator.generate()),
                 amount=Credits.of(command.amount),
                 occurred_at=self._clock.now(),
                 expires_at=command.expires_at,
@@ -106,10 +112,12 @@ class PurchaseCreditsHandler:
         self,
         *,
         uow: BillingUoW,
+        id_generator: IdGenerator,
         clock: Clock,
         event_publisher: EventPublisher,
     ) -> None:
         self._uow = uow
+        self._id_generator = id_generator
         self._clock = clock
         self._event_publisher = event_publisher
 
@@ -123,7 +131,7 @@ class PurchaseCreditsHandler:
                 )
 
             account.grant(
-                grant_id=command.grant_id,
+                grant_id=CreditGrantId(self._id_generator.generate()),
                 amount=Credits.of(command.amount),
                 occurred_at=self._clock.now(),
                 expires_at=command.expires_at,

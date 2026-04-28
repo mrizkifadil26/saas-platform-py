@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from typing import Annotated
-from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -33,8 +32,6 @@ from billing.credits.domain.exceptions import (
     InsufficientReservedCreditsError,
     InvalidCreditsAmountError,
 )
-from billing.credits.domain.value_objects.credit_account_id import CreditAccountId
-from billing.credits.domain.value_objects.credit_grant_id import CreditGrantId
 from billing.credits.interface.dependencies import (
     get_consume_reserved_credits_handler,
     get_create_credit_account_handler,
@@ -78,7 +75,6 @@ async def create_credit_account(
     try:
         dto = await handler.handle(
             CreateCreditAccountCommand(
-                credit_account_id=CreditAccountId(uuid4().hex),
                 user_id=UserId(request.user_id),
             )
         )
@@ -107,7 +103,6 @@ async def grant_credits(
         dto = await handler.handle(
             GrantCreditsCommand(
                 user_id=UserId(request.user_id),
-                grant_id=CreditGrantId(uuid4().hex),
                 amount=request.amount,
                 source_type=request.source_type,
                 source_id=request.source_id,
@@ -136,7 +131,6 @@ async def purchase_credits(
         dto = await handler.handle(
             PurchaseCreditsCommand(
                 user_id=UserId(request.user_id),
-                grant_id=CreditGrantId(uuid4().hex),
                 amount=request.amount,
                 source_id=request.source_id,
                 description=request.description,

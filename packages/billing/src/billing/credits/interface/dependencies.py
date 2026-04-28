@@ -57,10 +57,22 @@ def get_uow(
 def get_create_credit_account_handler(
     uow: Annotated[BillingUoW, Depends(get_uow)],
     id_generator: Annotated[IdGenerator, Depends(get_id_generator)],
-    clock: Annotated[SystemClock, Depends(get_clock)],
     event_publisher: Annotated[EventPublisher, Depends(get_event_publisher)],
 ) -> CreateCreditAccountHandler:
     return CreateCreditAccountHandler(
+        uow=uow,
+        id_generator=id_generator,
+        event_publisher=event_publisher,
+    )
+
+
+def get_grant_credits_handler(
+    uow: Annotated[BillingUoW, Depends(get_uow)],
+    id_generator: Annotated[IdGenerator, Depends(get_id_generator)],
+    clock: Annotated[Clock, Depends(get_clock)],
+    event_publisher: Annotated[EventPublisher, Depends(get_event_publisher)],
+) -> GrantCreditsHandler:
+    return GrantCreditsHandler(
         uow=uow,
         id_generator=id_generator,
         clock=clock,
@@ -68,25 +80,15 @@ def get_create_credit_account_handler(
     )
 
 
-def get_grant_credits_handler(
-    uow: Annotated[BillingUoW, Depends(get_uow)],
-    clock: Annotated[Clock, Depends(get_clock)],
-    event_publisher: Annotated[EventPublisher, Depends(get_event_publisher)],
-) -> GrantCreditsHandler:
-    return GrantCreditsHandler(
-        uow=uow,
-        clock=clock,
-        event_publisher=event_publisher,
-    )
-
-
 def get_purchase_credits_handler(
     uow: Annotated[BillingUoW, Depends(get_uow)],
+    id_generator: Annotated[IdGenerator, Depends(get_id_generator)],
     clock: Annotated[Clock, Depends(get_clock)],
     event_publisher: Annotated[EventPublisher, Depends(get_event_publisher)],
 ) -> PurchaseCreditsHandler:
     return PurchaseCreditsHandler(
         uow=uow,
+        id_generator=id_generator,
         clock=clock,
         event_publisher=event_publisher,
     )
