@@ -53,8 +53,8 @@ async def get_pricing_rule(
     return PricingRuleResponse(
         id=dto.id,
         pricing_key=dto.pricing_key,
-        amount=dto.amount,
-        currency=dto.currency,
+        amount=dto.unit_amount,
+        currency=dto.currency_code,
         billing_scheme=dto.billing_scheme,
         active_from=dto.active_from,
         active_until=dto.active_until,
@@ -89,7 +89,7 @@ async def create_pricing_snapshot(
         pricing_rule_id=dto.pricing_rule_id,
         pricing_key=dto.pricing_key,
         unit_amount=dto.unit_amount,
-        currency=dto.currency,
+        currency=dto.currency_code,
         billing_scheme=dto.billing_scheme,
         captured_at=dto.captured_at,
     )

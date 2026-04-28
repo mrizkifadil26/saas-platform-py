@@ -1,10 +1,10 @@
 from datetime import datetime
 
-from billing.pricing.domain.value_objects.price import Price
 from billing.pricing.domain.pricing_rule import PricingRule
 from billing.pricing.domain.pricing_rule_repository import PricingRuleRepository
 from billing.pricing.domain.pricing_snapshot import PricingSnapshot
 from billing.pricing.domain.value_objects.pricing_key import PricingKey
+from billing.shared.domain.value_objects.money import Money
 
 
 class PricingPolicy:
@@ -32,7 +32,7 @@ class PricingPolicy:
         *,
         quantity: int,
         at: datetime,
-    ) -> Price:
+    ) -> Money:
         pricing_rule = await self.resolve_pricing_rule(pricing_key, at=at)
         return pricing_rule.calculate_price(quantity)
 
@@ -46,7 +46,7 @@ class PricingPolicy:
         return PricingSnapshot(
             pricing_rule_id=pricing_rule.id,
             pricing_key=pricing_rule.pricing_key,
-            unit_price=pricing_rule.price,
+            price=pricing_rule.price,
             billing_scheme=pricing_rule.billing_scheme,
             captured_at=at,
         )
