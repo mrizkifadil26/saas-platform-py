@@ -6,7 +6,7 @@ from billing.shared.domain.domain_event import DomainEvent
 IdT = TypeVar("IdT")
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class AggregateRoot(Generic[IdT]):
     _domain_events: list[DomainEvent] = field(
         default_factory=list,

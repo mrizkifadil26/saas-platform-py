@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
@@ -27,7 +27,7 @@ from billing.subscription.domain.value_objects.subscription_item_id import (
 )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class Subscription(AggregateRoot[SubscriptionId]):
     subscription_id: SubscriptionId
     # TODO: should use customer_id instead of user_id later
@@ -121,7 +121,7 @@ class Subscription(AggregateRoot[SubscriptionId]):
         *,
         immediate: bool = False,
         occurred_at: datetime | None = None,
-    ) -> Subscription:
+    ) -> None:
         if self.status == SubscriptionStatus.CANCELED:
             raise SubscriptionAlreadyCanceledError(
                 f"Subscription {self.subscription_id} is already canceled"
@@ -132,37 +132,28 @@ class Subscription(AggregateRoot[SubscriptionId]):
                 f"Cannot cancel subscription {self.subscription_id} because it is expired"
             )
 
-        updated_subscription = (
-            replace(
-                self,
-                status=SubscriptionStatus.CANCELED,
-                cancel_at_period_end=False,
-            )
-            if immediate
-            else replace(self, cancel_at_period_end=True)
-        )
+        if immediate:
+            self.status = SubscriptionStatus.CANCELED
+            self.cancel_at_period_end = False
+        else:
+            self.cancel_at_period_end = True
 
         event = SubscriptionCanceled(
             subscription_id=self.subscription_id,
             immediate=immediate,
             occurred_at=occurred_at or self.billing_period.start_at,
         )
-        updated_subscription.record_event(event)
+        self.record_event(event)
 
-        return updated_subscription
-
-    def uncancel(self) -> Subscription:
+    def uncancel(self) -> None:
         if self.status.is_terminal:
             raise InvalidSubscriptionStateError(
                 f"Cannot uncancel subscription {self.subscription_id} because it is in terminal status {self.status}"
             )
 
-        return replace(
-            self,
-            cancel_at_period_end=False,
-        )
+        self.cancel_at_period_end = False
 
-    def mark_past_due(self) -> Subscription:
+    def mark_past_due(self) -> None:
         if self.status not in {
             SubscriptionStatus.ACTIVE,
             SubscriptionStatus.TRIALING,
@@ -171,9 +162,9 @@ class Subscription(AggregateRoot[SubscriptionId]):
                 f"Cannot mark subscription {self.subscription_id} as past due because it is not active or trialing (status: {self.status})"
             )
 
-        return replace(self, status=SubscriptionStatus.PAST_DUE)
+        self.status = SubscriptionStatus.PAST_DUE
 
-    def pause(self) -> Subscription:
+    def pause(self) -> None:
         if self.status not in {
             SubscriptionStatus.ACTIVE,
             SubscriptionStatus.PAST_DUE,
@@ -183,21 +174,21 @@ class Subscription(AggregateRoot[SubscriptionId]):
                 f"Cannot pause subscription {self.subscription_id} because it is not active or past due (status: {self.status})"
             )
 
-        return replace(self, status=SubscriptionStatus.PAUSED)
+        self.status = SubscriptionStatus.PAUSED
 
-    def resume(self) -> Subscription:
+    def resume(self) -> None:
         if self.status != SubscriptionStatus.PAUSED:
             raise InvalidSubscriptionStateError(
                 f"Cannot resume subscription {self.subscription_id} because it is not paused (status: {self.status})"
             )
 
-        return replace(self, status=SubscriptionStatus.ACTIVE)
+        self.status = SubscriptionStatus.ACTIVE
 
-    def expire(self) -> Subscription:
+    def expire(self) -> None:
         if self.status == SubscriptionStatus.EXPIRED:
-            return self
+            return
 
-        return replace(self, status=SubscriptionStatus.EXPIRED)
+        self.status = SubscriptionStatus.EXPIRED
 
     def can_renew(self) -> bool:
         return self.status.can_renew()
@@ -207,7 +198,7 @@ class Subscription(AggregateRoot[SubscriptionId]):
         next_billing_period: BillingPeriod,
         *,
         occurred_at: datetime | None = None,
-    ) -> Subscription:
+    ) -> None:
         if not self.can_renew():
             raise InvalidSubscriptionStateError(
                 f"Cannot renew subscription {self.subscription_id} because it is not in a renewable state (status: {self.status})"
@@ -223,11 +214,8 @@ class Subscription(AggregateRoot[SubscriptionId]):
                 f"Cannot renew subscription {self.subscription_id} because the next billing period {next_billing_period} does not start after the current billing period {self.billing_period}"
             )
 
-        updated_subscription = replace(
-            self,
-            status=SubscriptionStatus.ACTIVE,
-            billing_period=next_billing_period,
-        )
+        self.status = SubscriptionStatus.ACTIVE
+        self.billing_period = next_billing_period
 
         event = SubscriptionRenewed(
             subscription_id=self.subscription_id,
@@ -237,16 +225,14 @@ class Subscription(AggregateRoot[SubscriptionId]):
             new_period_end=next_billing_period.end_at,
             occurred_at=occurred_at or next_billing_period.start_at,
         )
-        updated_subscription.record_event(event)
-
-        return updated_subscription
+        self.record_event(event)
 
     def change_plan(
         self,
         new_plan_id: PlanId,
         *,
         occurred_at: datetime | None = None,
-    ) -> Subscription:
+    ) -> None:
         if self.status.is_terminal:
             raise InvalidSubscriptionStateError(
                 f"Cannot change plan for subscription {self.subscription_id} because it is in terminal status {self.status}"
@@ -257,7 +243,7 @@ class Subscription(AggregateRoot[SubscriptionId]):
                 f"Cannot change to the same plan for subscription {self.subscription_id} (plan_id: {self.plan_id})"
             )
 
-        updated_subcription = replace(self, plan_id=new_plan_id)
+        self.plan_id = new_plan_id
 
         event = SubscriptionChanged(
             subscription_id=self.subscription_id,
@@ -266,34 +252,32 @@ class Subscription(AggregateRoot[SubscriptionId]):
             occurred_at=occurred_at
             or datetime.now(tz=self.billing_period.start_at.tzinfo),
         )
-        updated_subcription.record_event(event)
-
-        return updated_subcription
+        self.record_event(event)
 
     def add_item(
         self,
         item: SubscriptionItem,
-    ) -> Subscription:
+    ) -> None:
         if any(existing.item_id == item.item_id for existing in self.items):
             raise ValueError(f"Duplicate SubscriptionItemId: {item.item_id}")
 
-        return replace(self, items=(*self.items, item))
+        self.items = (*self.items, item)
 
     def remove_item(
         self,
         item_id: SubscriptionItemId,
-    ) -> Subscription:
+    ) -> None:
         remaining_items = tuple(item for item in self.items if item.item_id != item_id)
         if len(remaining_items) == len(self.items):
             raise ValueError(f"SubscriptionItem not found: {item_id}")
 
-        return replace(self, items=remaining_items)
+        self.items = remaining_items
 
     def update_item_quantity(
         self,
         item_id: SubscriptionItemId,
         new_quantity: int,
-    ) -> Subscription:
+    ) -> None:
         updated = False
         items = []
         for item in self.items:
@@ -306,7 +290,7 @@ class Subscription(AggregateRoot[SubscriptionId]):
         if not updated:
             raise ValueError(f"SubscriptionItem not found: {item_id}")
 
-        return replace(self, items=tuple(items))
+        self.items = tuple(items)
 
     def has_grant_for_current_period(self) -> bool:
         return self.last_granted_period_start == self.current_period_start
@@ -320,7 +304,7 @@ class Subscription(AggregateRoot[SubscriptionId]):
     def mark_credits_granted_for_current_period(
         self,
         credits: Credits,
-    ) -> Subscription:
+    ) -> None:
         if credits.is_zero():
             raise ValueError("credits must be greater than zero")
 
@@ -334,10 +318,7 @@ class Subscription(AggregateRoot[SubscriptionId]):
                 f"Cannot mark credits as granted for subscription {self.subscription_id} because it is not active or credits have already been granted for the current period"
             )
 
-        return replace(
-            self,
-            last_granted_period_start=self.current_period_start,
-        )
+        self.last_granted_period_start = self.current_period_start
 
     def should_end_now(self, at: datetime) -> bool:
         if at.tzinfo is None:
@@ -347,10 +328,3 @@ class Subscription(AggregateRoot[SubscriptionId]):
             return False
 
         return self.cancel_at_period_end and at >= self.billing_period.end_at
-
-    # def _record(self, event: object) -> Subscription:
-    #     events = list(getattr(self, "_events", []))
-    #     events.append(event)
-    #     object.__setattr__(self, "_events", events)
-
-    #     return self

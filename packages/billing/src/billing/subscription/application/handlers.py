@@ -111,19 +111,19 @@ class RenewSubscriptionHandler:
                 end_at=command.next_period_end,
             )
 
-            updated_subscription = subscription.renew(
+            subscription.renew(
                 next_billing_period=next_period,
                 occurred_at=self._clock.now(),
             )
 
-            await self._uow.subscriptions.save(updated_subscription)
+            await self._uow.subscriptions.save(subscription)
 
         # self.idempotency_store.store(command.idempotency_key)
 
-        events = updated_subscription.pull_domain_events()
+        events = subscription.pull_domain_events()
         self._event_publisher.publish(events)
 
-        return SubscriptionMapper.domain_to_dto(updated_subscription)
+        return SubscriptionMapper.domain_to_dto(subscription)
 
 
 class ChangeSubscriptionPlanHandler:
@@ -158,19 +158,19 @@ class ChangeSubscriptionPlanHandler:
                     f"Subscription not found: {command.subscription_id}"
                 )
 
-            updated_subscription = subscription.change_plan(
+            subscription.change_plan(
                 new_plan_id=new_plan_id,
                 occurred_at=self._clock.now(),
             )
 
-            await self._uow.subscriptions.save(updated_subscription)
+            await self._uow.subscriptions.save(subscription)
 
         # self.idempotency_store.store(command.idempotency_key)
 
-        events = updated_subscription.pull_domain_events()
+        events = subscription.pull_domain_events()
         self._event_publisher.publish(events)
 
-        return SubscriptionMapper.domain_to_dto(updated_subscription)
+        return SubscriptionMapper.domain_to_dto(subscription)
 
 
 class CancelSubscriptionHandler:
@@ -204,19 +204,19 @@ class CancelSubscriptionHandler:
                     f"Subscription not found: {command.subscription_id}"
                 )
 
-            updated_subscription = subscription.cancel(
+            subscription.cancel(
                 immediate=command.immediate,
                 occurred_at=self._clock.now(),
             )
 
-            await self._uow.subscriptions.save(updated_subscription)
+            await self._uow.subscriptions.save(subscription)
 
         # self.idempotency_store.store(command.idempotency_key)
 
-        events = updated_subscription.pull_domain_events()
+        events = subscription.pull_domain_events()
         self._event_publisher.publish(events)
 
-        return SubscriptionMapper.domain_to_dto(updated_subscription)
+        return SubscriptionMapper.domain_to_dto(subscription)
 
 
 class GetSubscriptionHandler:
