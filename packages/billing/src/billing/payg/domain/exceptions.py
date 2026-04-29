@@ -1,25 +1,17 @@
 from billing.shared.exceptions import DomainError
 
 
-class PaygDomainError(DomainError):
-    """Base class for all Pay-as-you-go domain errors."""
-
-    pass
+class PaygPurchaseError(DomainError):
+    """Base exception for Pay-as-you-go purchase errors."""
 
 
-class UnknownPaygPack(PaygDomainError):
-    """Raised when an unknown Pay-as-you-go pack is requested."""
-
-    pass
+class InvalidPaygPurchaseStateError(PaygPurchaseError):
+    """Raised when an invalid state transition is attempted on a Pay-as-you-go purchase."""
 
 
-class PurchaseStateError(PaygDomainError):
-    """Raised when an invalid state transition is attempted on a purchase."""
-
-    pass
+class InvalidPaygPurchaseAmountError(PaygPurchaseError):
+    """Raised when an invalid amount of credits is used for a Pay-as-you-go purchase."""
 
 
-class InvalidMoney(PaygDomainError):
-    """Raised when an invalid money amount is used in a purchase."""
-
-    pass
+class PaygPurchaseAlreadyGrantedError(PaygPurchaseError):
+    """Raised when a Pay-as-you-go purchase has already been granted."""

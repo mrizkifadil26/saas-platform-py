@@ -38,11 +38,3 @@ class GrantStatus(str, Enum):
     FULLY_CONSUMED = "fully_consumed"
     EXPIRED = "expired"
     REVERSED = "reversed"
-
-
-class PurchaseStatus(str, Enum):
-    PENDING = "pending"
-    PAID = "paid"
-    FAILED = "failed"
-    REFUNDED = "refunded"
-    CANCELED = "canceled"
