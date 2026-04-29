@@ -19,12 +19,6 @@ class PricingNotFound(PricingError):
     pass
 
 
-class PricingRuleNotFound(PricingNotFound):
-    """Raised when a pricing rule is not found."""
-
-    pass
-
-
 class DomainInvariantError(PricingError):
     """Raised when a domain invariant is violated."""
 

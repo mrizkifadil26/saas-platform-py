@@ -4,6 +4,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from billing.pricing.application.exceptions import PricingRuleNotFound
 from billing.pricing.application.handlers import (
     CreatePricingSnapshotHandler,
     GetPricingRuleHandler,
@@ -12,7 +13,6 @@ from billing.pricing.application.queries import (
     CreatePricingSnapshotQuery,
     GetPricingRuleQuery,
 )
-from billing.pricing.exceptions import PricingRuleNotFound
 from billing.pricing.interface.dependencies import (
     get_create_pricing_snapshot_handler,
     get_pricing_rule_handler,

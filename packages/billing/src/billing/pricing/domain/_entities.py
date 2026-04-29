@@ -1,10 +1,9 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import NewType
 
 from billing.credits.domain.value_objects.credits import Credits
-from billing.payg.domain.value_objects import PackCode
-from billing.pricing.exceptions import (
+from billing.payg.domain.value_objects.pack_code import PackCode
+from billing.pricing.domain.exceptions import (
     InvalidPlanConfiguration,
     PricingNotFound,
 )

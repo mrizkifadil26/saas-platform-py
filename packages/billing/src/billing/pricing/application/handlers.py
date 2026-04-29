@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from billing.pricing.application.dto import PricingRuleDTO, PricingSnapshotDTO
+from billing.pricing.application.exceptions import PricingRuleNotFound
 from billing.pricing.application.interfaces import PricingCatalog
 from billing.pricing.application.queries import (
     CreatePricingSnapshotQuery,
@@ -8,7 +9,6 @@ from billing.pricing.application.queries import (
 )
 from billing.pricing.domain.pricing_snapshot import PricingSnapshot
 from billing.pricing.domain.value_objects.pricing_key import PricingKey
-from billing.pricing.exceptions import PricingRuleNotFound
 
 
 class GetPricingRuleHandler:
