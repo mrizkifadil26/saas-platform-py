@@ -19,7 +19,7 @@ class InvoiceStatus(StrEnum):
     def can_void(self) -> bool:
         return self in {
             InvoiceStatus.DRAFT,
-            InvoiceStatus.OPEN,
+            InvoiceStatus.OPEN,  # maybe restricted later
         }
 
     def can_mark_uncollectible(self) -> bool:
