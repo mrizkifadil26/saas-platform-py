@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Protocol
 
+from billing.invoice.domain.value_objects.invoice_id import InvoiceId
 from billing.payment.domain.value_objects.payment_id import PaymentId
 from billing.payment.domain.value_objects.payment_method import PaymentMethod
 from billing.shared.domain.value_objects.money import Money
@@ -12,8 +13,7 @@ class ChargeRequest:
     payment_id: PaymentId
     # TODO: later we should use customer_id instead of user_id
     user_id: UserId
-    # TODO: later we should use InvoiceId instead of str
-    invoice_id: str
+    invoice_id: InvoiceId
     amount: Money
     method: PaymentMethod
     idempotency_key: str

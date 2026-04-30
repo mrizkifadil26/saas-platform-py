@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 
+from billing.invoice.domain.value_objects.invoice_id import InvoiceId
 from billing.payment.domain.exceptions import (
     InvalidPaymentStateError,
     PaymentAlreadyRefundedError,
@@ -16,8 +17,8 @@ from billing.payment.domain.payment_events import (
     PaymentRefunded,
     PaymentSucceeded,
 )
-from billing.payment.domain.payment_gateway import PaymentId
 from billing.payment.domain.payment_status import PaymentStatus
+from billing.payment.domain.value_objects.payment_id import PaymentId
 from billing.payment.domain.value_objects.payment_method import PaymentMethod
 from billing.shared.domain.aggregate_root import AggregateRoot
 from billing.shared.domain.value_objects.money import Money
@@ -31,8 +32,7 @@ class Payment(AggregateRoot[PaymentId]):
     id: PaymentId
     # TODO: later should use customer_id instead of user_id
     user_id: UserId
-    # TODO: later should use invoiceId instead of str
-    invoice_id: str
+    invoice_id: InvoiceId
 
     amount: Money
     method: PaymentMethod
@@ -53,7 +53,7 @@ class Payment(AggregateRoot[PaymentId]):
         cls,
         id: PaymentId,
         user_id: UserId,
-        invoice_id: str,
+        invoice_id: InvoiceId,
         amount: Money,
         method: PaymentMethod,
         created_at: datetime,
@@ -84,7 +84,7 @@ class Payment(AggregateRoot[PaymentId]):
     def start_processing(
         self,
         *,
-        occured_at: datetime,
+        occurred_at: datetime,
     ) -> None:
         if not self.status.can_start_processing():
             raise InvalidPaymentStateError(
@@ -92,7 +92,7 @@ class Payment(AggregateRoot[PaymentId]):
             )
 
         self.status = PaymentStatus.PROCESSING
-        self.processing_started_at = occured_at
+        self.processing_started_at = occurred_at
 
         event = PaymentProcessingStarted(
             payment_id=self.id,
@@ -105,7 +105,7 @@ class Payment(AggregateRoot[PaymentId]):
         self,
         *,
         gateway_reference: str,
-        occured_at: datetime,
+        occurred_at: datetime,
     ) -> None:
         if self.status is PaymentStatus.SUCCEEDED:
             raise PaymentAlreadySucceededError(f"Payment already succeeded: {self.id}")
@@ -117,7 +117,7 @@ class Payment(AggregateRoot[PaymentId]):
 
         self.status = PaymentStatus.SUCCEEDED
         self.gateway_reference = gateway_reference
-        self.succeeded_at = occured_at
+        self.succeeded_at = occurred_at
 
         event = PaymentSucceeded(
             payment_id=self.id,

@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from billing.payment.domain.payment import PaymentId
+from billing.invoice.domain.value_objects.invoice_id import InvoiceId
+from billing.payment.domain.value_objects.payment_id import PaymentId
 from billing.shared.domain.domain_event import DomainEvent
 from billing.shared.domain.value_objects.money import Money
 from billing.shared.domain.value_objects.user_id import UserId
@@ -13,8 +14,7 @@ class PaymentCreated(DomainEvent):
     payment_id: PaymentId
     # TODO: later we should use customer_id instead of user_id
     user_id: UserId
-    # TODO: later we should use invoice_id instead of str
-    invoice_id: str
+    invoice_id: InvoiceId
     amount: Money
 
 
@@ -23,8 +23,7 @@ class PaymentProcessingStarted(DomainEvent):
     payment_id: PaymentId
     # TODO: later we should use customer_id instead of user_id
     user_id: UserId
-    # TODO: later we should use invoice_id instead of str
-    invoice_id: str
+    invoice_id: InvoiceId
 
 
 @dataclass(frozen=True, slots=True)
@@ -32,8 +31,7 @@ class PaymentSucceeded(DomainEvent):
     payment_id: PaymentId
     # TODO: later we should use customer_id instead of user_id
     user_id: UserId
-    # TODO: later we should use invoice_id instead of str
-    invoice_id: str
+    invoice_id: InvoiceId
     gateway_reference: str
 
 
@@ -42,8 +40,7 @@ class PaymentFailed(DomainEvent):
     payment_id: PaymentId
     # TODO: later we should use customer_id instead of user_id
     user_id: UserId
-    # TODO: later we should use invoice_id instead of str
-    invoice_id: str
+    invoice_id: InvoiceId
     reason: str
 
 
@@ -52,8 +49,7 @@ class PaymentCanceled(DomainEvent):
     payment_id: PaymentId
     # TODO: later we should use customer_id instead of user_id
     user_id: UserId
-    # TODO: later we should use invoice_id instead of str
-    invoice_id: str
+    invoice_id: InvoiceId
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,5 +57,4 @@ class PaymentRefunded(DomainEvent):
     payment_id: PaymentId
     # TODO: later we should use customer_id instead of user_id
     user_id: UserId
-    # TODO: later we should use invoice_id instead of str
-    invoice_id: str
+    invoice_id: InvoiceId
