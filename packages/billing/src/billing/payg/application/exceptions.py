@@ -1,21 +1,29 @@
-from billing.shared.application.exceptions import (
-    ApplicationError,
-)
+from billing.shared.exceptions import ApplicationError
 
 
 class PaygApplicationError(ApplicationError):
     """Base exception for PAYG application services."""
 
-    pass
+
+class PaygPurchaseNotFoundError(PaygApplicationError):
+    """Raised when PAYG purchase cannot be found."""
 
 
-class IdempotencyConflictError(PaygApplicationError):
-    """Raised when an idempotent request conflicts with a previous request."""
-
-    pass
+class PaygPackageNotFoundError(PaygApplicationError):
+    """Raised when PAYG package cannot be found."""
 
 
-class DuplicateRequestError(PaygApplicationError):
-    """Raised when a request with the same idempotency key is already in progress."""
+class CreditAccountNotFoundError(PaygApplicationError):
+    """Raised when user credit account cannot be found."""
 
-    pass
+
+class InvoiceNotFoundError(PaygApplicationError):
+    """Raised when invoice cannot be found."""
+
+
+class PaymentNotFoundError(PaygApplicationError):
+    """Raised when payment cannot be found."""
+
+
+class PaymentGatewayError(PaygApplicationError):
+    """Raised when payment gateway fails unexpectedly."""

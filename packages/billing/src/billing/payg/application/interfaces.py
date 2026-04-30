@@ -1,44 +1,28 @@
-from __future__ import annotations
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
 
-from typing import Protocol
-
-from billing.domain.credits.entities import CreditGrant
-from billing.domain.payg.entities import PaygPurchase
-
-
-class PaygPurchaseRepository(Protocol):
-    async def save(
-        self,
-        purchase: PaygPurchase,
-    ) -> None:
-        raise NotImplementedError
+from billing.credits.domain.value_objects.credits import Credits
+from billing.shared.domain.value_objects.money import Money
 
 
-class CreditGrantRepository(Protocol):
-    async def save_grant(
-        self,
-        grant: CreditGrant,
-    ) -> None:
-        raise NotImplementedError
+@dataclass(frozen=True, slots=True)
+class PaygCreditPackage:
+    code: str
+    name: str
+    credits: Credits
+    price: Money
 
 
-class PaygApplicationUnitOfWork(Protocol):
-    payg_purchase: PaygPurchaseRepository
-    ledger: CreditGrantRepository
+class PaygPricingCatalog(ABC):
+    """
+    Read-side pricing dependency.
 
-    async def __aenter__(self) -> PaygApplicationUnitOfWork:
-        raise NotImplementedError
+    PAYG application asks pricing:
+    'What does package X cost?'
 
-    async def __aexit__(
-        self,
-        exc_type,
-        exc,
-        tb,
-    ) -> None:
-        raise NotImplementedError
+    It does NOT trust frontend price. Ever.
+    """
 
-    async def commit(self) -> None:
-        raise NotImplementedError
-
-    async def rollback(self) -> None:
+    @abstractmethod
+    async def get_payg_package(self, package_code: str) -> PaygCreditPackage | None:
         raise NotImplementedError
