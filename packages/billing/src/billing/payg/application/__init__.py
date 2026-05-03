@@ -20,7 +20,6 @@ from billing.payg.application.handlers import (
     MarkPaygPaymentSucceededHandler,
     PurchasePaygCreditsHandler,
 )
-from billing.payg.application.interfaces import PaygCreditPackage, PaygPricingCatalog
 
 __all__ = [
     "CreditAccountNotFoundError",
@@ -32,9 +31,7 @@ __all__ = [
     "MarkPaygPaymentSucceededCommand",
     "MarkPaygPaymentSucceededHandler",
     "PaygApplicationError",
-    "PaygCreditPackage",
     "PaygPackageNotFoundError",
-    "PaygPricingCatalog",
     "PaygPurchaseDTO",
     "PaygPurchaseNotFoundError",
     "PaymentGatewayError",

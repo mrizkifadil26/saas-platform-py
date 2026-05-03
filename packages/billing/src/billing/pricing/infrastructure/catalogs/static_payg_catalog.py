@@ -3,8 +3,9 @@ from __future__ import annotations
 from decimal import Decimal
 
 from billing.credits.domain.value_objects.credits import Credits
-from billing.payg.application.interfaces import PaygCreditPackage, PaygPricingCatalog
 from billing.payg.domain.value_objects.pack_code import PackCode
+from billing.pricing.application.catalogs import PaygPricingCatalog
+from billing.pricing.application.dto import PaygCreditPackage
 from billing.pricing.domain.exceptions import PricingNotFound
 from billing.shared.domain.value_objects.currency import Currency
 from billing.shared.domain.value_objects.money import Money
