@@ -25,7 +25,6 @@ from billing.credits.domain.value_objects.credit_ledger_entry_id import (
 from billing.credits.domain.value_objects.credits import Credits
 from billing.shared.domain.aggregate_root import AggregateRoot
 from billing.shared.domain.value_objects.user_id import UserId
-from billing.subscription.domain.value_objects.subscription_id import SubscriptionId
 
 
 @dataclass(slots=True)

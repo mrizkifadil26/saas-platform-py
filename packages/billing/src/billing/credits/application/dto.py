@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from datetime import datetime
-from uuid import UUID
 
 from billing.credits.domain.credit_source_type import CreditSourceType
 from billing.credits.domain.value_objects.credit_account_id import CreditAccountId

@@ -9,7 +9,6 @@ from billing.credits.application.commands import (
     CreateCreditAccountCommand,
     ExpireCreditsCommand,
     GrantCreditsCommand,
-    PurchaseCreditsCommand,
     ReleaseReservedCreditsCommand,
     ReserveCreditsCommand,
 )
@@ -22,7 +21,6 @@ from billing.credits.application.handlers import (
     CreateCreditAccountHandler,
     ExpireCreditsHandler,
     GrantCreditsHandler,
-    PurchaseCreditsHandler,
     ReleaseReservedCreditsHandler,
     ReserveCreditsHandler,
 )
@@ -37,7 +35,6 @@ from billing.credits.interface.dependencies import (
     get_create_credit_account_handler,
     get_expire_credits_handler,
     get_grant_credits_handler,
-    get_purchase_credits_handler,
     get_release_reserved_credits_handler,
     get_reserve_credits_handler,
 )
@@ -48,7 +45,6 @@ from billing.credits.interface.schemas import (
     CreditAccountResponse,
     ExpireCreditsRequest,
     GrantCreditsRequest,
-    PurchaseCreditsRequest,
     ReleaseReservedCreditsRequest,
     ReserveCreditsRequest,
 )
@@ -105,33 +101,6 @@ async def grant_credits(
                 user_id=UserId(request.user_id),
                 amount=request.amount,
                 source_type=request.source_type,
-                source_id=request.source_id,
-                description=request.description,
-                expires_at=request.expires_at,
-            )
-        )
-    except CreditAccountNotFoundError as exc:
-        raise_not_found(exc)
-    except CreditError as exc:
-        raise_credit_domain_error(exc)
-
-    return credit_account_response_from_dto(dto)
-
-
-@router.post(
-    "/purchase",
-    response_model=CreditAccountResponse,
-    status_code=status.HTTP_200_OK,
-)
-async def purchase_credits(
-    request: PurchaseCreditsRequest,
-    handler: PurchaseCreditsHandler = Depends(get_purchase_credits_handler),
-) -> CreditAccountResponse:
-    try:
-        dto = await handler.handle(
-            PurchaseCreditsCommand(
-                user_id=UserId(request.user_id),
-                amount=request.amount,
                 source_id=request.source_id,
                 description=request.description,
                 expires_at=request.expires_at,

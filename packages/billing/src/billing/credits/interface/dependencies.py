@@ -11,7 +11,6 @@ from billing.credits.application.handlers import (
     CreateCreditAccountHandler,
     ExpireCreditsHandler,
     GrantCreditsHandler,
-    PurchaseCreditsHandler,
     ReleaseReservedCreditsHandler,
     ReserveCreditsHandler,
 )
@@ -73,20 +72,6 @@ def get_grant_credits_handler(
     event_publisher: Annotated[EventPublisher, Depends(get_event_publisher)],
 ) -> GrantCreditsHandler:
     return GrantCreditsHandler(
-        uow=uow,
-        id_generator=id_generator,
-        clock=clock,
-        event_publisher=event_publisher,
-    )
-
-
-def get_purchase_credits_handler(
-    uow: Annotated[BillingUoW, Depends(get_uow)],
-    id_generator: Annotated[IdGenerator, Depends(get_id_generator)],
-    clock: Annotated[Clock, Depends(get_clock)],
-    event_publisher: Annotated[EventPublisher, Depends(get_event_publisher)],
-) -> PurchaseCreditsHandler:
-    return PurchaseCreditsHandler(
         uow=uow,
         id_generator=id_generator,
         clock=clock,

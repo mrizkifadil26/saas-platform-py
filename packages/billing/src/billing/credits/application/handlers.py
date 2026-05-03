@@ -3,7 +3,6 @@ from billing.credits.application.commands import (
     CreateCreditAccountCommand,
     ExpireCreditsCommand,
     GrantCreditsCommand,
-    PurchaseCreditsCommand,
     ReleaseReservedCreditsCommand,
     ReserveCreditsCommand,
 )
@@ -14,7 +13,6 @@ from billing.credits.application.exceptions import (
 )
 from billing.credits.application.mappers import CreditAccountMapper
 from billing.credits.domain.credit_account import CreditAccount
-from billing.credits.domain.credit_source_type import CreditSourceType
 from billing.credits.domain.value_objects.credit_account_id import CreditAccountId
 from billing.credits.domain.value_objects.credit_grant_id import CreditGrantId
 from billing.credits.domain.value_objects.credits import Credits
@@ -94,48 +92,6 @@ class GrantCreditsHandler:
                 occurred_at=self._clock.now(),
                 expires_at=command.expires_at,
                 source_type=command.source_type,
-                source_id=command.source_id,
-                description=command.description,
-            )
-
-            await uow.credit_accounts.save(account)
-            await uow.commit()
-
-        events = account.pull_domain_events()
-        self._event_publisher.publish(events)
-
-        return CreditAccountMapper.domain_to_dto(account)
-
-
-class PurchaseCreditsHandler:
-    def __init__(
-        self,
-        *,
-        uow: BillingUoW,
-        id_generator: IdGenerator,
-        clock: Clock,
-        event_publisher: EventPublisher,
-    ) -> None:
-        self._uow = uow
-        self._id_generator = id_generator
-        self._clock = clock
-        self._event_publisher = event_publisher
-
-    async def handle(self, command: PurchaseCreditsCommand) -> CreditAccountDTO:
-        async with self._uow as uow:
-            account = await uow.credit_accounts.get_by_user_id(command.user_id)
-
-            if account is None:
-                raise CreditAccountNotFoundError(
-                    f"Credit account not found for user_id={command.user_id}"
-                )
-
-            account.grant(
-                grant_id=CreditGrantId(self._id_generator.generate()),
-                amount=Credits.of(command.amount),
-                occurred_at=self._clock.now(),
-                expires_at=command.expires_at,
-                source_type=CreditSourceType.PURCHASE,
                 source_id=command.source_id,
                 description=command.description,
             )
