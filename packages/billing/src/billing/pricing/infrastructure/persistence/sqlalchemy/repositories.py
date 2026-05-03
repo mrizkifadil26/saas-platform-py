@@ -56,3 +56,13 @@ class SQLPricingRuleRepository(
         model = PricingRuleORMMapper.to_model(pricing_rule)
 
         await self._session.merge(model)
+
+    @property
+    def model_type(self) -> type[PricingRuleModel]:
+        return PricingRuleModel
+
+    def _to_domain(self, model: PricingRuleModel) -> PricingRule:
+        return PricingRuleORMMapper.to_domain(model)
+
+    def _to_model(self, entity: PricingRule) -> PricingRuleModel:
+        return PricingRuleORMMapper.to_model(entity)
