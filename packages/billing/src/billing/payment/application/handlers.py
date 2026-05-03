@@ -98,6 +98,30 @@ class ChargeInvoiceHandler:
                 )
             )
         except Exception as exc:
+            occurred_at = self._clock.now()
+
+            async with self._uow as uow:
+                failed_payment = await uow.payments.get(payment.id)
+
+                if failed_payment is not None:
+                    failed_payment.mark_failed(
+                        reason="Payment gateway charge raised an exception.",
+                        occurred_at=occurred_at,
+                    )
+
+                    await uow.payments.save(failed_payment)
+                    await uow.commit()
+
+                events = (
+                    failed_payment.pull_domain_events()
+                    if failed_payment is not None
+                    else ()
+                )
+
+            if events:
+                # TODO: later we should use await
+                self._event_publisher.publish(events)
+
             raise PaymentGatewayError("Payment gateway charge failed.") from exc
 
         async with self._uow as uow:
