@@ -17,8 +17,10 @@ from billing.payg.domain.payg_purchase_events import (
     PaygPurchaseRefunded,
 )
 from billing.payg.domain.payg_purchase_status import PaygPurchaseStatus
+from billing.payg.domain.value_objects.pack_code import PackCode
 from billing.payg.domain.value_objects.payg_purchase_id import PaygPurchaseId
 from billing.shared.domain.aggregate_root import AggregateRoot
+from billing.shared.domain.value_objects.money import Money
 from billing.shared.domain.value_objects.user_id import UserId
 
 
@@ -27,7 +29,11 @@ class PaygPurchase(AggregateRoot[PaygPurchaseId]):
     id: PaygPurchaseId
     # TODO: later we should use customer_id instead of user_id, but for now we can use user_id since we don't have customer_id yet
     user_id: UserId
+    # TODO: later we should use a better pricing model instead of pack_code and credits, but for now we can use it since it's simple and easy to understand
+    pack_code: PackCode
     credits: Credits
+    price: Money
+    expires_in_days: int
     status: PaygPurchaseStatus
     created_at: datetime
     paid_at: datetime | None = None
@@ -43,7 +49,11 @@ class PaygPurchase(AggregateRoot[PaygPurchaseId]):
         purchase_id: PaygPurchaseId,
         # TODO: later we should use customer_id instead of user_id, but for now we can use user_id since we don't have customer_id yet
         user_id: UserId,
+        # TODO: later we should use a better pricing model instead of pack_code and credits, but for now we can use it since it's simple and easy to understand
+        pack_code: PackCode,
         credits: Credits,
+        price: Money,
+        expires_in_days: int,
         occurred_at: datetime,
     ) -> PaygPurchase:
         if credits.amount <= 0:
@@ -54,7 +64,10 @@ class PaygPurchase(AggregateRoot[PaygPurchaseId]):
         purchase = cls(
             id=purchase_id,
             user_id=user_id,
+            pack_code=pack_code,
             credits=credits,
+            price=price,
+            expires_in_days=expires_in_days,
             status=PaygPurchaseStatus.PENDING,
             created_at=occurred_at,
         )

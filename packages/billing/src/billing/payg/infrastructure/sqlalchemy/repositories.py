@@ -1,11 +1,11 @@
 from db.repositories import SQLAlchemyRepository
+from sqlalchemy import select
 
 from billing.payg.domain.payg_purchase import PaygPurchase
 from billing.payg.domain.payg_purchase_repository import PaygPurchaseRepository
 from billing.payg.domain.value_objects.payg_purchase_id import PaygPurchaseId
 from billing.payg.infrastructure.sqlalchemy.models import PaygPurchaseModel
 from billing.payg.infrastructure.sqlalchemy.orm_mappers import PaygPurchaseORMMapper
-from sqlalchemy import select
 
 
 class SQLPaygPurchaseRepository(

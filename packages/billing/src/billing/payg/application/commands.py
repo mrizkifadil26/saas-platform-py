@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from billing.payg.domain.value_objects.pack_code import PackCode
 from billing.payg.domain.value_objects.payg_purchase_id import PaygPurchaseId
 from billing.payment.domain.value_objects.payment_method import PaymentMethod
 from billing.shared.domain.value_objects.user_id import UserId
@@ -9,9 +10,9 @@ from billing.shared.domain.value_objects.user_id import UserId
 class PurchasePaygCreditsCommand:
     # TODO: later we should replace it with customer_id
     user_id: UserId
-    package_code: str
+    pack_code: PackCode
     payment_method: PaymentMethod
-    idempotency_key: str
+    idempotency_key: str | None
 
 
 @dataclass(frozen=True, slots=True)

@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from datetime import datetime
+from decimal import Decimal
 
 from db import AppBase
-
-from sqlalchemy import DateTime, String
+from sqlalchemy import DateTime, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 
@@ -19,7 +19,20 @@ class PaygPurchaseModel(AppBase):
         index=True,
     )
 
+    pack_code: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+    )
     credits: Mapped[int] = mapped_column(nullable=False)
+    price_amount: Mapped[Decimal] = mapped_column(
+        Numeric(18, 6),
+        nullable=False,
+    )
+    price_currency: Mapped[str] = mapped_column(
+        String(3),
+        nullable=False,
+    )
+    expires_in_days: Mapped[int] = mapped_column(nullable=False)
 
     status: Mapped[str] = mapped_column(
         String(32),
