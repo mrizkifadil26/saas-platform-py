@@ -18,7 +18,7 @@ from billing.payg.application.exceptions import (
     PaymentGatewayError,
     PaymentNotFoundError,
 )
-from billing.payg.application.interfaces import PaygPricingCatalog
+from billing.payg.config import PAYG_EXPIRY_DAYS
 from billing.payg.domain.payg_purchase import PaygPurchase
 from billing.payg.domain.value_objects.payg_purchase_id import PaygPurchaseId
 from billing.payment.domain.payment import Payment
