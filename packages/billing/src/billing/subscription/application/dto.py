@@ -26,28 +26,3 @@ class SubscriptionDTO:
     items: tuple[SubscriptionItemDTO, ...] = ()
     # TODO: still confused about this field, should we put it here?
     # last_granted_period_start: datetime | None
-
-
-# @dataclass(frozen=True, slots=True)
-# class SubscriptionGrantDTO:
-#     subscription_id: str
-#     user_id: str
-#     plan_code: str
-#     grant_id: str
-#     credits: Credits
-#     expires_at: datetime
-#     request_id: str | None
-
-
-# def to_subscription_grant_dto(
-#     result,
-# ) -> SubscriptionGrantDTO:
-#     return SubscriptionGrantDTO(
-#         subscription_id=str(result.subscription.subscription_id),
-#         user_id=str(result.subscription.user_id),
-#         plan_code=str(result.plan.code),
-#         grant_id=str(result.grant.grant_id),
-#         credits=result.grant.granted_credits,
-#         expires_at=result.grant.expires_at,
-#         request_id=str(result.grant.request_id) if result.grant.request_id else None,
-#     )
