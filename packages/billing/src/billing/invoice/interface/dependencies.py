@@ -1,12 +1,5 @@
 from typing import Annotated
 
-from billing.invoice.application.handlers import (
-    CreateInvoiceHandler,
-    IssueInvoiceHandler,
-    MarkInvoicePaidHandler,
-    MarkInvoiceUncollectibleHandler,
-    VoidInvoiceHandler,
-)
 from db.app_db.session import (
     AppSessionFactory,
     get_app_session_factory,
@@ -14,13 +7,15 @@ from db.app_db.session import (
 from fastapi import Depends
 
 from billing.credits.application.handlers import (
-    ConsumeReservedCreditsHandler,
-    CreateCreditAccountHandler,
     ExpireCreditsHandler,
-    GrantCreditsHandler,
-    PurchaseCreditsHandler,
     ReleaseReservedCreditsHandler,
-    ReserveCreditsHandler,
+)
+from billing.invoice.application.handlers import (
+    CreateInvoiceHandler,
+    IssueInvoiceHandler,
+    MarkInvoicePaidHandler,
+    MarkInvoiceUncollectibleHandler,
+    VoidInvoiceHandler,
 )
 from billing.shared.application.clock import Clock
 from billing.shared.application.event_publisher import EventPublisher
@@ -69,7 +64,7 @@ def get_create_invoice_handler(
 ) -> CreateInvoiceHandler:
     return CreateInvoiceHandler(
         uow=uow,
-        clock=get_clock(),
+        clock=clock,
         id_generator=id_generator,
         event_publisher=event_publisher,
     )

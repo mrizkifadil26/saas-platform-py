@@ -76,17 +76,16 @@ class IssueInvoiceHandler:
         self._event_publisher = event_publisher
 
     async def handle(self, command: IssueInvoiceCommand) -> InvoiceDTO:
-        async with self._uow:
-            invoice = await self._uow.invoices.get(command.invoice_id)
+        async with self._uow as uow:
+            invoice = await uow.invoices.get(command.invoice_id)
 
             if invoice is None:
                 raise InvoiceNotFoundError(f"Invoice not found: {command.invoice_id}")
 
             invoice.issue(occurred_at=self._clock.now())
 
-            await self._uow.invoices.save(invoice)
-            await self._uow.commit()
-
+            await uow.invoices.save(invoice)
+            await uow.commit()
 
         events = invoice.pull_domain_events()
         # TODO: should use await cause we want to guarantee the events are published before returning the response?
@@ -108,17 +107,16 @@ class MarkInvoicePaidHandler:
         self._event_publisher = event_publisher
 
     async def handle(self, command: MarkInvoicePaidCommand) -> InvoiceDTO:
-        async with self._uow:
-            invoice = await self._uow.invoices.get(command.invoice_id)
+        async with self._uow as uow:
+            invoice = await uow.invoices.get(command.invoice_id)
 
             if invoice is None:
                 raise InvoiceNotFoundError(f"Invoice not found: {command.invoice_id}")
 
             invoice.mark_paid(occurred_at=self._clock.now())
 
-            await self._uow.invoices.save(invoice)
-            await self._uow.commit()
-
+            await uow.invoices.save(invoice)
+            await uow.commit()
 
         events = invoice.pull_domain_events()
         # TODO: should use await cause we want to guarantee the events are published before returning the response?
@@ -140,17 +138,16 @@ class VoidInvoiceHandler:
         self._event_publisher = event_publisher
 
     async def handle(self, command: VoidInvoiceCommand) -> InvoiceDTO:
-        async with self._uow:
-            invoice = await self._uow.invoices.get(command.invoice_id)
+        async with self._uow as uow:
+            invoice = await uow.invoices.get(command.invoice_id)
 
             if invoice is None:
                 raise InvoiceNotFoundError(f"Invoice not found: {command.invoice_id}")
 
             invoice.void(occurred_at=self._clock.now())
 
-            await self._uow.invoices.save(invoice)
-            await self._uow.commit()
-
+            await uow.invoices.save(invoice)
+            await uow.commit()
 
         events = invoice.pull_domain_events()
         # TODO: should use await cause we want to guarantee the events are published before returning the response?
@@ -172,16 +169,16 @@ class MarkInvoiceUncollectibleHandler:
         self._event_publisher = event_publisher
 
     async def handle(self, command: MarkInvoiceUncollectibleCommand) -> InvoiceDTO:
-        async with self._uow:
-            invoice = await self._uow.invoices.get(command.invoice_id)
+        async with self._uow as uow:
+            invoice = await uow.invoices.get(command.invoice_id)
 
             if invoice is None:
                 raise InvoiceNotFoundError(f"Invoice not found: {command.invoice_id}")
 
             invoice.mark_uncollectible(occurred_at=self._clock.now())
 
-            await self._uow.invoices.save(invoice)
-            await self._uow.commit()
+            await uow.invoices.save(invoice)
+            await uow.commit()
 
         events = invoice.pull_domain_events()
         # TODO: should use await cause we want to guarantee the events are published before returning the response?

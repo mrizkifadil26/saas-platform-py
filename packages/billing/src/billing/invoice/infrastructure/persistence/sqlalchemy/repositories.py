@@ -1,4 +1,5 @@
 from db.repositories import SQLAlchemyRepository
+from sqlalchemy import select
 
 from billing.invoice.domain.invoice import Invoice
 from billing.invoice.domain.invoice_repository import InvoiceRepository
@@ -9,7 +10,6 @@ from billing.invoice.infrastructure.persistence.sqlalchemy.orm_mappers import (
     InvoiceORMMapper,
 )
 from billing.shared.domain.value_objects.user_id import UserId
-from sqlalchemy import select
 
 
 class SQLInvoiceRepository(

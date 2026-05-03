@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from billing.invoice.application.commands import (
@@ -81,11 +83,15 @@ def map_invoice_error(exc: Exception) -> HTTPException:
 )
 async def create_invoice(
     request: CreateInvoiceRequest,
-    handler: CreateInvoiceHandler = Depends(get_create_invoice_handler),
+    handler: Annotated[
+        CreateInvoiceHandler,
+        Depends(get_create_invoice_handler),
+    ],
 ) -> InvoiceResponse:
     try:
         dto = await handler.handle(
             CreateInvoiceCommand(
+                # TODO: should replace it with customer_id
                 user_id=UserId(request.user_id),
                 lines=tuple(
                     CreateInvoiceLineCommand(
@@ -113,12 +119,16 @@ async def create_invoice(
 )
 async def issue_invoice(
     invoice_id: str,
-    handler: IssueInvoiceHandler = Depends(get_issue_invoice_handler),
+    handler: Annotated[
+        IssueInvoiceHandler,
+        Depends(get_issue_invoice_handler),
+    ],
 ) -> InvoiceResponse:
     try:
         dto = await handler.handle(
             IssueInvoiceCommand(invoice_id=InvoiceId(invoice_id))
         )
+
         return to_response(dto)
 
     except Exception as exc:
@@ -131,12 +141,16 @@ async def issue_invoice(
 )
 async def mark_invoice_paid(
     invoice_id: str,
-    handler: MarkInvoicePaidHandler = Depends(get_mark_invoice_paid_handler),
+    handler: Annotated[
+        MarkInvoicePaidHandler,
+        Depends(get_mark_invoice_paid_handler),
+    ],
 ) -> InvoiceResponse:
     try:
         dto = await handler.handle(
             MarkInvoicePaidCommand(invoice_id=InvoiceId(invoice_id))
         )
+
         return to_response(dto)
 
     except Exception as exc:
@@ -149,10 +163,16 @@ async def mark_invoice_paid(
 )
 async def void_invoice(
     invoice_id: str,
-    handler: VoidInvoiceHandler = Depends(get_void_invoice_handler),
+    handler: Annotated[
+        VoidInvoiceHandler,
+        Depends(get_void_invoice_handler),
+    ],
 ) -> InvoiceResponse:
     try:
-        dto = await handler.handle(VoidInvoiceCommand(invoice_id=InvoiceId(invoice_id)))
+        dto = await handler.handle(
+            VoidInvoiceCommand(invoice_id=InvoiceId(invoice_id)),
+        )
+
         return to_response(dto)
 
     except Exception as exc:
@@ -165,14 +185,16 @@ async def void_invoice(
 )
 async def mark_invoice_uncollectible(
     invoice_id: str,
-    handler: MarkInvoiceUncollectibleHandler = Depends(
-        get_mark_invoice_uncollectible_handler
-    ),
+    handler: Annotated[
+        MarkInvoiceUncollectibleHandler,
+        Depends(get_mark_invoice_uncollectible_handler),
+    ],
 ) -> InvoiceResponse:
     try:
         dto = await handler.handle(
             MarkInvoiceUncollectibleCommand(invoice_id=InvoiceId(invoice_id))
         )
+
         return to_response(dto)
 
     except Exception as exc:
