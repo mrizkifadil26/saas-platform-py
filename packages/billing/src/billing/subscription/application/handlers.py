@@ -13,13 +13,21 @@ from billing.subscription.application.commands import (
 from billing.subscription.application.dto import (
     SubscriptionDTO,
 )
-from billing.subscription.application.exceptions import SubscriptionNotFound
-from billing.subscription.application.mappers import SubscriptionMapper
+from billing.subscription.application.exceptions import SubscriptionNotFoundError
+from billing.subscription.application.mappers import (
+    SubscriptionMapper,
+)
 from billing.subscription.application.queries import GetSubscriptionQuery
 from billing.subscription.domain.subscription_factory import SubscriptionFactory
+from billing.subscription.domain.subscription_item import SubscriptionItem
 from billing.subscription.domain.value_objects.billing_period import BillingPeriod
+from billing.subscription.domain.value_objects.feature_code import FeatureCode
 from billing.subscription.domain.value_objects.plan_code import PlanCode
+from billing.subscription.domain.value_objects.product_code import ProductCode
 from billing.subscription.domain.value_objects.subscription_id import SubscriptionId
+from billing.subscription.domain.value_objects.subscription_item_id import (
+    SubscriptionItemId,
+)
 
 
 class CreateSubscriptionHandler:
@@ -38,8 +46,6 @@ class CreateSubscriptionHandler:
         self._pricing_catalog = pricing_catalog
         self._clock = clock
         self._event_publisher = event_publisher
-
-        # self.subscription_repository = subscription_repository
         # self.idempotency_store = idempotency_store
 
     async def handle(
@@ -51,13 +57,14 @@ class CreateSubscriptionHandler:
         # raise ValueError("Duplicate request")
 
         now = self._clock.now()
-        plan = await self._pricing_catalog.get_subscription_plan(
-            # PlanId(command.plan_id)
-            PlanCode(command.plan_code)
-        )
-
         items = [
-            SubscriptionMapper.command_item_to_domain(item) for item in command.items
+            SubscriptionItem(
+                item_id=SubscriptionItemId(item.item_id),
+                product_code=ProductCode(item.product_code),
+                feature_code=FeatureCode(item.feature_code),
+                quantity=item.quantity,
+            )
+            for item in command.items
         ]
 
         subscription = SubscriptionFactory.create_subscription(
@@ -72,18 +79,19 @@ class CreateSubscriptionHandler:
             items=items,
             provider_subscription_id=command.provider_subscription_id,
             trial=command.trial,
-            occurred_at=self._clock.now(),
+            occurred_at=now,
         )
 
         async with self._uow as uow:
             await uow.subscriptions.save(subscription)
+            events = subscription.pull_domain_events()
 
-        # self.idempotency_store.store(command.idempotency_key)
+            await uow.commit()
 
-        events = subscription.pull_domain_events()
+        # TODO: later should use await
         self._event_publisher.publish(events)
 
-        return SubscriptionMapper.domain_to_dto(subscription)
+        return SubscriptionMapper.to_dto(subscription)
 
 
 class RenewSubscriptionHandler:
@@ -98,7 +106,6 @@ class RenewSubscriptionHandler:
         self._uow = uow
         self._clock = clock
         self._event_publisher = event_publisher
-
         # self.idempotency_store = idempotency_store
 
     async def handle(
@@ -108,12 +115,13 @@ class RenewSubscriptionHandler:
         # TODO: Should idempotency be handled at the application service level instead of the handler level?
         # if self.idempotency_store.exists(command.idempotency_key):
         # raise ValueError("Duplicate request")
+
         subscription_id = SubscriptionId(command.subscription_id)
 
         async with self._uow as uow:
             subscription = await uow.subscriptions.get(subscription_id)
             if subscription is None:
-                raise SubscriptionNotFound(
+                raise SubscriptionNotFoundError(
                     f"Subscription not found: {command.subscription_id}"
                 )
 
@@ -128,13 +136,14 @@ class RenewSubscriptionHandler:
             )
 
             await uow.subscriptions.save(subscription)
+            events = subscription.pull_domain_events()
 
-        # self.idempotency_store.store(command.idempotency_key)
+            await uow.commit()
 
-        events = subscription.pull_domain_events()
+        # TODO: later should use await
         self._event_publisher.publish(events)
 
-        return SubscriptionMapper.domain_to_dto(subscription)
+        return SubscriptionMapper.to_dto(subscription)
 
 
 class ChangeSubscriptionPlanHandler:
@@ -149,7 +158,6 @@ class ChangeSubscriptionPlanHandler:
         self._uow = uow
         self._clock = clock
         self._event_publisher = event_publisher
-
         # self.idempotency_store = idempotency_store
 
     async def handle(
@@ -159,6 +167,7 @@ class ChangeSubscriptionPlanHandler:
         # TODO: Should idempotency be handled at the application service level instead of the handler level?
         # if self.idempotency_store.exists(command.idempotency_key):
         # raise ValueError("Duplicate request")
+
         subscription_id = SubscriptionId(command.subscription_id)
         # new_plan_id = PlanId(command.new_plan_id)
         new_plan_code = PlanCode(command.new_plan_code)
@@ -166,27 +175,25 @@ class ChangeSubscriptionPlanHandler:
         async with self._uow as uow:
             subscription = await uow.subscriptions.get(subscription_id)
             if subscription is None:
-                raise SubscriptionNotFound(
+                raise SubscriptionNotFoundError(
                     f"Subscription not found: {command.subscription_id}"
                 )
 
-            # subscription.change_plan(
-            #     new_plan_id=new_plan_id,
-            #     occurred_at=self._clock.now(),
-            # )
             subscription.change_plan(
+                # new_plan_id=new_plan_id,
                 new_plan_code=new_plan_code,
                 occurred_at=self._clock.now(),
             )
 
             await uow.subscriptions.save(subscription)
+            events = subscription.pull_domain_events()
 
-        # self.idempotency_store.store(command.idempotency_key)
+            await uow.commit()
 
-        events = subscription.pull_domain_events()
+        # TODO: later should use await
         self._event_publisher.publish(events)
 
-        return SubscriptionMapper.domain_to_dto(subscription)
+        return SubscriptionMapper.to_dto(subscription)
 
 
 class CancelSubscriptionHandler:
@@ -216,7 +223,7 @@ class CancelSubscriptionHandler:
         async with self._uow as uow:
             subscription = await uow.subscriptions.get(subscription_id)
             if subscription is None:
-                raise SubscriptionNotFound(
+                raise SubscriptionNotFoundError(
                     f"Subscription not found: {command.subscription_id}"
                 )
 
@@ -226,13 +233,14 @@ class CancelSubscriptionHandler:
             )
 
             await uow.subscriptions.save(subscription)
+            events = subscription.pull_domain_events()
 
-        # self.idempotency_store.store(command.idempotency_key)
+            await uow.commit()
 
-        events = subscription.pull_domain_events()
+        # TODO: later should use await
         self._event_publisher.publish(events)
 
-        return SubscriptionMapper.domain_to_dto(subscription)
+        return SubscriptionMapper.to_dto(subscription)
 
 
 class GetSubscriptionHandler:
@@ -245,13 +253,12 @@ class GetSubscriptionHandler:
 
     async def handle(self, query: GetSubscriptionQuery) -> SubscriptionDTO:
         subscription_id = SubscriptionId(query.subscription_id)
-        async with self._uow:
-            subscription = await self._uow.subscriptions.get(
-                subscription_id,
-            )
+
+        async with self._uow as uow:
+            subscription = await uow.subscriptions.get(subscription_id)
             if subscription is None:
-                raise SubscriptionNotFound(
+                raise SubscriptionNotFoundError(
                     f"Subscription not found: {query.subscription_id}"
                 )
 
-        return SubscriptionMapper.domain_to_dto(subscription)
+        return SubscriptionMapper.to_dto(subscription)
