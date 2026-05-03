@@ -20,7 +20,6 @@ from billing.payment.application.handlers import (
     MarkPaymentSucceededHandler,
     RefundPaymentHandler,
 )
-from billing.payment.application.interface import PaymentProcessor
 
 __all__ = [
     "CancelPaymentCommand",
@@ -37,7 +36,6 @@ __all__ = [
     "PaymentDTO",
     "PaymentGatewayError",
     "PaymentNotFoundError",
-    "PaymentProcessor",
     "RefundPaymentCommand",
     "RefundPaymentHandler",
 ]

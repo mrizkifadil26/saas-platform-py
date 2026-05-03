@@ -1,5 +1,5 @@
-from billing.payment.infrastructure.gateways.fake_payment_processor import (
-    FakePaymentProcessor,
+from billing.payment.infrastructure.gateways.fake_payment_gateway import (
+    FakePaymentGateway,
 )
 
-__all__ = ["FakePaymentProcessor"]
+__all__ = ["FakePaymentGateway"]

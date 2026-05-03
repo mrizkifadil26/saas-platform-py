@@ -14,9 +14,8 @@ from billing.payment.application.exceptions import (
     PaymentGatewayError,
     PaymentNotFoundError,
 )
-from billing.payment.application.interface import PaymentProcessor
 from billing.payment.domain.payment import Payment
-from billing.payment.domain.payment_gateway import ChargeRequest
+from billing.payment.domain.payment_gateway import ChargeRequest, PaymentGateway
 from billing.payment.domain.value_objects.payment_id import PaymentId
 from billing.shared.application.clock import Clock
 from billing.shared.application.event_publisher import EventPublisher
@@ -46,20 +45,20 @@ class ChargeInvoiceHandler:
         uow: BillingUoW,
         clock: Clock,
         id_generator: IdGenerator,
-        payment_processor: PaymentProcessor,
+        payment_gateway: PaymentGateway,
         event_publisher: EventPublisher,
     ) -> None:
         self._uow = uow
         self._clock = clock
         self._id_generator = id_generator
-        self._payment_processor = payment_processor
+        self._payment_gateway = payment_gateway
         self._event_publisher = event_publisher
 
     async def handle(self, command: ChargeInvoiceCommand) -> PaymentDTO:
         now = self._clock.now()
 
-        async with self._uow:
-            invoice = await self._uow.invoices.get(command.invoice_id)
+        async with self._uow as uow:
+            invoice = await uow.invoices.get(command.invoice_id)
 
             if invoice is None:
                 raise InvoiceNotFoundError(f"Invoice not found: {command.invoice_id}")
@@ -80,15 +79,15 @@ class ChargeInvoiceHandler:
 
             payment.start_processing(occurred_at=now)
 
-            await self._uow.payments.save(payment)
-            await self._uow.commit()
+            await uow.payments.save(payment)
+            await uow.commit()
 
         created_events = payment.pull_domain_events()
         # TODO: later we should use await
         self._event_publisher.publish(created_events)
 
         try:
-            charge_result = await self._payment_processor.charge(
+            charge_result = await self._payment_gateway.charge(
                 ChargeRequest(
                     payment_id=payment.id,
                     user_id=payment.user_id,
@@ -126,9 +125,9 @@ class ChargeInvoiceHandler:
 
                 invoice.mark_paid(occurred_at=occurred_at)
 
-                await self._uow.payments.save(payment)
-                await self._uow.invoices.save(invoice)
-                await self._uow.commit()
+                await uow.payments.save(payment)
+                await uow.invoices.save(invoice)
+                await uow.commit()
 
                 events = payment.pull_domain_events() + invoice.pull_domain_events()
 
@@ -138,10 +137,11 @@ class ChargeInvoiceHandler:
                     occurred_at=occurred_at,
                 )
 
-                await self._uow.payments.save(payment)
-                await self._uow.commit()
+                await uow.payments.save(payment)
+                await uow.commit()
 
-        events = payment.pull_domain_events()
+                events = payment.pull_domain_events()
+
         # TODO: later we should use await
         self._event_publisher.publish(events)
 
@@ -188,9 +188,9 @@ class MarkPaymentSucceededHandler:
             if invoice.is_payable:
                 invoice.mark_paid(occurred_at=occurred_at)
 
-            await self._uow.payments.save(payment)
-            await self._uow.invoices.save(invoice)
-            await self._uow.commit()
+            await uow.payments.save(payment)
+            await uow.invoices.save(invoice)
+            await uow.commit()
 
         events = payment.pull_domain_events() + invoice.pull_domain_events()
         # TODO: later we should use await
@@ -227,8 +227,8 @@ class MarkPaymentFailedHandler:
                 occurred_at=self._clock.now(),
             )
 
-            await self._uow.payments.save(payment)
-            await self._uow.commit()
+            await uow.payments.save(payment)
+            await uow.commit()
 
         events = payment.pull_domain_events()
         # TODO: later we should use await

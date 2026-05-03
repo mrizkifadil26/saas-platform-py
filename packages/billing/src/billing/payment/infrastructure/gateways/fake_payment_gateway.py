@@ -2,11 +2,16 @@ from __future__ import annotations
 
 from uuid import uuid4
 
-from billing.payment.application.interface import PaymentProcessor
-from billing.payment.domain.payment_gateway import ChargeRequest, ChargeResult
+from billing.payment.domain.payment_gateway import (
+    ChargeRequest,
+    ChargeResult,
+    PaymentGateway,
+    RefundRequest,
+    RefundResult,
+)
 
 
-class FakePaymentProcessor(PaymentProcessor):
+class FakePaymentGateway(PaymentGateway):
     def __init__(self, *, should_succeed: bool = True) -> None:
         self._should_succeed = should_succeed
 
@@ -23,3 +28,6 @@ class FakePaymentProcessor(PaymentProcessor):
             gateway_reference=None,
             failure_reason="Fake payment failure.",
         )
+
+    async def refund(self, request: RefundRequest) -> RefundResult:
+        raise NotImplementedError
