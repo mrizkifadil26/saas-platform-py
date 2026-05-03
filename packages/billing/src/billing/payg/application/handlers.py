@@ -1,4 +1,6 @@
+from billing.credits.domain.credit_account import CreditAccount
 from billing.credits.domain.credit_source_type import CreditSourceType
+from billing.credits.domain.value_objects.credit_account_id import CreditAccountId
 from billing.credits.domain.value_objects.credit_grant_id import CreditGrantId
 from billing.invoice.domain.invoice import Invoice
 from billing.invoice.domain.value_objects.invoice_id import InvoiceId
@@ -24,6 +26,7 @@ from billing.payg.domain.value_objects.payg_purchase_id import PaygPurchaseId
 from billing.payment.domain.payment import Payment
 from billing.payment.domain.payment_gateway import ChargeRequest, PaymentGateway
 from billing.payment.domain.value_objects.payment_id import PaymentId
+from billing.pricing.application.catalogs import PaygPricingCatalog
 from billing.shared.application.clock import Clock
 from billing.shared.application.event_publisher import EventPublisher
 from billing.shared.application.id_generator import IdGenerator
@@ -74,21 +77,32 @@ class PurchasePaygCreditsHandler:
         self,
         command: PurchasePaygCreditsCommand,
     ) -> PurchasePaygCreditsResultDTO:
-        package = await self._pricing_catalog.get_payg_package(command.package_code)
+        package = await self._pricing_catalog.get_payg_package(command.pack_code)
 
         if package is None:
             raise PaygPackageNotFoundError(
-                f"PAYG package not found: {command.package_code}"
+                f"PAYG package not found: {command.pack_code}"
             )
 
         now = self._clock.now()
 
-        async with self._uow:
+        async with self._uow as uow:
+            credit_account = await uow.credit_accounts.get_by_user_id(command.user_id)
+            if credit_account is None:
+                credit_account = CreditAccount.create(
+                    id=CreditAccountId(self._id_generator.generate()),
+                    user_id=command.user_id,
+                )
+                await uow.credit_accounts.save(credit_account)
+
             purchase = PaygPurchase.create(
                 purchase_id=PaygPurchaseId(self._id_generator.generate()),
                 user_id=command.user_id,
                 credits=package.credits,
                 occurred_at=now,
+                pack_code=package.code,
+                price=package.price,
+                expires_in_days=PAYG_EXPIRY_DAYS,
             )
 
             invoice = Invoice.create(
@@ -115,13 +129,14 @@ class PurchasePaygCreditsHandler:
             )
             payment.start_processing(occurred_at=now)
 
-            await self._uow.payg_purchases.save(purchase)
-            await self._uow.invoices.save(invoice)
-            await self._uow.payments.save(payment)
-            await self._uow.commit()
+            await uow.payg_purchases.save(purchase)
+            await uow.invoices.save(invoice)
+            await uow.payments.save(payment)
+            await uow.commit()
 
             created_events = (
-                purchase.pull_domain_events()
+                credit_account.pull_domain_events()
+                + purchase.pull_domain_events()
                 + invoice.pull_domain_events()
                 + payment.pull_domain_events()
             )
@@ -137,16 +152,69 @@ class PurchasePaygCreditsHandler:
                     invoice_id=invoice.id,
                     amount=invoice.total,
                     method=command.payment_method,
-                    idempotency_key=command.idempotency_key,
+                    # idempotency_key=command.idempotency_key,
+                    idempotency_key="dummy",  # TODO: implement idempotency later
                 )
             )
         except Exception as exc:
+            payment = await self._mark_gateway_exception(
+                payment_id=payment.id,
+                purchase_id=purchase.id,
+                reason="PAYG payment gateway charge raised an exception.",
+            )
+
             raise PaymentGatewayError("PAYG payment gateway charge failed.") from exc
 
+        if charge_result.succeeded:
+            if charge_result.gateway_reference is None:
+                await self._mark_gateway_exception(
+                    payment_id=payment.id,
+                    purchase_id=purchase.id,
+                    reason="Gateway returned success without gateway reference.",
+                )
+                raise PaymentGatewayError(
+                    "Gateway returned success without gateway reference."
+                )
+
+            purchase, invoice, payment = await self._apply_successful_charge(
+                purchase_id=purchase.id,
+                invoice_id=invoice.id,
+                payment_id=payment.id,
+                gateway_reference=charge_result.gateway_reference,
+            )
+        else:
+            failure_reason = charge_result.failure_reason or "Payment failed."
+
+            purchase, invoice, payment = await self._apply_failed_charge(
+                purchase_id=purchase.id,
+                invoice_id=invoice.id,
+                payment_id=payment.id,
+                reason=failure_reason,
+            )
+
+        return PurchasePaygCreditsResultDTO(
+            purchase=PaygPurchaseDTO.from_domain(purchase),
+            invoice_id=str(invoice.id),
+            payment_id=str(payment.id),
+            amount=payment.amount.amount,
+            currency=payment.amount.currency.value,
+            gateway_reference=payment.gateway_reference,
+        )
+
+    async def _apply_successful_charge(
+        self,
+        *,
+        purchase_id: PaygPurchaseId,
+        invoice_id: InvoiceId,
+        payment_id: PaymentId,
+        gateway_reference: str,
+    ) -> tuple[PaygPurchase, Invoice, Payment]:
+        occurred_at = self._clock.now()
+
         async with self._uow as uow:
-            purchase = await uow.payg_purchases.get(purchase.id)
-            invoice = await uow.invoices.get(invoice.id)
-            payment = await uow.payments.get(payment.id)
+            purchase = await uow.payg_purchases.get(purchase_id)
+            invoice = await uow.invoices.get(invoice_id)
+            payment = await uow.payments.get(payment_id)
 
             if purchase is None:
                 raise PaygPurchaseNotFoundError("PAYG purchase disappeared.")
@@ -157,41 +225,33 @@ class PurchasePaygCreditsHandler:
             if payment is None:
                 raise PaymentNotFoundError("Payment disappeared.")
 
-            occurred_at = self._clock.now()
+            credit_account = await uow.credit_accounts.get_by_user_id(purchase.user_id)
 
-            if charge_result.succeeded:
-                if charge_result.gateway_reference is None:
-                    raise PaymentGatewayError(
-                        "Gateway returned success without gateway reference."
-                    )
-
-                payment.mark_succeeded(
-                    gateway_reference=charge_result.gateway_reference,
-                    occurred_at=occurred_at,
+            if credit_account is None:
+                credit_account = CreditAccount.create(
+                    id=CreditAccountId(self._id_generator.generate()),
+                    user_id=purchase.user_id,
                 )
 
-                invoice.mark_paid(occurred_at=occurred_at)
+            payment.mark_succeeded(
+                gateway_reference=gateway_reference,
+                occurred_at=occurred_at,
+            )
 
-                purchase.mark_payment_succeeded(occurred_at=occurred_at)
+            invoice.mark_paid(occurred_at=occurred_at)
 
-                credit_account = await uow.credit_accounts.get_by_user_id(
-                    command.user_id
-                )
+            purchase.mark_payment_succeeded(occurred_at=occurred_at)
 
-                if credit_account is None:
-                    raise CreditAccountNotFoundError(
-                        f"Credit account not found for user: {command.user_id}"
-                    )
+            credit_account.grant(
+                grant_id=CreditGrantId(self._id_generator.generate()),
+                amount=purchase.credits,
+                source_type=CreditSourceType.PURCHASE,
+                source_id=str(purchase.id),
+                occurred_at=occurred_at,
+                description=f"PAYG purchase {purchase.id}",
+            )
 
-                credit_account.grant(
-                    grant_id=CreditGrantId(self._id_generator.generate()),
-                    amount=purchase.credits,
-                    source_type=CreditSourceType.PURCHASE,
-                    source_id=str(purchase.id),
-                    occurred_at=occurred_at,
-                )
-
-                purchase.mark_credits_granted(occurred_at=occurred_at)
+            purchase.mark_credits_granted(occurred_at=occurred_at)
 
                 await self._uow.payments.save(payment)
                 await self._uow.invoices.save(invoice)
@@ -199,43 +259,102 @@ class PurchasePaygCreditsHandler:
                 await self._uow.payg_purchases.save(purchase)
                 await self._uow.commit()
 
-                events = (
-                    payment.pull_domain_events()
-                    + invoice.pull_domain_events()
-                    + credit_account.pull_domain_events()
-                    + purchase.pull_domain_events()
-                )
+            events = (
+                payment.pull_domain_events()
+                + invoice.pull_domain_events()
+                + credit_account.pull_domain_events()
+                + purchase.pull_domain_events()
+            )
 
-            else:
-                failure_reason = charge_result.failure_reason or "Payment failed."
-
-                payment.mark_failed(
-                    reason=failure_reason,
-                    occurred_at=occurred_at,
-                )
-
-                purchase.fail(
-                    reason=failure_reason,
-                    occurred_at=occurred_at,
-                )
-
-                await self._uow.payments.save(payment)
-                await self._uow.payg_purchases.save(purchase)
-                await self._uow.commit()
-
-                events = payment.pull_domain_events() + purchase.pull_domain_events()
-
-        # TODO: will use await later
         self._event_publisher.publish(events)
 
-        return PurchasePaygCreditsResultDTO(
-            purchase=PaygPurchaseDTO.from_domain(purchase),
-            invoice_id=str(invoice.id),
-            payment_id=str(payment.id),
-            amount=payment.amount.amount,
-            currency=payment.amount.currency.value,
-            gateway_reference=payment.gateway_reference,
-        )
+        return purchase, invoice, payment
+
+    async def _apply_failed_charge(
+        self,
+        *,
+        purchase_id: PaygPurchaseId,
+        invoice_id: InvoiceId,
+        payment_id: PaymentId,
+        reason: str,
+    ) -> tuple[PaygPurchase, Invoice, Payment]:
+        occurred_at = self._clock.now()
+
+        async with self._uow as uow:
+            purchase = await uow.payg_purchases.get(purchase_id)
+            invoice = await uow.invoices.get(invoice_id)
+            payment = await uow.payments.get(payment_id)
+
+            if purchase is None:
+                raise PaygPurchaseNotFoundError("PAYG purchase disappeared.")
+
+            if invoice is None:
+                raise InvoiceNotFoundError("Invoice disappeared.")
+
+            if payment is None:
+                raise PaymentNotFoundError("Payment disappeared.")
+
+            payment.mark_failed(
+                reason=reason,
+                occurred_at=occurred_at,
+            )
+
+            purchase.fail(
+                reason=reason,
+                occurred_at=occurred_at,
+            )
+
+            await uow.payments.save(payment)
+            await uow.payg_purchases.save(purchase)
+            await uow.commit()
+
+        events = payment.pull_domain_events() + purchase.pull_domain_events()
+        self._event_publisher.publish(events)
+
+        return purchase, invoice, payment
+
+    async def _mark_gateway_exception(
+        self,
+        *,
+        payment_id: PaymentId,
+        purchase_id: PaygPurchaseId,
+        reason: str,
+    ) -> Payment | None:
+        occurred_at = self._clock.now()
+
+        async with self._uow as uow:
+            payment = await uow.payments.get(payment_id)
+            purchase = await uow.payg_purchases.get(purchase_id)
+
+            if payment is None:
+                return None
+
+            payment.mark_failed(
+                reason=reason,
+                occurred_at=occurred_at,
+            )
+
+            if purchase is not None:
+                purchase.fail(
+                    reason=reason,
+                    occurred_at=occurred_at,
+                )
+
+            await uow.payments.save(payment)
+
+            if purchase is not None:
+                await uow.payg_purchases.save(purchase)
+
+            await uow.commit()
+
+        events = payment.pull_domain_events()
+
+        if purchase is not None:
+            events += purchase.pull_domain_events()
+
+        self._event_publisher.publish(events)
+
+        return payment
 
 
 class MarkPaygPaymentSucceededHandler:
@@ -362,8 +481,6 @@ class GrantPaygCreditsHandler:
                     f"Credit account not found for user: {purchase.user_id}"
                 )
 
-            occurred_at = self._clock.now()
-
             credit_account.grant(
                 grant_id=CreditGrantId(self._id_generator.generate()),
                 amount=purchase.credits,
@@ -384,104 +501,3 @@ class GrantPaygCreditsHandler:
         self._event_publisher.publish(events)
 
         return PaygPurchaseDTO.from_domain(purchase)
-
-
-# class PaygApplicationService:
-#     def __init__(
-#         self,
-#         uow: PaygApplicationUnitOfWork,
-#         event_publisher: EventPublisher | None = None,
-#         idempotency_store: IdempotencyStore | None = None,
-#     ):
-#         self.uow = uow
-#         self.event_publisher = event_publisher
-#         self.idempotency_store = idempotency_store
-
-#     async def create_purchase(
-#         self,
-#         cmd: CreatePaygPurchaseCommand,
-#     ) -> PaygPurchaseResultDTO:
-#         now = cmd.now or utc_now()
-
-#         key = self._idempotency_key(str(cmd.request_id))
-#         fingerprint = self._fingerprint(
-#             {
-#                 "user_id": str(cmd.user_id),
-#                 "plan_code": str(cmd.plan_code),
-#                 "request_id": str(cmd.request_id),
-#                 "metadata": cmd.metadata or {},
-#             }
-#         )
-
-#         await self._ensure_idempotent(key, fingerprint)
-
-#         async with self.uow:
-#             result = create_payg_purchase(
-#                 purchase_id=PaygPurchaseId.new(),
-#                 grant_id=GrantId.new(),
-#                 user_id=cmd.user_id,
-#                 plan_code=cmd.plan_code,
-#                 now=now,
-#                 request_id=cmd.request_id,
-#                 metadata=cmd.metadata,
-#             )
-
-#             await self.uow.payg_purchase.save(
-#                 result.purchase
-#             )
-#             await self.uow.ledger.save_grant(result.grant)
-#             await self.uow.commit()
-
-#         await self._store_idempotency(key, fingerprint)
-#         await self._publish_many([result.event])
-
-#         return to_payg_purchase_result_dto(result)
-
-#     async def _ensure_idempotent(
-#         self,
-#         key: str,
-#         fingerprint: str,
-#     ) -> None:
-#         if self.idempotency_store is None:
-#             return
-
-#         existing = await self.idempotency_store.get(key)
-#         if existing is None:
-#             return
-
-#         if existing != fingerprint:
-#             raise IdempotencyConflictError(
-#                 f"Conflicting request for key={key}"
-#             )
-#         raise DuplicateRequestError(
-#             f"Request for key={key} already processed"
-#         )
-
-#     async def _store_idempotency(
-#         self,
-#         key: str,
-#         fingerprint: str,
-#     ) -> None:
-#         if self.idempotency_store is None:
-#             return
-#         await self.idempotency_store.save(key, fingerprint)
-
-#     async def _publish_many(
-#         self,
-#         events: list[object],
-#     ) -> None:
-#         if self.event_publisher is None or not events:
-#             return
-#         await self.event_publisher.publish_many(events)
-
-#     @staticmethod
-#     def _idempotency_key(request_id: str) -> str:
-#         return f"billing:payg:create_purchase:{request_id}"
-
-#     @staticmethod
-#     def _fingerprint(payload: dict) -> str:
-#         raw = json.dumps(
-#             payload,
-#             sort_keys=True,
-#         ).encode("utf-8")
-#         return hashlib.sha256(raw).hexdigest()
