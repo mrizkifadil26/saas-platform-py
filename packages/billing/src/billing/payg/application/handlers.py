@@ -253,11 +253,11 @@ class PurchasePaygCreditsHandler:
 
             purchase.mark_credits_granted(occurred_at=occurred_at)
 
-                await self._uow.payments.save(payment)
-                await self._uow.invoices.save(invoice)
-                await self._uow.credit_accounts.save(credit_account)
-                await self._uow.payg_purchases.save(purchase)
-                await self._uow.commit()
+            await uow.payments.save(payment)
+            await uow.invoices.save(invoice)
+            await uow.credit_accounts.save(credit_account)
+            await uow.payg_purchases.save(purchase)
+            await uow.commit()
 
             events = (
                 payment.pull_domain_events()
@@ -380,8 +380,8 @@ class MarkPaygPaymentSucceededHandler:
         self,
         command: MarkPaygPaymentSucceededCommand,
     ) -> PaygPurchaseDTO:
-        async with self._uow:
-            purchase = await self._uow.payg_purchases.get(command.purchase_id)
+        async with self._uow as uow:
+            purchase = await uow.payg_purchases.get(command.purchase_id)
 
             if purchase is None:
                 raise PaygPurchaseNotFoundError(
@@ -390,8 +390,8 @@ class MarkPaygPaymentSucceededHandler:
 
             purchase.mark_payment_succeeded(occurred_at=self._clock.now())
 
-            await self._uow.payg_purchases.save(purchase)
-            await self._uow.commit()
+            await uow.payg_purchases.save(purchase)
+            await uow.commit()
 
             events = purchase.pull_domain_events()
 
@@ -417,8 +417,8 @@ class MarkPaygPaymentFailedHandler:
         self,
         command: MarkPaygPaymentFailedCommand,
     ) -> PaygPurchaseDTO:
-        async with self._uow:
-            purchase = await self._uow.payg_purchases.get(command.purchase_id)
+        async with self._uow as uow:
+            purchase = await uow.payg_purchases.get(command.purchase_id)
 
             if purchase is None:
                 raise PaygPurchaseNotFoundError(
@@ -430,8 +430,8 @@ class MarkPaygPaymentFailedHandler:
                 occurred_at=self._clock.now(),
             )
 
-            await self._uow.payg_purchases.save(purchase)
-            await self._uow.commit()
+            await uow.payg_purchases.save(purchase)
+            await uow.commit()
 
             events = purchase.pull_domain_events()
 
@@ -464,15 +464,17 @@ class GrantPaygCreditsHandler:
         self._event_publisher = event_publisher
 
     async def handle(self, command: GrantPaygCreditsCommand) -> PaygPurchaseDTO:
-        async with self._uow:
-            purchase = await self._uow.payg_purchases.get(command.purchase_id)
+        occurred_at = self._clock.now()
+
+        async with self._uow as uow:
+            purchase = await uow.payg_purchases.get(command.purchase_id)
 
             if purchase is None:
                 raise PaygPurchaseNotFoundError(
                     f"PAYG purchase not found: {command.purchase_id}"
                 )
 
-            credit_account = await self._uow.credit_accounts.get_by_user_id(
+            credit_account = await uow.credit_accounts.get_by_user_id(
                 purchase.user_id
             )
 
@@ -491,9 +493,9 @@ class GrantPaygCreditsHandler:
 
             purchase.mark_credits_granted(occurred_at=occurred_at)
 
-            await self._uow.credit_accounts.save(credit_account)
-            await self._uow.payg_purchases.save(purchase)
-            await self._uow.commit()
+            await uow.credit_accounts.save(credit_account)
+            await uow.payg_purchases.save(purchase)
+            await uow.commit()
 
             events = credit_account.pull_domain_events() + purchase.pull_domain_events()
 
