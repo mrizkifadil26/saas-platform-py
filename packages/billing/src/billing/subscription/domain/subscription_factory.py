@@ -5,7 +5,7 @@ from billing.shared.domain.value_objects.user_id import UserId
 from billing.subscription.domain.subscription import Subscription
 from billing.subscription.domain.subscription_item import SubscriptionItem
 from billing.subscription.domain.value_objects.billing_period import BillingPeriod
-from billing.subscription.domain.value_objects.plan_id import PlanId
+from billing.subscription.domain.value_objects.plan_code import PlanCode
 from billing.subscription.domain.value_objects.subscription_id import SubscriptionId
 
 
@@ -14,7 +14,9 @@ class SubscriptionFactory:
     def create_subscription(
         subscription_id: SubscriptionId,
         user_id: UserId,
-        plan_id: PlanId,
+        # TODO: should use plan_id instead of plan_code later
+        # plan_id: PlanId,
+        plan_code: PlanCode,
         period_start: datetime,
         period_end: datetime,
         items: Sequence[SubscriptionItem] | None = None,
@@ -25,7 +27,7 @@ class SubscriptionFactory:
         return Subscription.create(
             subscription_id=subscription_id,
             user_id=user_id,
-            plan_id=plan_id,
+            plan_code=plan_code,
             billing_period=BillingPeriod(
                 start_at=period_start,
                 end_at=period_end,

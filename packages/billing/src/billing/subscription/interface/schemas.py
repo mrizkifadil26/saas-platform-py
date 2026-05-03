@@ -13,7 +13,8 @@ class CreateSubscriptionItemRequest(BaseModel):
 class CreateSubscriptionRequest(BaseModel):
     # TODO: should replace it with customer_id
     user_id: str = Field(..., min_length=1)
-    plan_id: str = Field(..., min_length=1)
+    # plan_id: str = Field(..., min_length=1)
+    plan_code: str = Field(..., min_length=1)
     period_start: datetime
     period_end: datetime
     items: list[CreateSubscriptionItemRequest] = Field(default_factory=list)
@@ -32,7 +33,8 @@ class SubscriptionResponse(BaseModel):
     subscription_id: str
     # TODO: should replace it with customer_id
     user_id: str
-    plan_id: str
+    # plan_id: str
+    plan_code: str
     status: str
     current_period_start: datetime
     current_period_end: datetime

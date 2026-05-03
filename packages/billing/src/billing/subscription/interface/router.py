@@ -38,7 +38,8 @@ async def create_subscription(
         CreateSubscriptionCommand(
             # TODO: should replace it with customer_id
             user_id=request.user_id,
-            plan_id=request.plan_id,
+            # plan_id=request.plan_id,
+            plan_code=request.plan_code,
             period_start=request.period_start,
             period_end=request.period_end,
             items=tuple(

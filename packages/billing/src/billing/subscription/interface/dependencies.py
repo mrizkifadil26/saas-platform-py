@@ -6,6 +6,10 @@ from db.app_db.session import (
 )
 from fastapi import Depends
 
+from billing.pricing.application.catalogs import SubscriptionPricingCatalog
+from billing.pricing.infrastructure.catalogs.static_subscription_catalog import (
+    StaticSubscriptionCatalog,
+)
 from billing.shared.application.clock import Clock
 from billing.shared.application.event_publisher import EventPublisher
 from billing.shared.application.id_generator import IdGenerator
@@ -46,15 +50,23 @@ def get_uow(
     return SQLAlchemyBillingUoW(session_factory)
 
 
+def get_pricing_catalog() -> SubscriptionPricingCatalog:
+    return StaticSubscriptionCatalog()
+
+
 def get_create_subscription_handler(
     uow: Annotated[BillingUoW, Depends(get_uow)],
     id_generator: Annotated[IdGenerator, Depends(get_id_generator)],
+    pricing_catalog: Annotated[
+        SubscriptionPricingCatalog, Depends(get_pricing_catalog)
+    ],
     clock: Annotated[Clock, Depends(get_clock)],
     event_publisher: Annotated[EventPublisher, Depends(get_event_publisher)],
 ) -> CreateSubscriptionHandler:
     return CreateSubscriptionHandler(
         uow=uow,
         id_generator=id_generator,
+        pricing_catalog=pricing_catalog,
         clock=clock,
         event_publisher=event_publisher,
     )

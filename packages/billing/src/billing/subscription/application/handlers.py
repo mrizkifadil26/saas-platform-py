@@ -1,3 +1,4 @@
+from billing.pricing.application.catalogs import SubscriptionPricingCatalog
 from billing.shared.application.clock import Clock
 from billing.shared.application.event_publisher import EventPublisher
 from billing.shared.application.id_generator import IdGenerator
@@ -17,7 +18,7 @@ from billing.subscription.application.mappers import SubscriptionMapper
 from billing.subscription.application.queries import GetSubscriptionQuery
 from billing.subscription.domain.subscription_factory import SubscriptionFactory
 from billing.subscription.domain.value_objects.billing_period import BillingPeriod
-from billing.subscription.domain.value_objects.plan_id import PlanId
+from billing.subscription.domain.value_objects.plan_code import PlanCode
 from billing.subscription.domain.value_objects.subscription_id import SubscriptionId
 
 
@@ -27,12 +28,14 @@ class CreateSubscriptionHandler:
         *,
         uow: BillingUoW,
         id_generator: IdGenerator,
+        pricing_catalog: SubscriptionPricingCatalog,
         clock: Clock,
         event_publisher: EventPublisher,
         # idempotency_store: IdempotencyStore,
     ) -> None:
         self._uow = uow
         self._id_generator = id_generator
+        self._pricing_catalog = pricing_catalog
         self._clock = clock
         self._event_publisher = event_publisher
 
@@ -47,6 +50,12 @@ class CreateSubscriptionHandler:
         # if self.idempotency_store.exists(command.idempotency_key):
         # raise ValueError("Duplicate request")
 
+        now = self._clock.now()
+        plan = await self._pricing_catalog.get_subscription_plan(
+            # PlanId(command.plan_id)
+            PlanCode(command.plan_code)
+        )
+
         items = [
             SubscriptionMapper.command_item_to_domain(item) for item in command.items
         ]
@@ -55,7 +64,9 @@ class CreateSubscriptionHandler:
             subscription_id=SubscriptionId(self._id_generator.generate()),
             # TODO: should implement customer_id than user_id
             user_id=UserId(command.user_id),
-            plan_id=PlanId(command.plan_id),
+            # TODO: should use plan_id instead of plan_code later
+            # plan_id=PlanId(command.plan_id),
+            plan_code=PlanCode(command.plan_code),
             period_start=command.period_start,
             period_end=command.period_end,
             items=items,
@@ -64,8 +75,8 @@ class CreateSubscriptionHandler:
             occurred_at=self._clock.now(),
         )
 
-        async with self._uow:
-            await self._uow.subscriptions.save(subscription)
+        async with self._uow as uow:
+            await uow.subscriptions.save(subscription)
 
         # self.idempotency_store.store(command.idempotency_key)
 
@@ -99,8 +110,8 @@ class RenewSubscriptionHandler:
         # raise ValueError("Duplicate request")
         subscription_id = SubscriptionId(command.subscription_id)
 
-        async with self._uow:
-            subscription = await self._uow.subscriptions.get(subscription_id)
+        async with self._uow as uow:
+            subscription = await uow.subscriptions.get(subscription_id)
             if subscription is None:
                 raise SubscriptionNotFound(
                     f"Subscription not found: {command.subscription_id}"
@@ -116,7 +127,7 @@ class RenewSubscriptionHandler:
                 occurred_at=self._clock.now(),
             )
 
-            await self._uow.subscriptions.save(subscription)
+            await uow.subscriptions.save(subscription)
 
         # self.idempotency_store.store(command.idempotency_key)
 
@@ -149,21 +160,26 @@ class ChangeSubscriptionPlanHandler:
         # if self.idempotency_store.exists(command.idempotency_key):
         # raise ValueError("Duplicate request")
         subscription_id = SubscriptionId(command.subscription_id)
-        new_plan_id = PlanId(command.new_plan_id)
+        # new_plan_id = PlanId(command.new_plan_id)
+        new_plan_code = PlanCode(command.new_plan_code)
 
-        async with self._uow:
-            subscription = await self._uow.subscriptions.get(subscription_id)
+        async with self._uow as uow:
+            subscription = await uow.subscriptions.get(subscription_id)
             if subscription is None:
                 raise SubscriptionNotFound(
                     f"Subscription not found: {command.subscription_id}"
                 )
 
+            # subscription.change_plan(
+            #     new_plan_id=new_plan_id,
+            #     occurred_at=self._clock.now(),
+            # )
             subscription.change_plan(
-                new_plan_id=new_plan_id,
+                new_plan_code=new_plan_code,
                 occurred_at=self._clock.now(),
             )
 
-            await self._uow.subscriptions.save(subscription)
+            await uow.subscriptions.save(subscription)
 
         # self.idempotency_store.store(command.idempotency_key)
 
@@ -197,8 +213,8 @@ class CancelSubscriptionHandler:
         # raise ValueError("Duplicate request")
         subscription_id = SubscriptionId(command.subscription_id)
 
-        async with self._uow:
-            subscription = await self._uow.subscriptions.get(subscription_id)
+        async with self._uow as uow:
+            subscription = await uow.subscriptions.get(subscription_id)
             if subscription is None:
                 raise SubscriptionNotFound(
                     f"Subscription not found: {command.subscription_id}"
@@ -209,7 +225,7 @@ class CancelSubscriptionHandler:
                 occurred_at=self._clock.now(),
             )
 
-            await self._uow.subscriptions.save(subscription)
+            await uow.subscriptions.save(subscription)
 
         # self.idempotency_store.store(command.idempotency_key)
 

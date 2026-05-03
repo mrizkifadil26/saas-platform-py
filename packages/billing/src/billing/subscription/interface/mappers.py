@@ -10,7 +10,8 @@ def to_response(dto: SubscriptionDTO) -> SubscriptionResponse:
         subscription_id=dto.subscription_id,
         # TODO: should replace it with customer_id
         user_id=dto.user_id,
-        plan_id=dto.plan_id,
+        # plan_id=dto.plan_id,
+        plan_code=dto.plan_code,
         status=dto.status,
         current_period_start=dto.current_period_start,
         current_period_end=dto.current_period_end,

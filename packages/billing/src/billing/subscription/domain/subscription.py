@@ -20,7 +20,7 @@ from billing.subscription.domain.subscription_events import (
 from billing.subscription.domain.subscription_item import SubscriptionItem
 from billing.subscription.domain.subscription_status import SubscriptionStatus
 from billing.subscription.domain.value_objects.billing_period import BillingPeriod
-from billing.subscription.domain.value_objects.plan_id import PlanId
+from billing.subscription.domain.value_objects.plan_code import PlanCode
 from billing.subscription.domain.value_objects.subscription_id import SubscriptionId
 from billing.subscription.domain.value_objects.subscription_item_id import (
     SubscriptionItemId,
@@ -32,7 +32,9 @@ class Subscription(AggregateRoot[SubscriptionId]):
     subscription_id: SubscriptionId
     # TODO: should use customer_id instead of user_id later
     user_id: UserId
-    plan_id: PlanId
+    # TODO: should use plan_id instead of plan_code later
+    # plan_id: PlanId
+    plan_code: PlanCode
     status: SubscriptionStatus
     billing_period: BillingPeriod
 
@@ -66,7 +68,8 @@ class Subscription(AggregateRoot[SubscriptionId]):
         subscription_id: SubscriptionId,
         # TODO: should use customer_id instead of user_id later
         user_id: UserId,
-        plan_id: PlanId,
+        # plan_id: PlanId,
+        plan_code: PlanCode,
         billing_period: BillingPeriod,
         items: list[SubscriptionItem] | None = None,
         provider_subscription_id: str | None = None,
@@ -78,7 +81,8 @@ class Subscription(AggregateRoot[SubscriptionId]):
         subscription = cls(
             subscription_id=subscription_id,
             user_id=user_id,
-            plan_id=plan_id,
+            # plan_id=plan_id,
+            plan_code=plan_code,
             status=status,
             billing_period=billing_period,
             items=tuple(items) if items else tuple(),
@@ -89,7 +93,8 @@ class Subscription(AggregateRoot[SubscriptionId]):
         event = SubscriptionStarted(
             subscription_id=subscription_id,
             user_id=user_id,
-            plan_id=plan_id,
+            # plan_id=plan_id,
+            plan_code=plan_code,
             occurred_at=occurred_at or billing_period.start_at,
         )
 
@@ -209,9 +214,12 @@ class Subscription(AggregateRoot[SubscriptionId]):
                 f"Cannot renew subscription {self.subscription_id} because it is set to cancel at period end"
             )
 
+        current_period = self.billing_period
+
         if next_billing_period.start_at < self.billing_period.end_at:
             raise InvalidSubscriptionStateError(
-                f"Cannot renew subscription {self.subscription_id} because the next billing period {next_billing_period} does not start after the current billing period {self.billing_period}"
+                f"Cannot renew subscription {self.subscription_id} because the next billing period "
+                f"{next_billing_period} does not start after the current billing period {self.billing_period}"
             )
 
         self.status = SubscriptionStatus.ACTIVE
@@ -219,8 +227,8 @@ class Subscription(AggregateRoot[SubscriptionId]):
 
         event = SubscriptionRenewed(
             subscription_id=self.subscription_id,
-            previous_period_start=self.billing_period.start_at,
-            previous_period_end=self.billing_period.end_at,
+            previous_period_start=current_period.start_at,
+            previous_period_end=current_period.end_at,
             new_period_start=next_billing_period.start_at,
             new_period_end=next_billing_period.end_at,
             occurred_at=occurred_at or next_billing_period.start_at,
@@ -229,28 +237,38 @@ class Subscription(AggregateRoot[SubscriptionId]):
 
     def change_plan(
         self,
-        new_plan_id: PlanId,
+        # TODO: plan_id should be used instead of plan_code after we have multi-tenancy
+        # new_plan_id: PlanId,
+        new_plan_code: PlanCode,
         *,
-        occurred_at: datetime | None = None,
+        occurred_at: datetime,
     ) -> None:
         if self.status.is_terminal:
             raise InvalidSubscriptionStateError(
-                f"Cannot change plan for subscription {self.subscription_id} because it is in terminal status {self.status}"
+                f"Cannot change plan for subscription {self.subscription_id} "
+                f"because it is in terminal status {self.status}"
             )
 
-        if new_plan_id == self.plan_id:
+        # if new_plan_id == self.plan_id:
+        if new_plan_code == self.plan_code:
             raise InvalidSubscriptionStateError(
-                f"Cannot change to the same plan for subscription {self.subscription_id} (plan_id: {self.plan_id})"
+                f"Cannot change to the same plan for subscription {self.subscription_id} "
+                # f"(plan_id: {self.plan_id})"
+                f"(plan_code: {self.plan_code})"
             )
 
-        self.plan_id = new_plan_id
+        # previous_plan_id = self.plan_id
+        # self.plan_id = new_plan_id
+        previous_plan_code = self.plan_code
+        self.plan_code = new_plan_code
 
         event = SubscriptionChanged(
             subscription_id=self.subscription_id,
-            previous_plan_id=self.plan_id,
-            new_plan_id=new_plan_id,
-            occurred_at=occurred_at
-            or datetime.now(tz=self.billing_period.start_at.tzinfo),
+            # previous_plan_id=previous_plan_id,
+            # new_plan_id=new_plan_id,
+            previous_plan_code=previous_plan_code,
+            new_plan_code=new_plan_code,
+            occurred_at=occurred_at,
         )
         self.record_event(event)
 

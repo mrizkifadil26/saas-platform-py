@@ -49,7 +49,9 @@ class SubscriptionMapper:
         return SubscriptionDTO(
             subscription_id=str(subscription.subscription_id),
             user_id=str(subscription.user_id),
-            plan_id=str(subscription.plan_id),
+            # TODO: later we should use plan_id instead of plan_code, but for now we need to keep plan_code for backward compatibility with existing subscriptions
+            # plan_id=str(subscription.plan_id),
+            plan_code=str(subscription.plan_code),
             status=subscription.status,
             current_period_start=subscription.current_period_start,
             current_period_end=subscription.current_period_end,

@@ -6,7 +6,7 @@ from billing.subscription.domain.subscription_item import SubscriptionItem
 from billing.subscription.domain.subscription_status import SubscriptionStatus
 from billing.subscription.domain.value_objects.billing_period import BillingPeriod
 from billing.subscription.domain.value_objects.feature_code import FeatureCode
-from billing.subscription.domain.value_objects.plan_id import PlanId
+from billing.subscription.domain.value_objects.plan_code import PlanCode
 from billing.subscription.domain.value_objects.product_code import ProductCode
 from billing.subscription.domain.value_objects.subscription_id import SubscriptionId
 from billing.subscription.domain.value_objects.subscription_item_id import (
@@ -26,7 +26,8 @@ class SubscriptionORMMapper:
         return Subscription(
             subscription_id=SubscriptionId(model.subscription_id),
             user_id=UserId(model.user_id),
-            plan_id=PlanId(model.plan_id),
+            # plan_id=PlanId(model.plan_id),
+            plan_code=PlanCode(model.plan_code),
             status=SubscriptionStatus(model.status),
             billing_period=BillingPeriod(
                 start_at=model.current_period_start,
@@ -53,7 +54,8 @@ class SubscriptionORMMapper:
             subscription_id=str(domain.subscription_id),
             # TODO: should use customer_id than user_id
             user_id=str(domain.user_id),
-            plan_id=str(domain.plan_id),
+            # plan_id=str(domain.plan_id),
+            plan_code=str(domain.plan_code),
             status=domain.status.value,
             current_period_start=domain.billing_period.start_at,
             current_period_end=domain.billing_period.end_at,
@@ -83,7 +85,8 @@ class SubscriptionORMMapper:
     ) -> SubscriptionModel:
         # TODO: should use customer_id than user_id
         model.user_id = str(domain.user_id)
-        model.plan_id = str(domain.plan_id)
+        # model.plan_id = str(domain.plan_id)
+        model.plan_code = str(domain.plan_code)
         model.status = domain.status.value
         model.current_period_start = domain.billing_period.start_at
         model.current_period_end = domain.billing_period.end_at

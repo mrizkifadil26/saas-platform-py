@@ -15,7 +15,9 @@ class SubscriptionDTO:
     subscription_id: str
     # TODO: should use customer_id instead of user_id
     user_id: str
-    plan_id: str
+    # TODO: later we should use plan_id instead of plan_code, but for now we need to keep plan_code for backward compatibility with existing subscriptions
+    # plan_id=str(subscription.plan_id),
+    plan_code: str
     status: str
     current_period_start: datetime
     current_period_end: datetime
