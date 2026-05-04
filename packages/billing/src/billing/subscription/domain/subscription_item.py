@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from billing.subscription.domain.exceptions import InvalidSubscriptionItemQuantityError
 from billing.subscription.domain.value_objects.feature_code import FeatureCode
 from billing.subscription.domain.value_objects.product_code import ProductCode
 from billing.subscription.domain.value_objects.subscription_item_id import (
@@ -11,7 +12,7 @@ from billing.subscription.domain.value_objects.subscription_item_id import (
 
 @dataclass(frozen=True, slots=True)
 class SubscriptionItem:
-    """Represents an item in a subscription."""
+    """A billable line item within a subscription."""
 
     item_id: SubscriptionItemId
     product_code: ProductCode
@@ -20,12 +21,13 @@ class SubscriptionItem:
 
     def __post_init__(self):
         if self.quantity < 1:
-            raise ValueError("Quantity must be at least 1.")
+            raise InvalidSubscriptionItemQuantityError("Quantity must be at least 1.")
 
     def change_quantity(self, new_quantity: int) -> SubscriptionItem:
-        """Returns a new SubscriptionItem with the updated quantity."""
         if new_quantity < 1:
-            raise ValueError("New quantity must be at least 1.")
+            raise InvalidSubscriptionItemQuantityError(
+                "New quantity must be at least 1."
+            )
 
         return SubscriptionItem(
             item_id=self.item_id,

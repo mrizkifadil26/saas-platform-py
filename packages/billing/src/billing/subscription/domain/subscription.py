@@ -121,6 +121,9 @@ class Subscription(AggregateRoot[SubscriptionId]):
     def can_be_canceled(self) -> bool:
         return not self.status.is_terminal
 
+    def can_renew(self) -> bool:
+        return self.status.can_renew()
+
     def cancel(
         self,
         *,
@@ -195,9 +198,6 @@ class Subscription(AggregateRoot[SubscriptionId]):
 
         self.status = SubscriptionStatus.EXPIRED
 
-    def can_renew(self) -> bool:
-        return self.status.can_renew()
-
     def renew(
         self,
         next_billing_period: BillingPeriod,
@@ -206,20 +206,29 @@ class Subscription(AggregateRoot[SubscriptionId]):
     ) -> None:
         if not self.can_renew():
             raise InvalidSubscriptionStateError(
-                f"Cannot renew subscription {self.subscription_id} because it is not in a renewable state (status: {self.status})"
+                f"Cannot renew subscription {self.subscription_id} "
+                f"because it is not in a renewable state (status: {self.status})"
             )
 
         if self.cancel_at_period_end:
             raise InvalidSubscriptionStateError(
-                f"Cannot renew subscription {self.subscription_id} because it is set to cancel at period end"
+                f"Cannot renew subscription {self.subscription_id} "
+                f"because it is set to cancel at period end"
             )
 
         current_period = self.billing_period
 
-        if next_billing_period.start_at < self.billing_period.end_at:
+        if not current_period.is_adjacent_to(next_billing_period):
             raise InvalidSubscriptionStateError(
-                f"Cannot renew subscription {self.subscription_id} because the next billing period "
-                f"{next_billing_period} does not start after the current billing period {self.billing_period}"
+                f"Cannot renew subscription {self.subscription_id} "
+                f"because the next billing period {next_billing_period} "
+                f"is not adjacent to the current billing period {self.billing_period}"
+            )
+
+        if not current_period.is_followed_by(next_billing_period):
+            raise InvalidSubscriptionStateError(
+                f"Cannot renew subscription {self.subscription_id} "
+                f"because the next billing period must start at the current period end"
             )
 
         self.status = SubscriptionStatus.ACTIVE

@@ -23,3 +23,7 @@ class RecurringCreditsAlreadyGrantedError(SubscriptionError):
 
 class InvalidSubscriptionItemError(SubscriptionError):
     """Raised when an invalid subscription item is encountered."""
+
+
+class InvalidSubscriptionItemQuantityError(SubscriptionError):
+    """Raised when an invalid quantity is set for a subscription item."""

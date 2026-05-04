@@ -32,15 +32,17 @@ class BillingPeriod:
     def is_adjacent_to(self, other: BillingPeriod) -> bool:
         return self.end_at == other.start_at or other.end_at == self.start_at
 
-    def next_period(self, interval: BillingPeriod) -> BillingPeriod:
-        duration = self.duration
+    def is_followed_by(self, next_period: BillingPeriod) -> bool:
+        return self.end_at == next_period.start_at
+
+    def next_period(self) -> BillingPeriod:
         return BillingPeriod(
             start_at=self.end_at,
-            end_at=self.end_at + duration,
+            end_at=self.end_at + self.duration,
         )
 
     @classmethod
-    def from_bounds(cls, start_at: datetime, end_at: datetime) -> "BillingPeriod":
+    def from_bounds(cls, start_at: datetime, end_at: datetime) -> BillingPeriod:
         return cls(start_at=start_at, end_at=end_at)
 
     @classmethod
@@ -50,12 +52,10 @@ class BillingPeriod:
         month: int,
     ) -> BillingPeriod:
         start = datetime(year, month, 1, tzinfo=timezone.utc)
+
         if month == 12:
             end = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
         else:
             end = datetime(year, month + 1, 1, tzinfo=timezone.utc)
 
         return cls(start_at=start, end_at=end)
-
-    # def cycle_key(self, subscription_id: SubscriptionId) -> str:
-    #     return f"{subscription_id.value}:{self.start_at.date().isoformat()}:{self.end_at.date().isoformat()}"
