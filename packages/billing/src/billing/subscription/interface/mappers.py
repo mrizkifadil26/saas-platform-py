@@ -8,9 +8,7 @@ from billing.subscription.interface.schemas import (
 def to_response(dto: SubscriptionDTO) -> SubscriptionResponse:
     return SubscriptionResponse(
         subscription_id=dto.subscription_id,
-        # TODO: should replace it with customer_id
         user_id=dto.user_id,
-        # plan_id=dto.plan_id,
         plan_code=dto.plan_code,
         status=dto.status,
         current_period_start=dto.current_period_start,

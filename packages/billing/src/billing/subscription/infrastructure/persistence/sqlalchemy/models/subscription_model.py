@@ -10,7 +10,6 @@ class SubscriptionModel(AppBase):
 
     subscription_id: Mapped[str] = mapped_column(String(36), primary_key=True)
     user_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
-    # plan_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     plan_code: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
 
     status: Mapped[str] = mapped_column(String(32), nullable=False, index=True)

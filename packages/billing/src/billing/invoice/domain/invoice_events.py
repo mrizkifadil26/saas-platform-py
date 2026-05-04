@@ -7,11 +7,13 @@ from billing.shared.domain.domain_event import DomainEvent
 from billing.shared.domain.value_objects.money import Money
 from billing.shared.domain.value_objects.user_id import UserId
 
+# TODO(billing-migration):
+# - Replace user_id with customer_id once Customer owns billing identity.
+
 
 @dataclass(frozen=True, slots=True)
 class InvoiceCreated(DomainEvent):
     invoice_id: InvoiceId
-    # TODO: later should use customer_id instead of user_id
     user_id: UserId
     total: Money
 
@@ -19,7 +21,6 @@ class InvoiceCreated(DomainEvent):
 @dataclass(frozen=True, slots=True)
 class InvoiceIssued(DomainEvent):
     invoice_id: InvoiceId
-    # TODO: later should use customer_id instead of user_id
     user_id: UserId
     total: Money
 
@@ -27,7 +28,6 @@ class InvoiceIssued(DomainEvent):
 @dataclass(frozen=True, slots=True)
 class InvoicePaid(DomainEvent):
     invoice_id: InvoiceId
-    # TODO: later should use customer_id instead of user_id
     user_id: UserId
     total: Money
 
@@ -35,12 +35,10 @@ class InvoicePaid(DomainEvent):
 @dataclass(frozen=True, slots=True)
 class InvoiceVoided(DomainEvent):
     invoice_id: InvoiceId
-    # TODO: later should use customer_id instead of user_id
     user_id: UserId
 
 
 @dataclass(frozen=True, slots=True)
 class InvoiceMarkedUncollectible(DomainEvent):
     invoice_id: InvoiceId
-    # TODO: later should use customer_id instead of user_id
     user_id: UserId

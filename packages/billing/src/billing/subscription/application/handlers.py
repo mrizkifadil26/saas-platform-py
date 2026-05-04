@@ -31,6 +31,10 @@ from billing.subscription.domain.value_objects.subscription_item_id import (
 
 
 class CreateSubscriptionHandler:
+    # TODO(idempotency):
+    # Implement idempotency at the API/application service boundary.
+    # Duplicate commands should be detected and short-circuited before reaching handlers.
+
     def __init__(
         self,
         *,
@@ -39,23 +43,17 @@ class CreateSubscriptionHandler:
         pricing_catalog: SubscriptionPricingCatalog,
         clock: Clock,
         event_publisher: EventPublisher,
-        # idempotency_store: IdempotencyStore,
     ) -> None:
         self._uow = uow
         self._id_generator = id_generator
         self._pricing_catalog = pricing_catalog
         self._clock = clock
         self._event_publisher = event_publisher
-        # self.idempotency_store = idempotency_store
 
     async def handle(
         self,
         command: CreateSubscriptionCommand,
     ) -> SubscriptionDTO:
-        # TODO: Should idempotency be handled at the application service level instead of the handler level?
-        # if self.idempotency_store.exists(command.idempotency_key):
-        # raise ValueError("Duplicate request")
-
         now = self._clock.now()
         items = [
             SubscriptionItem(
@@ -69,10 +67,7 @@ class CreateSubscriptionHandler:
 
         subscription = SubscriptionFactory.create_subscription(
             subscription_id=SubscriptionId(self._id_generator.generate()),
-            # TODO: should implement customer_id than user_id
             user_id=UserId(command.user_id),
-            # TODO: should use plan_id instead of plan_code later
-            # plan_id=PlanId(command.plan_id),
             plan_code=PlanCode(command.plan_code),
             period_start=command.period_start,
             period_end=command.period_end,
@@ -95,27 +90,25 @@ class CreateSubscriptionHandler:
 
 
 class RenewSubscriptionHandler:
+    # TODO(idempotency):
+    # Implement idempotency at the API/application service boundary.
+    # Duplicate commands should be detected and short-circuited before reaching handlers.
+
     def __init__(
         self,
         *,
         uow: BillingUoW,
         clock: Clock,
         event_publisher: EventPublisher,
-        # idempotency_store: IdempotencyStore,
     ) -> None:
         self._uow = uow
         self._clock = clock
         self._event_publisher = event_publisher
-        # self.idempotency_store = idempotency_store
 
     async def handle(
         self,
         command: RenewSubscriptionCommand,
     ) -> SubscriptionDTO:
-        # TODO: Should idempotency be handled at the application service level instead of the handler level?
-        # if self.idempotency_store.exists(command.idempotency_key):
-        # raise ValueError("Duplicate request")
-
         subscription_id = SubscriptionId(command.subscription_id)
 
         async with self._uow as uow:
@@ -140,36 +133,37 @@ class RenewSubscriptionHandler:
 
             await uow.commit()
 
-        # TODO: later should use await
+        # TODO(async-events):
+        # Transition to async event publishing:
+        # - Make EventPublisher.publish async
+        # - Await publishing after commit
+        # - Ensure delivery is safe to retry (idempotent or deduplicated)
         self._event_publisher.publish(events)
 
         return SubscriptionMapper.to_dto(subscription)
 
 
 class ChangeSubscriptionPlanHandler:
+    # TODO(idempotency):
+    # Implement idempotency at the API/application service boundary.
+    # Duplicate commands should be detected and short-circuited before reaching handlers.
+
     def __init__(
         self,
         *,
         uow: BillingUoW,
         clock: Clock,
         event_publisher: EventPublisher,
-        # idempotency_store: IdempotencyStore,
     ) -> None:
         self._uow = uow
         self._clock = clock
         self._event_publisher = event_publisher
-        # self.idempotency_store = idempotency_store
 
     async def handle(
         self,
         command: ChangeSubscriptionPlanCommand,
     ) -> SubscriptionDTO:
-        # TODO: Should idempotency be handled at the application service level instead of the handler level?
-        # if self.idempotency_store.exists(command.idempotency_key):
-        # raise ValueError("Duplicate request")
-
         subscription_id = SubscriptionId(command.subscription_id)
-        # new_plan_id = PlanId(command.new_plan_id)
         new_plan_code = PlanCode(command.new_plan_code)
 
         async with self._uow as uow:
@@ -180,7 +174,6 @@ class ChangeSubscriptionPlanHandler:
                 )
 
             subscription.change_plan(
-                # new_plan_id=new_plan_id,
                 new_plan_code=new_plan_code,
                 occurred_at=self._clock.now(),
             )
@@ -190,34 +183,36 @@ class ChangeSubscriptionPlanHandler:
 
             await uow.commit()
 
-        # TODO: later should use await
+        # TODO(async-events):
+        # Transition to async event publishing:
+        # - Make EventPublisher.publish async
+        # - Await publishing after commit
+        # - Ensure delivery is safe to retry (idempotent or deduplicated)
         self._event_publisher.publish(events)
 
         return SubscriptionMapper.to_dto(subscription)
 
 
 class CancelSubscriptionHandler:
+    # TODO(idempotency):
+    # Implement idempotency at the API/application service boundary.
+    # Duplicate commands should be detected and short-circuited before reaching handlers.
+
     def __init__(
         self,
         *,
         uow: BillingUoW,
         clock: Clock,
         event_publisher: EventPublisher,
-        # idempotency_store: IdempotencyStore,
     ) -> None:
         self._uow = uow
         self._clock = clock
         self._event_publisher = event_publisher
 
-        # self.idempotency_store = idempotency_store
-
     async def handle(
         self,
         command: CancelSubscriptionCommand,
     ) -> SubscriptionDTO:
-        # TODO: Should idempotency be handled at the application service level instead of the handler level?
-        # if self.idempotency_store.exists(command.idempotency_key):
-        # raise ValueError("Duplicate request")
         subscription_id = SubscriptionId(command.subscription_id)
 
         async with self._uow as uow:
@@ -237,7 +232,11 @@ class CancelSubscriptionHandler:
 
             await uow.commit()
 
-        # TODO: later should use await
+        # TODO(async-events):
+        # Transition to async event publishing:
+        # - Make EventPublisher.publish async
+        # - Await publishing after commit
+        # - Ensure delivery is safe to retry (idempotent or deduplicated)
         self._event_publisher.publish(events)
 
         return SubscriptionMapper.to_dto(subscription)

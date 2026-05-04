@@ -26,7 +26,6 @@ class SubscriptionORMMapper:
         return Subscription(
             subscription_id=SubscriptionId(model.subscription_id),
             user_id=UserId(model.user_id),
-            # plan_id=PlanId(model.plan_id),
             plan_code=PlanCode(model.plan_code),
             status=SubscriptionStatus(model.status),
             billing_period=BillingPeriod(
@@ -52,9 +51,7 @@ class SubscriptionORMMapper:
     def to_model(domain: Subscription) -> SubscriptionModel:
         model = SubscriptionModel(
             subscription_id=str(domain.subscription_id),
-            # TODO: should use customer_id than user_id
             user_id=str(domain.user_id),
-            # plan_id=str(domain.plan_id),
             plan_code=str(domain.plan_code),
             status=domain.status.value,
             current_period_start=domain.billing_period.start_at,
@@ -83,9 +80,7 @@ class SubscriptionORMMapper:
         model: SubscriptionModel,
         domain: Subscription,
     ) -> SubscriptionModel:
-        # TODO: should use customer_id than user_id
         model.user_id = str(domain.user_id)
-        # model.plan_id = str(domain.plan_id)
         model.plan_code = str(domain.plan_code)
         model.status = domain.status.value
         model.current_period_start = domain.billing_period.start_at
@@ -121,19 +116,5 @@ class SubscriptionORMMapper:
         for item_id, existing_item in existing_items_by_id.items():
             if item_id not in domain_items_by_id:
                 model.items.remove(existing_item)
-
-        # model.items.clear()
-        # model.items.extend(
-        #     [
-        #         SubscriptionItemModel(
-        #             id=str(item.item_id),
-        #             subscription_id=str(domain.subscription_id),
-        #             product_code=str(item.product_code),
-        #             feature_code=str(item.feature_code),
-        #             quantity=item.quantity,
-        #         )
-        #         for item in domain.items
-        #     ]
-        # )
 
         return model

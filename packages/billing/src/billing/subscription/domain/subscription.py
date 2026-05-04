@@ -30,10 +30,8 @@ from billing.subscription.domain.value_objects.subscription_item_id import (
 @dataclass(slots=True)
 class Subscription(AggregateRoot[SubscriptionId]):
     subscription_id: SubscriptionId
-    # TODO: should use customer_id instead of user_id later
     user_id: UserId
-    # TODO: should use plan_id instead of plan_code later
-    # plan_id: PlanId
+
     plan_code: PlanCode
     status: SubscriptionStatus
     billing_period: BillingPeriod
@@ -66,9 +64,7 @@ class Subscription(AggregateRoot[SubscriptionId]):
         cls,
         *,
         subscription_id: SubscriptionId,
-        # TODO: should use customer_id instead of user_id later
         user_id: UserId,
-        # plan_id: PlanId,
         plan_code: PlanCode,
         billing_period: BillingPeriod,
         items: list[SubscriptionItem] | None = None,
@@ -81,7 +77,6 @@ class Subscription(AggregateRoot[SubscriptionId]):
         subscription = cls(
             subscription_id=subscription_id,
             user_id=user_id,
-            # plan_id=plan_id,
             plan_code=plan_code,
             status=status,
             billing_period=billing_period,
@@ -93,7 +88,6 @@ class Subscription(AggregateRoot[SubscriptionId]):
         event = SubscriptionStarted(
             subscription_id=subscription_id,
             user_id=user_id,
-            # plan_id=plan_id,
             plan_code=plan_code,
             occurred_at=occurred_at or billing_period.start_at,
         )
@@ -264,8 +258,6 @@ class Subscription(AggregateRoot[SubscriptionId]):
 
     def change_plan(
         self,
-        # TODO: plan_id should be used instead of plan_code after we have multi-tenancy
-        # new_plan_id: PlanId,
         new_plan_code: PlanCode,
         *,
         occurred_at: datetime,
@@ -280,19 +272,14 @@ class Subscription(AggregateRoot[SubscriptionId]):
         if new_plan_code == self.plan_code:
             raise InvalidSubscriptionStateError(
                 f"Cannot change to the same plan for subscription {self.subscription_id} "
-                # f"(plan_id: {self.plan_id})"
                 f"(plan_code: {self.plan_code})"
             )
 
-        # previous_plan_id = self.plan_id
-        # self.plan_id = new_plan_id
         previous_plan_code = self.plan_code
         self.plan_code = new_plan_code
 
         event = SubscriptionPlanChanged(
             subscription_id=self.subscription_id,
-            # previous_plan_id=previous_plan_id,
-            # new_plan_id=new_plan_id,
             previous_plan_code=previous_plan_code,
             new_plan_code=new_plan_code,
             occurred_at=occurred_at,

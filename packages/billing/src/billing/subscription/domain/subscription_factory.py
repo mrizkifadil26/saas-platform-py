@@ -14,8 +14,6 @@ class SubscriptionFactory:
     def create_subscription(
         subscription_id: SubscriptionId,
         user_id: UserId,
-        # TODO: should use plan_id instead of plan_code later
-        # plan_id: PlanId,
         plan_code: PlanCode,
         period_start: datetime,
         period_end: datetime,
