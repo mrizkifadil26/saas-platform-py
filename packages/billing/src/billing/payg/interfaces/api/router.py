@@ -53,42 +53,42 @@ async def purchase_payg_credits(
     )
 
 
-@router.get("/purchases/{purchase_id}", response_model=PaygPurchaseResponse)
-async def get_purchase(
-    purchase_id: str,
-    handler: Annotated[
-        ...,
-        ...,
-    ],
-) -> PaygPurchaseResponse:
-    try:
-        result = await handler.get_purchase(purchase_id)  # assume you expose this
-    except PaygPurchaseNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+# @router.get("/purchases/{purchase_id}", response_model=PaygPurchaseResponse)
+# async def get_purchase(
+#     purchase_id: str,
+#     handler: Annotated[
+#         ...,
+#         ...,
+#     ],
+# ) -> PaygPurchaseResponse:
+#     try:
+#         result = await handler.get_purchase(purchase_id)  # assume you expose this
+#     except PaygPurchaseNotFoundError as e:
+#         raise HTTPException(status_code=404, detail=str(e))
 
-    return PaygPurchaseResponse(
-        purchase_id=result.purchase_id,
-        user_id=result.user_id,
-        credits=result.credits,
-        status=result.status,
-    )
+#     return PaygPurchaseResponse(
+#         purchase_id=result.purchase_id,
+#         user_id=result.user_id,
+#         credits=result.credits,
+#         status=result.status,
+#     )
 
 
-@router.get("/packs", response_model=...)
-async def get_payg_packs(
-    handler: Annotated[
-        ...,
-        ...,
-    ],
-) -> PaygPurchaseResponse:
-    try:
-        result = await handler.get_purchase(purchase_id)  # assume you expose this
-    except PaygPurchaseNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+# @router.get("/packs", response_model=...)
+# async def get_payg_packs(
+#     handler: Annotated[
+#         ...,
+#         ...,
+#     ],
+# ) -> PaygPurchaseResponse:
+#     try:
+#         result = await handler.get_purchase(purchase_id)  # assume you expose this
+#     except PaygPurchaseNotFoundError as e:
+#         raise HTTPException(status_code=404, detail=str(e))
 
-    return PaygPurchaseResponse(
-        purchase_id=result.purchase_id,
-        user_id=result.user_id,
-        credits=result.credits,
-        status=result.status,
-    )
+#     return PaygPurchaseResponse(
+#         purchase_id=result.purchase_id,
+#         user_id=result.user_id,
+#         credits=result.credits,
+#         status=result.status,
+#     )
