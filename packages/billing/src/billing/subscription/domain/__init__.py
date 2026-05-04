@@ -9,7 +9,7 @@ from billing.subscription.domain.exceptions import (
 from billing.subscription.domain.subscription import Subscription
 from billing.subscription.domain.subscription_events import (
     SubscriptionCanceled,
-    SubscriptionChanged,
+    SubscriptionPlanChanged,
     SubscriptionRenewed,
     SubscriptionStarted,
 )
@@ -25,9 +25,9 @@ __all__ = [
     "Subscription",
     "SubscriptionAlreadyCanceledError",
     "SubscriptionCanceled",
-    "SubscriptionChanged",
     "SubscriptionError",
     "SubscriptionFactory",
+    "SubscriptionPlanChanged",
     "SubscriptionRenewed",
     "SubscriptionRepository",
     "SubscriptionStarted",

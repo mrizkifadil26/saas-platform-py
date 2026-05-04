@@ -13,7 +13,7 @@ from billing.subscription.domain.exceptions import (
 )
 from billing.subscription.domain.subscription_events import (
     SubscriptionCanceled,
-    SubscriptionChanged,
+    SubscriptionPlanChanged,
     SubscriptionRenewed,
     SubscriptionStarted,
 )
@@ -124,6 +124,24 @@ class Subscription(AggregateRoot[SubscriptionId]):
     def can_renew(self) -> bool:
         return self.status.can_renew()
 
+    def has_grant_for_current_period(self) -> bool:
+        return self.last_granted_period_start == self.current_period_start
+
+    def can_grant_recurring_credits(self) -> bool:
+        return (
+            self.status == SubscriptionStatus.ACTIVE
+            and not self.has_grant_for_current_period()
+        )
+
+    def should_end_now(self, at: datetime) -> bool:
+        if at.tzinfo is None:
+            raise ValueError("at must be timezone-aware")
+
+        if self.status.is_terminal:
+            return False
+
+        return self.cancel_at_period_end and at >= self.billing_period.end_at
+
     def cancel(
         self,
         *,
@@ -149,7 +167,7 @@ class Subscription(AggregateRoot[SubscriptionId]):
         event = SubscriptionCanceled(
             subscription_id=self.subscription_id,
             immediate=immediate,
-            occurred_at=occurred_at or self.billing_period.start_at,
+            effective_at=occurred_at or self.billing_period.start_at,
         )
         self.record_event(event)
 
@@ -271,7 +289,7 @@ class Subscription(AggregateRoot[SubscriptionId]):
         previous_plan_code = self.plan_code
         self.plan_code = new_plan_code
 
-        event = SubscriptionChanged(
+        event = SubscriptionPlanChanged(
             subscription_id=self.subscription_id,
             # previous_plan_id=previous_plan_id,
             # new_plan_id=new_plan_id,
@@ -319,15 +337,6 @@ class Subscription(AggregateRoot[SubscriptionId]):
 
         self.items = tuple(items)
 
-    def has_grant_for_current_period(self) -> bool:
-        return self.last_granted_period_start == self.current_period_start
-
-    def can_grant_recurring_credits(self) -> bool:
-        return (
-            self.status == SubscriptionStatus.ACTIVE
-            and not self.has_grant_for_current_period()
-        )
-
     def mark_credits_granted_for_current_period(
         self,
         credits: Credits,
@@ -346,12 +355,3 @@ class Subscription(AggregateRoot[SubscriptionId]):
             )
 
         self.last_granted_period_start = self.current_period_start
-
-    def should_end_now(self, at: datetime) -> bool:
-        if at.tzinfo is None:
-            raise ValueError("at must be timezone-aware")
-
-        if self.status.is_terminal:
-            return False
-
-        return self.cancel_at_period_end and at >= self.billing_period.end_at
