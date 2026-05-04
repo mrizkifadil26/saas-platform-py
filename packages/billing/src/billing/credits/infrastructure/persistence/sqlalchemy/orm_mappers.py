@@ -123,7 +123,7 @@ class CreditLedgerEntryORMMapper:
             delta=int(domain.delta),
             balance_after_available=int(domain.balance_after_available),
             balance_after_reserved=int(domain.balance_after_reserved),
-            source_type=domain.source_type,
+            source_type=domain.source_type.value,
             source_id=domain.source_id,
             description=domain.description,
             occurred_at=domain.occurred_at,
