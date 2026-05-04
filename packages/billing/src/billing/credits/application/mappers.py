@@ -35,7 +35,7 @@ class CreditAccountMapper:
                 CreditLedgerEntryDTO(
                     id=entry.id,
                     credit_account_id=entry.credit_account_id,
-                    amount=entry.amount,
+                    delta=entry.delta,
                     balance_after_available=int(entry.balance_after_available),
                     balance_after_reserved=int(entry.balance_after_reserved),
                     source_type=entry.source_type,

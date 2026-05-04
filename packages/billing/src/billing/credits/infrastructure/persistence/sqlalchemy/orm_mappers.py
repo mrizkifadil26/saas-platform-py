@@ -106,7 +106,7 @@ class CreditLedgerEntryORMMapper:
         return CreditLedgerEntry(
             id=CreditLedgerEntryId(model.id),
             credit_account_id=CreditAccountId(model.credit_account_id),
-            amount=model.amount,
+            delta=model.delta,
             balance_after_available=Credits.of(model.balance_after_available),
             balance_after_reserved=Credits.of(model.balance_after_reserved),
             source_type=CreditSourceType(model.source_type),
@@ -120,7 +120,7 @@ class CreditLedgerEntryORMMapper:
         return CreditLedgerEntryModel(
             id=str(domain.id),
             credit_account_id=str(domain.credit_account_id),
-            amount=int(domain.amount),
+            delta=int(domain.delta),
             balance_after_available=int(domain.balance_after_available),
             balance_after_reserved=int(domain.balance_after_reserved),
             source_type=domain.source_type,

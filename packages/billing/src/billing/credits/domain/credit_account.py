@@ -30,8 +30,11 @@ from billing.shared.domain.value_objects.user_id import UserId
 @dataclass(slots=True)
 class CreditAccount(AggregateRoot[CreditAccountId]):
     id: CreditAccountId
-    # TODO: later we need to use customer_Id instead of user_id, but for now we can use user_id as a placeholder
+
+    # TODO: Replace user_id with customer_id once billing has its own customer aggregate.
+    #       Billing should not permanently depend on auth/user identity.
     user_id: UserId
+
     balance: CreditBalance
     grants: list[CreditGrant] = field(default_factory=list)
     ledger_entries: list[CreditLedgerEntry] = field(default_factory=list)
@@ -79,10 +82,10 @@ class CreditAccount(AggregateRoot[CreditAccountId]):
         )
 
         self.grants.append(grant)
-        self.balance = self.balance.add(amount)
+        self.balance = self.balance.grant(amount)
 
         self._record_entry(
-            amount=int(amount),
+            delta=int(amount),
             source_type=source_type,
             source_id=source_id,
             description=description,
@@ -92,7 +95,7 @@ class CreditAccount(AggregateRoot[CreditAccountId]):
         event = CreditsGranted(
             credit_account_id=self.id,
             grant_id=grant_id,
-            amount=int(amount),
+            amount=amount,
             source_type=source_type,
             source_id=source_id,
             expires_at=expires_at,
@@ -112,7 +115,7 @@ class CreditAccount(AggregateRoot[CreditAccountId]):
         self.balance = self.balance.reserve(amount)
 
         self._record_entry(
-            amount=-int(amount),
+            delta=-int(amount),
             source_type=CreditSourceType.RESERVATION,
             source_id=source_id,
             description=description,
@@ -121,65 +124,10 @@ class CreditAccount(AggregateRoot[CreditAccountId]):
 
         event = CreditsReserved(
             credit_account_id=self.id,
-            amount=int(amount),
+            amount=amount,
             source_id=source_id,
-            occurred_at=occurred_at,
         )
 
-        self.record_event(event)
-
-    def consume_reserved(
-        self,
-        *,
-        amount: Credits,
-        occurred_at: datetime,
-        source_id: str | None = None,
-        description: str | None = None,
-    ) -> None:
-        self.balance = self.balance.consume_reserved(amount)
-
-        remaining_to_consume = amount
-        updated_grants: list[CreditGrant] = []
-
-        for grant in sorted(
-            self.grants,
-            key=lambda grant: (
-                grant.expires_at or datetime.max.replace(tzinfo=occurred_at.tzinfo)
-            ),
-        ):
-            if remaining_to_consume == 0:
-                updated_grants.append(grant)
-                continue
-
-            if grant.remaining == 0:
-                updated_grants.append(grant)
-                continue
-
-            consumed = min(grant.remaining, remaining_to_consume)
-            updated_grants.append(grant.consume(consumed))
-            remaining_to_consume -= consumed
-
-        if remaining_to_consume.is_positive():
-            raise CreditBalanceInconsistentError(
-                "Grant balances are inconsistent with reserved balance"
-            )
-
-        self.grants = updated_grants
-
-        self._record_entry(
-            amount=-int(amount),
-            source_type=CreditSourceType.USAGE_CONSUMPTION,
-            source_id=source_id,
-            description=description,
-            occurred_at=occurred_at,
-        )
-
-        event = ReservedCreditsConsumed(
-            credit_account_id=self.id,
-            amount=int(amount),
-            source_id=source_id,
-            occurred_at=occurred_at,
-        )
         self.record_event(event)
 
     def release_reserved(
@@ -193,7 +141,7 @@ class CreditAccount(AggregateRoot[CreditAccountId]):
         self.balance = self.balance.release_reserved(amount)
 
         self._record_entry(
-            amount=int(amount),
+            delta=int(amount),
             source_type=CreditSourceType.RESERVATION_RELEASE,
             source_id=source_id,
             description=description,
@@ -202,11 +150,62 @@ class CreditAccount(AggregateRoot[CreditAccountId]):
 
         event = ReservedCreditsReleased(
             credit_account_id=self.id,
-            amount=int(amount),
+            amount=amount,
             source_id=source_id,
+        )
+        self.record_event(event)
+
+    def consume_reserved(
+        self,
+        *,
+        amount: Credits,
+        occurred_at: datetime,
+        source_id: str | None = None,
+        description: str | None = None,
+    ) -> None:
+        remaining_to_consume = amount
+        updated_grants: list[CreditGrant] = []
+
+        for grant in sorted(
+            self.grants,
+            key=lambda grant: (
+                grant.expires_at or datetime.max.replace(tzinfo=occurred_at.tzinfo)
+            ),
+        ):
+            if remaining_to_consume.is_zero():
+                updated_grants.append(grant)
+                continue
+
+            if grant.remaining.is_zero():
+                updated_grants.append(grant)
+                continue
+
+            consumed = grant.remaining.min_with(remaining_to_consume)
+
+            updated_grants.append(grant.consume(consumed))
+            remaining_to_consume = remaining_to_consume - consumed
+
+        if remaining_to_consume.is_positive():
+            raise CreditBalanceInconsistentError(
+                "Grant balances are inconsistent with reserved balance"
+            )
+
+        self.balance = self.balance.consume_reserved(amount)
+        self.grants = updated_grants
+
+        self._record_entry(
+            delta=-int(amount),
+            source_type=CreditSourceType.USAGE_CONSUMPTION,
+            source_id=source_id,
+            description=description,
             occurred_at=occurred_at,
         )
 
+        event = ReservedCreditsConsumed(
+            credit_account_id=self.id,
+            amount=amount,
+            source_id=source_id,
+        )
         self.record_event(event)
 
     def expire_grants(
@@ -220,8 +219,21 @@ class CreditAccount(AggregateRoot[CreditAccountId]):
 
         for grant in self.grants:
             if grant.is_expired_at(occurred_at) and grant.remaining.is_positive():
-                expired_amount = expired_amount + grant.remaining
-                updated_grants.append(grant.expire(at=occurred_at))
+                amount_to_expire = grant.remaining
+                expired_grant = grant.expire(at=occurred_at)
+
+                assert grant.expires_at is not None
+
+                expired_amount = expired_amount + amount_to_expire
+                updated_grants.append(expired_grant)
+
+                event = CreditsExpired(
+                    credit_account_id=self.id,
+                    grant_id=grant.id,
+                    amount=amount_to_expire,
+                    expires_at=grant.expires_at,
+                )
+                self.record_event(event)
             else:
                 updated_grants.append(grant)
 
@@ -229,40 +241,32 @@ class CreditAccount(AggregateRoot[CreditAccountId]):
             self.grants = updated_grants
             return Credits.zero()
 
-        self.balance = self.balance.subtract_available(expired_amount)
+        self.balance = self.balance.consume_available(expired_amount)
         self.grants = updated_grants
 
         self._record_entry(
-            amount=-int(expired_amount),
+            delta=-int(expired_amount),
             source_type=CreditSourceType.EXPIRATION,
             source_id=None,
             description=description,
             occurred_at=occurred_at,
         )
 
-        event = CreditsExpired(
-            credit_account_id=self.id,
-            amount=int(expired_amount),
-            occurred_at=occurred_at,
-        )
-        self.record_event(event)
-
         return expired_amount
 
     def _record_entry(
         self,
         *,
-        amount: int,
+        delta: int,
         source_type: CreditSourceType,
         source_id: str | None,
         description: str | None,
         occurred_at: datetime,
     ) -> None:
         entry = CreditLedgerEntry(
-            # TODO: generate a proper UUID for the ledger entry
-            id=CreditLedgerEntryId(uuid4().hex),
+            id=CreditLedgerEntryId(str(uuid4())),
             credit_account_id=self.id,
-            amount=amount,
+            delta=delta,
             balance_after_available=self.balance.available,
             balance_after_reserved=self.balance.reserved,
             source_type=source_type,

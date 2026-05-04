@@ -50,7 +50,7 @@ def credit_ledger_entry_response_from_dto(
     return CreditLedgerEntryResponse(
         id=str(dto.id),
         credit_account_id=str(dto.credit_account_id),
-        amount=dto.amount,
+        delta=dto.delta,
         balance_after_available=dto.balance_after_available,
         balance_after_reserved=dto.balance_after_reserved,
         source_type=dto.source_type,

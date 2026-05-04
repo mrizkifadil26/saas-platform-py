@@ -18,6 +18,16 @@ class SQLCreditAccountRepository(
     SQLAlchemyRepository[CreditAccount, CreditAccountId, CreditAccountModel],
     CreditAccountRepository,
 ):
+    @property
+    def model_type(self) -> type[CreditAccountModel]:
+        return CreditAccountModel
+
+    def _to_domain(self, model: CreditAccountModel) -> CreditAccount:
+        return CreditAccountORMMapper.from_model(model)
+
+    def _to_model(self, entity: CreditAccount) -> CreditAccountModel:
+        return CreditAccountORMMapper.to_model(entity)
+
     async def get_by_user_id(self, user_id: UserId) -> CreditAccount | None:
         stmt = (
             select(CreditAccountModel)
@@ -74,13 +84,3 @@ class SQLCreditAccountRepository(
 
         # Update existing model
         CreditAccountORMMapper.update_model(existing, entity)
-
-    @property
-    def model_type(self) -> type[CreditAccountModel]:
-        return CreditAccountModel
-
-    def _to_domain(self, model: CreditAccountModel) -> CreditAccount:
-        return CreditAccountORMMapper.from_model(model)
-
-    def _to_model(self, entity: CreditAccount) -> CreditAccountModel:
-        return CreditAccountORMMapper.to_model(entity)

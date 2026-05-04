@@ -36,7 +36,7 @@ class Credits:
     def can_cover(self, other: Credits) -> bool:
         return self.amount >= other.amount
 
-    def min(self, other: Credits) -> Credits:
+    def min_with(self, other: Credits) -> Credits:
         return Credits(min(self.amount, other.amount))
 
     def __add__(self, other: Credits) -> Credits:

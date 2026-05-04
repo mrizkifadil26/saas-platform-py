@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 
 from billing.credits.domain.exceptions import (
@@ -41,6 +41,9 @@ class CreditGrant:
     def is_expired_at(self, at: datetime) -> bool:
         return self.expires_at is not None and at >= self.expires_at
 
+    def is_fully_consumed(self) -> bool:
+        return self.remaining.is_zero()
+
     def consume(self, amount: Credits) -> CreditGrant:
         if amount.is_zero():
             raise InvalidCreditsAmountError(
@@ -53,26 +56,16 @@ class CreditGrant:
                 remaining=int(self.remaining),
             )
 
-        return CreditGrant(
-            id=self.id,
-            credit_account_id=self.credit_account_id,
-            amount=self.amount,
+        return replace(
+            self,
             remaining=self.remaining - amount,
-            granted_at=self.granted_at,
-            expires_at=self.expires_at,
-            source_id=self.source_id,
         )
 
     def expire(self, at: datetime) -> CreditGrant:
-        if self.is_expired_at(at):
-            return CreditGrant(
-                id=self.id,
-                credit_account_id=self.credit_account_id,
-                amount=self.amount,
-                remaining=Credits.zero(),
-                granted_at=self.granted_at,
-                expires_at=self.expires_at,
-                source_id=self.source_id,
-            )
+        if not self.is_expired_at(at) or self.remaining.is_zero():
+            return self
 
-        return self
+        return replace(
+            self,
+            remaining=Credits.zero(),
+        )

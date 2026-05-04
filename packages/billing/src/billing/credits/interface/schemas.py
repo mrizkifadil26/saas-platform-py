@@ -74,7 +74,7 @@ class CreditGrantResponse(BaseModel):
 class CreditLedgerEntryResponse(BaseModel):
     id: str
     credit_account_id: str
-    amount: int
+    delta: int
     balance_after_available: int
     balance_after_reserved: int
     source_type: CreditSourceType

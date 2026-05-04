@@ -20,7 +20,7 @@ class CreditLedgerEntry:
     # Signed delta:
     # + credits granted/released
     # - credits reserved/consumed/expired
-    amount: int
+    delta: int
 
     balance_after_available: Credits
     balance_after_reserved: Credits
@@ -31,12 +31,12 @@ class CreditLedgerEntry:
     occurred_at: datetime
 
     def __post_init__(self) -> None:
-        if isinstance(self.amount, bool) or not isinstance(self.amount, int):
+        if isinstance(self.delta, bool) or not isinstance(self.delta, int):
             raise InvalidCreditLedgerEntryError(
-                "Credit ledger entry amount must be an integer."
+                "Credit ledger entry delta must be an integer."
             )
 
-        if self.amount == 0:
+        if self.delta == 0:
             raise InvalidCreditLedgerEntryError(
-                "Credit ledger entry amount cannot be zero."
+                "Credit ledger entry delta cannot be zero."
             )

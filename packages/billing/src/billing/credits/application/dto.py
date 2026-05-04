@@ -18,6 +18,15 @@ class CreditBalanceDTO:
 
 
 @dataclass(frozen=True, slots=True)
+class CreditAccountDTO:
+    id: CreditAccountId
+    user_id: UserId
+    balance: CreditBalanceDTO
+    grants: tuple[CreditGrantDTO, ...]
+    ledger_entries: tuple[CreditLedgerEntryDTO, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class CreditGrantDTO:
     id: CreditGrantId
     credit_account_id: CreditAccountId
@@ -32,21 +41,10 @@ class CreditGrantDTO:
 class CreditLedgerEntryDTO:
     id: CreditLedgerEntryId
     credit_account_id: CreditAccountId
-    amount: int
+    delta: int
     balance_after_available: int
     balance_after_reserved: int
     source_type: CreditSourceType
     source_id: str | None
     description: str | None
     occurred_at: datetime
-
-
-
-@dataclass(frozen=True, slots=True)
-class CreditAccountDTO:
-    id: CreditAccountId
-    # TODO: should use customer_id instead of user_id
-    user_id: UserId
-    balance: CreditBalanceDTO
-    grants: tuple[CreditGrantDTO, ...]
-    ledger_entries: tuple[CreditLedgerEntryDTO, ...]

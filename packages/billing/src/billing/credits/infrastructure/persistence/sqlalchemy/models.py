@@ -79,7 +79,7 @@ class CreditLedgerEntryModel(AppBase):
         index=True,
     )
 
-    amount: Mapped[int] = mapped_column(Integer, nullable=False)
+    delta: Mapped[int] = mapped_column(Integer, nullable=False)
 
     balance_after_available: Mapped[int] = mapped_column(Integer, nullable=False)
     balance_after_reserved: Mapped[int] = mapped_column(Integer, nullable=False)
