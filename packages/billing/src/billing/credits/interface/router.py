@@ -38,7 +38,7 @@ from billing.credits.interface.dependencies import (
     get_release_reserved_credits_handler,
     get_reserve_credits_handler,
 )
-from billing.credits.interface.mappers import credit_account_response_from_dto
+from billing.credits.interface.mappers import to_response
 from billing.credits.interface.schemas import (
     ConsumeReservedCreditsRequest,
     CreateCreditAccountRequest,
@@ -83,7 +83,7 @@ async def create_credit_account(
             },
         ) from exc
 
-    return credit_account_response_from_dto(dto)
+    return to_response(dto)
 
 
 @router.post(
@@ -111,7 +111,7 @@ async def grant_credits(
     except CreditError as exc:
         raise_credit_domain_error(exc)
 
-    return credit_account_response_from_dto(dto)
+    return to_response(dto)
 
 
 @router.post(
@@ -137,7 +137,7 @@ async def reserve_credits(
     except CreditError as exc:
         raise_credit_domain_error(exc)
 
-    return credit_account_response_from_dto(dto)
+    return to_response(dto)
 
 
 @router.post(
@@ -165,7 +165,7 @@ async def consume_reserved_credits(
     except CreditError as exc:
         raise_credit_domain_error(exc)
 
-    return credit_account_response_from_dto(dto)
+    return to_response(dto)
 
 
 @router.post(
@@ -193,7 +193,7 @@ async def release_reserved_credits(
     except CreditError as exc:
         raise_credit_domain_error(exc)
 
-    return credit_account_response_from_dto(dto)
+    return to_response(dto)
 
 
 @router.post(
@@ -217,7 +217,7 @@ async def expire_credits(
     except CreditError as exc:
         raise_credit_domain_error(exc)
 
-    return credit_account_response_from_dto(dto)
+    return to_response(dto)
 
 
 # ---------------------------------------------------------------------

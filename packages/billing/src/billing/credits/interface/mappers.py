@@ -12,19 +12,17 @@ from billing.credits.interface.schemas import (
 )
 
 
-def credit_account_response_from_dto(dto: CreditAccountDTO) -> CreditAccountResponse:
+def to_response(dto: CreditAccountDTO) -> CreditAccountResponse:
     return CreditAccountResponse(
         id=str(dto.id),
         user_id=str(dto.user_id),
-        balance=credit_balance_response_from_dto(dto.balance),
-        grants=[credit_grant_response_from_dto(grant) for grant in dto.grants],
-        ledger_entries=[
-            credit_ledger_entry_response_from_dto(entry) for entry in dto.ledger_entries
-        ],
+        balance=_to_balance(dto.balance),
+        grants=[_to_grant(grant) for grant in dto.grants],
+        ledger_entries=[_to_ledger_entry(entry) for entry in dto.ledger_entries],
     )
 
 
-def credit_balance_response_from_dto(dto: CreditBalanceDTO) -> CreditBalanceResponse:
+def _to_balance(dto: CreditBalanceDTO) -> CreditBalanceResponse:
     return CreditBalanceResponse(
         available=dto.available,
         reserved=dto.reserved,
@@ -32,7 +30,7 @@ def credit_balance_response_from_dto(dto: CreditBalanceDTO) -> CreditBalanceResp
     )
 
 
-def credit_grant_response_from_dto(dto: CreditGrantDTO) -> CreditGrantResponse:
+def _to_grant(dto: CreditGrantDTO) -> CreditGrantResponse:
     return CreditGrantResponse(
         id=str(dto.id),
         credit_account_id=str(dto.credit_account_id),
@@ -44,9 +42,7 @@ def credit_grant_response_from_dto(dto: CreditGrantDTO) -> CreditGrantResponse:
     )
 
 
-def credit_ledger_entry_response_from_dto(
-    dto: CreditLedgerEntryDTO,
-) -> CreditLedgerEntryResponse:
+def _to_ledger_entry(dto: CreditLedgerEntryDTO) -> CreditLedgerEntryResponse:
     return CreditLedgerEntryResponse(
         id=str(dto.id),
         credit_account_id=str(dto.credit_account_id),

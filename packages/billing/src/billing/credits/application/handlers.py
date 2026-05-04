@@ -23,19 +23,20 @@ from billing.shared.application.uow import BillingUoW
 
 
 class CreateCreditAccountHandler:
+    # TODO(idempotency):
+    # Implement idempotency at the API/application service boundary.
+    # Duplicate commands should be detected and short-circuited before reaching handlers.
+
     def __init__(
         self,
         *,
         uow: BillingUoW,
         id_generator: IdGenerator,
         event_publisher: EventPublisher,
-        # idempotency_store: IdempotencyStore,
     ) -> None:
         self._uow = uow
         self._id_generator = id_generator
         self._event_publisher = event_publisher
-
-        # self.idempotency_store = idempotency_store
 
     async def handle(
         self,
@@ -55,12 +56,13 @@ class CreateCreditAccountHandler:
             )
 
             await uow.credit_accounts.save(account)
+            events = account.pull_domain_events()
+
             await uow.commit()
 
-        events = account.pull_domain_events()
         self._event_publisher.publish(events)
 
-        return CreditAccountMapper.domain_to_dto(account)
+        return CreditAccountMapper.to_dto(account)
 
 
 class GrantCreditsHandler:
@@ -78,6 +80,8 @@ class GrantCreditsHandler:
         self._event_publisher = event_publisher
 
     async def handle(self, command: GrantCreditsCommand) -> CreditAccountDTO:
+        now = self._clock.now()
+
         async with self._uow as uow:
             account = await uow.credit_accounts.get_by_user_id(command.user_id)
 
@@ -89,7 +93,7 @@ class GrantCreditsHandler:
             account.grant(
                 grant_id=CreditGrantId(self._id_generator.generate()),
                 amount=Credits.of(command.amount),
-                occurred_at=self._clock.now(),
+                occurred_at=now,
                 expires_at=command.expires_at,
                 source_type=command.source_type,
                 source_id=command.source_id,
@@ -97,123 +101,13 @@ class GrantCreditsHandler:
             )
 
             await uow.credit_accounts.save(account)
+            events = account.pull_domain_events()
+
             await uow.commit()
 
-        events = account.pull_domain_events()
         self._event_publisher.publish(events)
 
-        return CreditAccountMapper.domain_to_dto(account)
-
-
-class ReserveCreditsHandler:
-    def __init__(
-        self,
-        *,
-        uow: BillingUoW,
-        clock: Clock,
-        event_publisher: EventPublisher,
-    ) -> None:
-        self._uow = uow
-        self._clock = clock
-        self._event_publisher = event_publisher
-
-    async def handle(self, command: ReserveCreditsCommand) -> CreditAccountDTO:
-        async with self._uow as uow:
-            account = await uow.credit_accounts.get_by_user_id(command.user_id)
-
-            if account is None:
-                raise CreditAccountNotFoundError(
-                    f"Credit account not found for user_id={command.user_id}"
-                )
-
-            account.reserve(
-                amount=Credits.of(command.amount),
-                occurred_at=self._clock.now(),
-                source_id=command.source_id,
-                description=command.description,
-            )
-
-            await uow.credit_accounts.save(account)
-            await uow.commit()
-
-        events = account.pull_domain_events()
-        self._event_publisher.publish(events)
-
-        return CreditAccountMapper.domain_to_dto(account)
-
-
-class ConsumeReservedCreditsHandler:
-    def __init__(
-        self,
-        *,
-        uow: BillingUoW,
-        clock: Clock,
-        event_publisher: EventPublisher,
-    ) -> None:
-        self._uow = uow
-        self._clock = clock
-        self._event_publisher = event_publisher
-
-    async def handle(self, command: ConsumeReservedCreditsCommand) -> CreditAccountDTO:
-        async with self._uow as uow:
-            account = await uow.credit_accounts.get_by_user_id(command.user_id)
-
-            if account is None:
-                raise CreditAccountNotFoundError(
-                    f"Credit account not found for user_id={command.user_id}"
-                )
-
-            account.consume_reserved(
-                amount=Credits.of(command.amount),
-                occurred_at=self._clock.now(),
-                source_id=command.source_id,
-                description=command.description,
-            )
-
-            await uow.credit_accounts.save(account)
-            await uow.commit()
-
-        events = account.pull_domain_events()
-        self._event_publisher.publish(events)
-
-        return CreditAccountMapper.domain_to_dto(account)
-
-
-class ReleaseReservedCreditsHandler:
-    def __init__(
-        self,
-        *,
-        uow: BillingUoW,
-        clock: Clock,
-        event_publisher: EventPublisher,
-    ) -> None:
-        self._uow = uow
-        self._clock = clock
-        self._event_publisher = event_publisher
-
-    async def handle(self, command: ReleaseReservedCreditsCommand) -> CreditAccountDTO:
-        async with self._uow as uow:
-            account = await uow.credit_accounts.get_by_user_id(command.user_id)
-
-            if account is None:
-                raise CreditAccountNotFoundError(
-                    f"Credit account not found for user_id={command.user_id}"
-                )
-
-            account.release_reserved(
-                amount=Credits.of(command.amount),
-                occurred_at=self._clock.now(),
-                source_id=command.source_id,
-                description=command.description,
-            )
-
-            await uow.credit_accounts.save(account)
-            await uow.commit()
-
-        events = account.pull_domain_events()
-        self._event_publisher.publish(events)
-
-        return CreditAccountMapper.domain_to_dto(account)
+        return CreditAccountMapper.to_dto(account)
 
 
 class ExpireCreditsHandler:
@@ -229,6 +123,8 @@ class ExpireCreditsHandler:
         self._event_publisher = event_publisher
 
     async def handle(self, command: ExpireCreditsCommand) -> CreditAccountDTO:
+        now = self._clock.now()
+
         async with self._uow as uow:
             account = await uow.credit_accounts.get_by_user_id(command.user_id)
 
@@ -238,14 +134,135 @@ class ExpireCreditsHandler:
                 )
 
             account.expire_grants(
-                occurred_at=self._clock.now(),
+                occurred_at=now,
                 description=command.description,
             )
 
             await uow.credit_accounts.save(account)
+            events = account.pull_domain_events()
+
             await uow.commit()
 
-        events = account.pull_domain_events()
         self._event_publisher.publish(events)
 
-        return CreditAccountMapper.domain_to_dto(account)
+        return CreditAccountMapper.to_dto(account)
+
+
+class ReserveCreditsHandler:
+    def __init__(
+        self,
+        *,
+        uow: BillingUoW,
+        clock: Clock,
+        event_publisher: EventPublisher,
+    ) -> None:
+        self._uow = uow
+        self._clock = clock
+        self._event_publisher = event_publisher
+
+    async def handle(self, command: ReserveCreditsCommand) -> CreditAccountDTO:
+        now = self._clock.now()
+
+        async with self._uow as uow:
+            account = await uow.credit_accounts.get_by_user_id(command.user_id)
+
+            if account is None:
+                raise CreditAccountNotFoundError(
+                    f"Credit account not found for user_id={command.user_id}"
+                )
+
+            account.reserve(
+                amount=Credits.of(command.amount),
+                occurred_at=now,
+                source_id=command.source_id,
+                description=command.description,
+            )
+
+            await uow.credit_accounts.save(account)
+            events = account.pull_domain_events()
+
+            await uow.commit()
+
+        self._event_publisher.publish(events)
+
+        return CreditAccountMapper.to_dto(account)
+
+
+class ReleaseReservedCreditsHandler:
+    def __init__(
+        self,
+        *,
+        uow: BillingUoW,
+        clock: Clock,
+        event_publisher: EventPublisher,
+    ) -> None:
+        self._uow = uow
+        self._clock = clock
+        self._event_publisher = event_publisher
+
+    async def handle(self, command: ReleaseReservedCreditsCommand) -> CreditAccountDTO:
+        now = self._clock.now()
+
+        async with self._uow as uow:
+            account = await uow.credit_accounts.get_by_user_id(command.user_id)
+
+            if account is None:
+                raise CreditAccountNotFoundError(
+                    f"Credit account not found for user_id={command.user_id}"
+                )
+
+            account.release_reserved(
+                amount=Credits.of(command.amount),
+                occurred_at=now,
+                source_id=command.source_id,
+                description=command.description,
+            )
+
+            await uow.credit_accounts.save(account)
+            events = account.pull_domain_events()
+
+            await uow.commit()
+
+        self._event_publisher.publish(events)
+
+        return CreditAccountMapper.to_dto(account)
+
+
+class ConsumeReservedCreditsHandler:
+    def __init__(
+        self,
+        *,
+        uow: BillingUoW,
+        clock: Clock,
+        event_publisher: EventPublisher,
+    ) -> None:
+        self._uow = uow
+        self._clock = clock
+        self._event_publisher = event_publisher
+
+    async def handle(self, command: ConsumeReservedCreditsCommand) -> CreditAccountDTO:
+        now = self._clock.now()
+
+        async with self._uow as uow:
+            account = await uow.credit_accounts.get_by_user_id(command.user_id)
+
+            if account is None:
+                raise CreditAccountNotFoundError(
+                    f"Credit account not found for user_id={command.user_id}"
+                )
+
+            account.consume_reserved(
+                amount=Credits.of(command.amount),
+                occurred_at=now,
+                source_id=command.source_id,
+                description=command.description,
+            )
+
+            await uow.credit_accounts.save(account)
+            events = account.pull_domain_events()
+
+            await uow.commit()
+
+        self._event_publisher.publish(events)
+
+        return CreditAccountMapper.to_dto(account)
