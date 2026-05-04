@@ -1,10 +1,7 @@
 from typing import Annotated
 
-from db.app_db.session import (
-    AppSessionFactory,
-    get_app_session_factory,
-)
-from fastapi import Depends
+from db.app_db.session import AppSessionFactory
+from fastapi import Depends, Request
 
 from billing.pricing.application.catalogs import SubscriptionPricingCatalog
 from billing.pricing.infrastructure.catalogs.static_subscription_catalog import (
@@ -39,6 +36,10 @@ def get_id_generator() -> UUIDGenerator:
 
 def get_event_publisher() -> EventPublisher:
     return SimpleEventPublisher()
+
+
+def get_app_session_factory(request: Request) -> AppSessionFactory:
+    return request.app.state.app_session_factory
 
 
 def get_uow(
