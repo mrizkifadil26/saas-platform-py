@@ -1,0 +1,35 @@
+[project]
+name = "iam"
+version = "0.1.0"
+description = ""
+authors = [
+    { name = "Muhammad Rizki Fadillah", email = "mrizkifadil26@gmail.com" },
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "db (>=0.1.1,<0.2.0)",
+    "db @ file:///home/mrizkifadil26/projects/px-project/py-px/packages/shared/db",
+    "sqlalchemy (>=2.0.49,<3.0.0)",
+    "fastapi (>=0.136.1,<0.137.0)",
+]
+
+[tool.poetry]
+packages = [{ include = "iam", from = "src" }]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    "I",    # import sorting (isort replacement)
+    "F401", # unused imports
+    "F822", # undefined name in __all__
+    "F403", # import * usage
+    "F405", # name from import * not defined
+    "RUF",  # Ruff-specific rules
+]
