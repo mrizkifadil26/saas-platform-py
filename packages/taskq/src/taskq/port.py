@@ -4,7 +4,7 @@ from typing import Any, Optional, Protocol
 
 @dataclass(frozen=True)
 class ReservedJob:
-    handle: Any   # opaque provider handle (Job, receipt handle, tag, id...)
+    handle: Any  # opaque provider handle (Job, receipt handle, tag, id...)
     body: str
     queue: str  # tube/queue name
 
