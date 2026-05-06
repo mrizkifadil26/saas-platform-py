@@ -12,6 +12,7 @@ dependencies = [
     "db @ file:///home/mrizkifadil26/projects/px-project/py-px/packages/shared/db",
     "sqlalchemy (>=2.0.49,<3.0.0)",
     "fastapi (>=0.136.1,<0.137.0)",
+    "argon2-cffi (>=25.1.0,<26.0.0)",
 ]
 
 [tool.poetry]
