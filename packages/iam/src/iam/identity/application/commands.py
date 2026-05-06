@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from iam.identity.domain.value_objects.user_id import UserId
-from src.iam.shared.application.command import Command
+from iam.shared.application.command import Command
 
 
 @dataclass(frozen=True, slots=True)

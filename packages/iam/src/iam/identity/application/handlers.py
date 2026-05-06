@@ -1,3 +1,9 @@
+from iam.identity.application.commands import (
+    ActivateUser,
+    ChangePassword,
+    DeactivateUser,
+    RegisterUser,
+)
 from iam.identity.application.dto import PaginatedUsersDTO, UserDTO
 from iam.identity.application.exceptions import (
     UserAlreadyExistsError,
@@ -10,12 +16,6 @@ from iam.identity.domain.user import User
 from iam.identity.domain.user_repository import UserRepository
 from iam.identity.domain.value_objects.email_address import EmailAddress
 from iam.identity.domain.value_objects.password_hash import PasswordHash
-from src.iam.identity.application.commands import (
-    ActivateUser,
-    ChangePassword,
-    DeactivateUser,
-    RegisterUser,
-)
 
 
 class RegisterUserHandler:
