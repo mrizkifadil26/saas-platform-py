@@ -6,11 +6,11 @@
         },
         {
             "name": "DB",
-            "path": "packages/db"
+            "path": "packages/shared/db"
         },
         {
-            "name": "Infra",
-            "path": "infra"
+            "name": "IAM",
+            "path": "packages/iam"
         },
         {
             "name": "API",
