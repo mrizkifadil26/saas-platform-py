@@ -20,5 +20,4 @@ QueryResult = TypeVar(
 
 
 class QueryHandler(Protocol, Generic[QueryType, QueryResult]):
-    async def handle(self, query: QueryType) -> QueryResult:
-        raise NotImplementedError
+    async def handle(self, query: QueryType) -> QueryResult: ...
