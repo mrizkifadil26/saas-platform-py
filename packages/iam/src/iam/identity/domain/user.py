@@ -50,7 +50,7 @@ class User(AggregateRoot[UserId]):
         self.status = UserStatus.ACTIVE
 
     def disable(self) -> None:
-        if self.status != UserStatus.DISABLED:
+        if self.status == UserStatus.DISABLED:
             raise ValidationError("User already disabled or invalid state")
 
         self.status = UserStatus.DISABLED
