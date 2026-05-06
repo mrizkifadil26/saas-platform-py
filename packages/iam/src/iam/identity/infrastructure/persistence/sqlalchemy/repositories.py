@@ -68,7 +68,7 @@ class SQLAlchemyUserRepository(
         return UserModel
 
     def _to_domain(self, model: UserModel) -> User:
-        raise NotImplementedError
+        return UserORMMapper.to_domain(model)
 
     def _to_model(self, entity: User) -> UserModel:
-        raise NotImplementedError
+        return UserORMMapper.to_model(entity)
