@@ -1,12 +1,25 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
 from typing import Generic, Protocol, TypeVar
 
-CommandResult = TypeVar("CommandResult")
 
-
+@dataclass(frozen=True, slots=True)
 class Command:
     pass
 
 
-class CommandHandler(Protocol, Generic[CommandResult]):
-    async def handle(self, command: Command) -> CommandResult:
-        raise NotImplementedError
+CommandType = TypeVar(
+    "CommandType",
+    bound=Command,
+    contravariant=True,
+)
+
+CommandResult = TypeVar(
+    "CommandResult",
+    covariant=True,
+)
+
+
+class CommandHandler(Protocol, Generic[CommandType, CommandResult]):
+    async def handle(self, command: CommandType) -> CommandResult: ...

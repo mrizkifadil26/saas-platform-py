@@ -4,12 +4,11 @@ from typing import Generic, TypeVar
 from iam.shared.domain.domain_event import DomainEvent
 from iam.shared.domain.entity import Entity
 
-
 AggregateId = TypeVar("AggregateId")
 
 
 @dataclass(eq=False)
-class AggregateRoot(Entity[AggregateId], Generic[AggregateId]):
+class AggregateRoot(Entity[AggregateId]):
     _events: list[DomainEvent] = field(default_factory=list, init=False)
 
     def record_event(self, event: DomainEvent) -> None:

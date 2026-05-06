@@ -1,12 +1,11 @@
 from dataclasses import dataclass
-from typing import TypeVar
-
+from typing import Generic, TypeVar
 
 EntityId = TypeVar("EntityId")
 
 
 @dataclass(eq=False)
-class Entity:
+class Entity(Generic[EntityId]):
     """Base class for entities."""
 
     id: EntityId

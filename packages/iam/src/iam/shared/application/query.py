@@ -1,12 +1,24 @@
+from dataclasses import dataclass
 from typing import Generic, Protocol, TypeVar
 
-QueryResult = TypeVar("QueryResult")
 
-
+@dataclass(frozen=True, slots=True)
 class Query:
     pass
 
 
-class QueryHandler(Protocol, Generic[QueryResult]):
-    async def handle(self, query: Query) -> QueryResult:
+QueryType = TypeVar(
+    "QueryType",
+    bound=Query,
+    contravariant=True,
+)
+
+QueryResult = TypeVar(
+    "QueryResult",
+    covariant=True,
+)
+
+
+class QueryHandler(Protocol, Generic[QueryType, QueryResult]):
+    async def handle(self, query: QueryType) -> QueryResult:
         raise NotImplementedError
