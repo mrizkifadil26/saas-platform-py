@@ -1,8 +1,7 @@
 from typing import Protocol
 
-from iam.identity.domain.user import User
-from iam.identity.domain.value_objects.email_address import EmailAddress
-from iam.identity.domain.value_objects.user_id import UserId
+from .user import User
+from .value_objects import EmailAddress, UserId
 
 
 class UserRepository(Protocol):

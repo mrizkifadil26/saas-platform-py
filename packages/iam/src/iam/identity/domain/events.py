@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 
-from iam.identity.domain.value_objects.user_id import UserId
-from iam.shared.domain.domain_event import DomainEvent
+from iam.shared.domain.events import DomainEvent
+
+from .value_objects import UserId
 
 
 @dataclass(frozen=True)
