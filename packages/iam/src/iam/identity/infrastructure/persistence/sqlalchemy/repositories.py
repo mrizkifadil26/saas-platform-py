@@ -1,17 +1,15 @@
-from db.repositories import SQLAlchemyRepository
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from iam.identity.domain.user import User
-from iam.identity.domain.user_repository import UserRepository
-from iam.identity.domain.value_objects.email_address import EmailAddress
-from iam.identity.domain.value_objects.user_id import UserId
-from iam.identity.infrastructure.persistence.sqlalchemy.models import UserModel
-from iam.identity.infrastructure.persistence.sqlalchemy.orm_mappers import UserORMMapper
+from db.repositories import SQLAlchemyRepository
+from iam.identity.domain import User, UserRepository
+from iam.identity.domain.value_objects import EmailAddress, UserId
+
+from .models import UserModel
+from .orm_mappers import UserORMMapper
 
 
 class SQLAlchemyUserRepository(
-    SQLAlchemyRepository[User, UserId, UserModel],
+    SQLAlchemyRepository[User, UserModel],
     UserRepository,
 ):
     async def save(self, user: User) -> None:

@@ -1,9 +1,10 @@
-from iam.identity.domain.user import User
-from iam.identity.domain.user_status import UserStatus
-from iam.identity.domain.value_objects.email_address import EmailAddress
-from iam.identity.domain.value_objects.password_hash import PasswordHash
-from iam.identity.domain.value_objects.user_id import UserId
-from iam.identity.infrastructure.persistence.sqlalchemy.models import UserModel
+from iam.identity.domain import (
+    User,
+    UserStatus,
+)
+from iam.identity.domain.value_objects import EmailAddress, EmailVerification, UserId
+
+from .models import UserModel
 
 
 class UserORMMapper:
@@ -12,8 +13,14 @@ class UserORMMapper:
         return User(
             id=UserId(model.id),
             email=EmailAddress(model.email),
-            password_hash=PasswordHash(model.password_hash),
+            verification=EmailVerification(
+                verified_at=model.email_verified_at,
+                verification_requested_at=model.email_verification_requested_at,
+            ),
             status=UserStatus(model.status),
+            created_at=model.created_at,
+            updated_at=model.updated_at,
+            last_login_at=model.last_login_at,
         )
 
     @staticmethod
@@ -21,8 +28,12 @@ class UserORMMapper:
         return UserModel(
             id=user.id.value,
             email=user.email.value,
-            password_hash=user.password_hash.value,
+            email_verified_at=user.verification.verified_at,
+            email_verification_requested_at=user.verification.verification_requested_at,
             status=user.status.value,
+            created_at=user.created_at,
+            updated_at=user.updated_at,
+            last_login_at=user.last_login_at,
         )
 
     @staticmethod
@@ -31,5 +42,11 @@ class UserORMMapper:
         user: User,
     ) -> None:
         model.email = user.email.value
-        model.password_hash = user.password_hash.value
-        model.status = user.status.value
+        model.email_verified_at = user.verification.verified_at
+        model.email_verification_requested_at = (
+            user.verification.verification_requested_at
+        )
+        model.status = user.status
+        model.created_at = user.created_at
+        model.updated_at = user.updated_at
+        model.last_login_at = user.last_login_at

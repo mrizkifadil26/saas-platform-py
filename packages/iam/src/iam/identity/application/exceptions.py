@@ -1,4 +1,4 @@
-from iam.identity.domain.value_objects.user_id import UserId
+from iam.identity.domain.value_objects import UserId
 
 
 class UserAlreadyExistsError(Exception):
