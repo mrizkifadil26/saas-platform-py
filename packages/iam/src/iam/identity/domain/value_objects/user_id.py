@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 
-from iam.shared.domain.value_object import UUIDIdentifier
+from iam.shared.domain import EntityId
 
 
 @dataclass(frozen=True, slots=True)
-class UserId(UUIDIdentifier):
+class UserId(EntityId):
     pass

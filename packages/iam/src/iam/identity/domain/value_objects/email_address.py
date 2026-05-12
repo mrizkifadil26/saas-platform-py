@@ -5,7 +5,7 @@ from iam.shared.domain.value_object import ValueObject
 
 
 @dataclass(frozen=True, slots=True)
-class EmailAddress(ValueObject):
+class EmailAddress(ValueObject[str]):
     value: str
 
     def __post_init__(self) -> None:
