@@ -1,23 +1,12 @@
-from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from iam.identity.domain import (
-    User,
-    UserRepository,
-)
-from iam.identity.domain.value_objects import EmailAddress
+from iam.identity.application.exceptions import UserAlreadyExistsError
+from iam.identity.domain import User, UserRepository
 
-from .exceptions import (
-    UserAlreadyExistsError,
-)
+from .commands import RegisterUserCommand
 
 
-@dataclass(frozen=True, slots=True)
-class RegisterUserCommand:
-    email: str
-
-
-class RegisterUserService:
+class RegisterUserUseCase:
     def __init__(
         self,
         user_repository: UserRepository,
@@ -29,11 +18,11 @@ class RegisterUserService:
         command: RegisterUserCommand,
     ) -> None:
         now = datetime.now(UTC)
-        email = EmailAddress(command.email)
+        email = command.email
 
         existing_user = await self.user_repository.find_by_email(email)
         if existing_user is not None:
-            raise UserAlreadyExistsError(command.email)
+            raise UserAlreadyExistsError(email.value)
 
         user = User.register(
             email=email,
