@@ -1,0 +1,28 @@
+from argon2 import PasswordHasher as Argon2Hasher
+from argon2.exceptions import VerificationError, VerifyMismatchError
+
+from iam.authentication.application.interfaces import PasswordHasher
+
+
+class Argon2PasswordHasher(PasswordHasher):
+    def __init__(self) -> None:
+        self._hasher = Argon2Hasher()
+
+    async def hash(
+        self,
+        plain_password: str,
+    ) -> str:
+        return self._hasher.hash(plain_password)
+
+    async def verify(
+        self,
+        plain_password: str,
+        password_hash: str,
+    ) -> bool:
+        try:
+            return self._hasher.verify(
+                password_hash,
+                plain_password,
+            )
+        except (VerifyMismatchError, VerificationError):
+            return False
