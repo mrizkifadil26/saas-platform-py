@@ -1,7 +1,7 @@
 from collections.abc import Awaitable, Callable
 from typing import Type
 
-from iam.shared.domain.domain_event import DomainEvent
+from iam.shared.domain import DomainEvent
 
 EventHandler = Callable[[DomainEvent], Awaitable[None]]
 
