@@ -1,20 +1,22 @@
 from dataclasses import dataclass
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, cast
 
-EntityId = TypeVar("EntityId")
+IdT = TypeVar("IdT")
 
 
 @dataclass(eq=False)
-class Entity(Generic[EntityId]):
+class Entity(Generic[IdT]):
     """Base class for entities."""
 
-    id: EntityId
+    id: IdT
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Entity):
+        if type(other) is not type(self):
             return NotImplemented
 
-        return self.id == other.id
+        other_entity = cast(Entity[IdT], other)
+
+        return self.id == other_entity.id
 
     def __hash__(self) -> int:
         return hash((type(self), self.id))
