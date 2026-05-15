@@ -1,11 +1,21 @@
 from sqlalchemy import func, select
 
 from db.repositories import SQLAlchemyRepository
-from iam.identity.domain import User, UserRepository
-from iam.identity.domain.value_objects import EmailAddress, UserId
+from iam.identity.domain import (
+    EmailVerification,
+    EmailVerificationRepository,
+    User,
+    UserRepository,
+)
+from iam.identity.domain.value_objects import (
+    EmailAddress,
+    EmailVerificationId,
+    EmailVerificationTokenHash,
+    UserId,
+)
 
-from .models import UserModel
-from .orm_mappers import UserORMMapper
+from .models import EmailVerificationModel, UserModel
+from .orm_mappers import EmailVerificationORMMapper, UserORMMapper
 
 
 class SQLAlchemyUserRepository(
@@ -70,3 +80,57 @@ class SQLAlchemyUserRepository(
 
     def _to_model(self, entity: User) -> UserModel:
         return UserORMMapper.to_model(entity)
+
+
+class SQLAlchemyEmailVerificationRepository(
+    SQLAlchemyRepository[EmailVerification, EmailVerificationModel],
+    EmailVerificationRepository,
+):
+    async def save(self, verification: EmailVerification) -> None:
+        existing = await self._session.get(EmailVerificationModel, verification.id)
+        if existing is None:
+            model = self._to_model(verification)
+            self._session.add(model)
+            return
+
+        EmailVerificationORMMapper.update_model(existing, verification)
+
+    async def find_by_id(
+        self, verification_id: EmailVerificationId
+    ) -> EmailVerification | None:
+        stmt = select(EmailVerificationModel).where(
+            EmailVerificationModel.id == verification_id.value
+        )
+
+        result = await self._session.execute(stmt)
+        model = result.scalar_one_or_none()
+
+        if model is None:
+            return None
+
+        return self._to_domain(model)
+
+    async def find_by_token_hash(
+        self, token_hash: EmailVerificationTokenHash
+    ) -> EmailVerification | None:
+        stmt = select(EmailVerificationModel).where(
+            EmailVerificationModel.token_hash == token_hash.value
+        )
+
+        result = await self._session.execute(stmt)
+        model = result.scalar_one_or_none()
+
+        if model is None:
+            return None
+
+        return self._to_domain(model)
+
+    @property
+    def model_type(self) -> type[EmailVerificationModel]:
+        return EmailVerificationModel
+
+    def _to_domain(self, model: EmailVerificationModel) -> EmailVerification:
+        return EmailVerificationORMMapper.to_domain(model)
+
+    def _to_model(self, entity: EmailVerification) -> EmailVerificationModel:
+        return EmailVerificationORMMapper.to_model(entity)
