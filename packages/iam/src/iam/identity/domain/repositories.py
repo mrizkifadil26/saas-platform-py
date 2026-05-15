@@ -1,13 +1,14 @@
 from typing import Protocol
 
-from iam.identity.domain.value_objects import (
-    EmailVerificationId,
-    EmailVerificationTokenHash,
-)
-
+from .credential import Credential
 from .email_verification import EmailVerification
 from .user import User
-from .value_objects import EmailAddress, UserId
+from .value_objects import (
+    EmailAddress,
+    EmailVerificationId,
+    EmailVerificationTokenHash,
+    UserId,
+)
 
 
 class UserRepository(Protocol):
@@ -31,3 +32,15 @@ class EmailVerificationRepository(Protocol):
         self,
         token_hash: EmailVerificationTokenHash,
     ) -> EmailVerification | None: ...
+
+
+class CredentialRepository(Protocol):
+    async def save(
+        self,
+        credential: Credential,
+    ) -> None: ...
+
+    async def find_by_user_id(
+        self,
+        user_id: UserId,
+    ) -> Credential | None: ...

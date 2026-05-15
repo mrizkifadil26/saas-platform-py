@@ -6,9 +6,3 @@ class AuthenticationStatus(StrEnum):
     SUCCESS = "success"
     FAILURE = "failure"
     LOCKED_OUT = "locked_out"
-
-
-class CredentialStatus(StrEnum):
-    ACTIVE = "active"
-    DISABLED = "disabled"
-    COMPROMISED = "compromised"

@@ -3,7 +3,6 @@ from datetime import UTC, datetime
 from iam.authentication.domain import (
     AuthenticationAttempt,
     AuthenticationAttemptRepository,
-    CredentialRepository,
 )
 from iam.identity.domain import UserRepository
 

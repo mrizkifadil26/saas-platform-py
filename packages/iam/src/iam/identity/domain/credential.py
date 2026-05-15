@@ -3,11 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 
-from iam.identity.domain.value_objects import UserId
 from iam.shared.domain import Entity
 
 from .enums import CredentialStatus
-from .value_objects import CredentialId, PasswordHash
+from .value_objects import CredentialId, PasswordHash, UserId
 
 
 @dataclass(eq=False, slots=True)
