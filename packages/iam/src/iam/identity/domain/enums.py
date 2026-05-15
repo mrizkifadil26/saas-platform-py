@@ -34,7 +34,7 @@ class UserStatus(StrEnum):
     def is_disabled(self) -> bool:
         """
         Administrative deactivation.
-        User access is fully blocked. 
+        User access is fully blocked.
         TODO: later use manually re-enabled.
         """
         return self == UserStatus.DISABLED

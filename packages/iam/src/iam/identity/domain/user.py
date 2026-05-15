@@ -6,21 +6,20 @@ from datetime import datetime
 from iam.shared.domain import AggregateRoot
 from iam.shared.domain.exceptions import ValidationError
 
+from .enums import UserStatus
 from .events import UserDisabled, UserRegistered
-from .user_status import UserStatus
-from .value_objects import EmailAddress, EmailVerification, UserId
+from .value_objects import EmailAddress, UserId
 
 
 @dataclass(slots=True)
 class User(AggregateRoot[UserId]):
     email: EmailAddress
-    verification: EmailVerification
-
     status: UserStatus
 
     created_at: datetime
     updated_at: datetime | None = None
 
+    email_verified_at: datetime | None = None
     last_login_at: datetime | None = None
 
     @classmethod
@@ -33,7 +32,6 @@ class User(AggregateRoot[UserId]):
         user = cls(
             id=UserId.generate(),
             email=email,
-            verification=EmailVerification(),
             status=UserStatus.PENDING,
             created_at=registered_at,
         )
@@ -46,6 +44,10 @@ class User(AggregateRoot[UserId]):
 
         return user
 
+    @property
+    def is_email_verified(self) -> bool:
+        return self.email_verified_at is not None
+
     def activate(
         self,
         *,
@@ -54,8 +56,8 @@ class User(AggregateRoot[UserId]):
         if not self.status.can_activate():
             raise ValidationError("User already active or invalid state")
 
-        if not self.verification.is_verified:
-            raise ValidationError("Email must be verified before activation")
+        # if not self.verification.is_verified:
+        #     raise ValidationError("Email must be verified before activation")
 
         self.status = UserStatus.ACTIVE
         self.touch(activated_at)
@@ -129,20 +131,22 @@ class User(AggregateRoot[UserId]):
         #     UserUnsuspended(user_id=self.id)
         # )
 
-    def verify_email(
+    def mark_email_as_verified(
         self,
         *,
         verified_at: datetime,
     ) -> None:
-        if self.verification.is_verified:
-            raise ValidationError("Email already verified")
+        # if self.verification.is_verified:
+        #     raise ValidationError("Email already verified")
 
         if self.status.is_disabled():
             raise ValidationError("Disabled user cannot verify email")
 
-        self.verification = self.verification.verify(
-            verified_at=verified_at,
-        )
+        # self.verification = self.verification.verify(
+        #     verified_at=verified_at,
+        # )
+
+        self.email_verified_at = verified_at
 
         # TODO: record email verified event
 

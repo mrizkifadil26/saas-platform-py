@@ -1,47 +1,36 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
-from datetime import datetime
+from dataclasses import dataclass
+
+from iam.shared.domain.exceptions import ValidationError
+from iam.shared.domain.value_object import ValueObject
 
 
 @dataclass(frozen=True, slots=True)
-class EmailVerification:
-    verified_at: datetime | None = None
-    verification_requested_at: datetime | None = None
+class EmailVerificationToken(ValueObject[str]):
+    value: str
 
-    @property
-    def is_verified(self) -> bool:
-        return self.verified_at is not None
+    def __post_init__(self) -> None:
+        normalized = self.value.strip()
+        if not normalized:
+            raise ValidationError("Verification token cannot be empty")
 
-    @property
-    def is_pending(self) -> bool:
-        return self.verification_requested_at is not None and not self.is_verified
+        object.__setattr__(self, "value", normalized)
 
-    def mark_requested(
-        self,
-        *,
-        requested_at: datetime,
-    ) -> EmailVerification:
-        if self.is_verified:
-            raise ValueError("Email already verified")
+    def __str__(self) -> str:
+        return self.value
 
-        return replace(
-            self,
-            verification_requested_at=requested_at,
-        )
 
-    def verify(
-        self,
-        *,
-        verified_at: datetime,
-    ) -> EmailVerification:
-        if self.is_verified:
-            raise ValueError("Email already verified")
+@dataclass(frozen=True, slots=True)
+class EmailVerificationTokenHash(ValueObject[str]):
+    value: str
 
-        return replace(
-            self,
-            verified_at=verified_at,
-        )
+    def __post_init__(self) -> None:
+        normalized = self.value.strip()
+        if not normalized:
+            raise ValidationError("Verification token hash cannot be empty")
 
-    def reset_verification(self) -> EmailVerification:
-        return replace(self)
+        object.__setattr__(self, "value", normalized)
+
+    def __str__(self) -> str:
+        return self.value
