@@ -4,7 +4,7 @@ from uuid import UUID
 from sqlalchemy import DateTime, ForeignKey, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 
-from db import AppBase
+from db.app_db import AppBase
 
 
 class CredentialModel(AppBase):
