@@ -61,16 +61,3 @@ class RefreshToken(ValueObject[str]):
             raise ValueError("Refresh token cannot be empty")
 
         object.__setattr__(self, "value", value)
-
-
-@dataclass(frozen=True, slots=True)
-class RegistrationToken(ValueObject[str]):
-    value: str
-
-    def __post_init__(self) -> None:
-        value = self.value.strip()
-
-        if not value:
-            raise ValueError("Refresh token cannot be empty")
-
-        object.__setattr__(self, "value", value)

@@ -7,7 +7,7 @@ from sqlalchemy import DateTime, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
-from db import AppBase
+from db.app_db import AppBase
 from iam.shared.domain import DomainEvent
 
 

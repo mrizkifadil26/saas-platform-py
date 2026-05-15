@@ -1,18 +1,10 @@
-from datetime import datetime
 from typing import Protocol
 
 from iam.authentication.domain.value_objects import (
     AccessToken,
     RefreshToken,
-    RegistrationToken,
-)
-from iam.authentication.infrastructure.security.jwt_payloads import (
-    RegistrationTokenPayload,
 )
 from iam.identity.domain.value_objects import UserId
-
-# from iam.organizations.domain.value_objects.organization_id import OrganizationId
-# from .dto import AuthTokens
 
 
 class PasswordHasher(Protocol):
@@ -49,17 +41,3 @@ class TokenProvider(Protocol):
         self,
         token: RefreshToken,
     ) -> object: ...
-
-
-class RegistrationTokenProvider(Protocol):
-    async def generate_token(
-        self,
-        user_id: UserId,
-        *,
-        issued_at: datetime,
-    ) -> RegistrationToken: ...
-
-    async def verify_token(
-        self,
-        token: RegistrationToken,
-    ) -> RegistrationTokenPayload: ...
