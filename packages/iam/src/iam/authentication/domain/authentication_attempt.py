@@ -27,6 +27,7 @@ class AuthenticationAttempt(AggregateRoot[AuthenticationAttemptId]):
     def create(
         cls,
         user_id: UserId,
+        *,
         ip_address: str,
         user_agent: str,
         attempted_at: datetime | None = None,

@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 
-from iam.authentication.domain import AuthenticationAttemptRepository
+from iam.authentication.domain import (
+    AuthenticationAttemptRepository,
+)
 from iam.identity.domain.value_objects import UserId
 
 

@@ -75,8 +75,8 @@ class AuthenticateWithPasswordUseCase:
 
         attempt = AuthenticationAttempt.create(
             user.id,
-            command.ip_address,
-            command.user_agent,
+            ip_address=command.ip_address,
+            user_agent=command.user_agent,
             attempted_at=now,
         )
         if not is_valid:
@@ -93,7 +93,6 @@ class AuthenticateWithPasswordUseCase:
         # TODO: needs rehash password if the hash is outdated
 
         # TODO: create authentication session
-        
 
         access_token = await self._token_provider.generate_access_token(user.id)
         refresh_token = await self._token_provider.generate_refresh_token(user.id)
