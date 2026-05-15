@@ -1,8 +1,17 @@
 from dataclasses import dataclass
-
-from iam.identity.domain.value_objects import EmailAddress
+from uuid import UUID
 
 
 @dataclass(frozen=True, slots=True)
 class RegisterUserCommand:
-    email: EmailAddress
+    email: str
+
+
+@dataclass(frozen=True, slots=True)
+class VerifyEmailCommand:
+    token: str
+
+
+@dataclass(frozen=True, slots=True)
+class ResendEmailVerificationCommand:
+    user_id: UUID

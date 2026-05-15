@@ -1,16 +1,24 @@
 from dataclasses import dataclass
+from uuid import UUID
 
 
 @dataclass(frozen=True, slots=True)
-class UserDTO:
-    id: str
+class RegisterUserResult:
+    user_id: UUID
     email: str
-    status: str
+
+    verification_email_sent: bool
 
 
 @dataclass(frozen=True, slots=True)
-class PaginatedUsersDTO:
-    items: list[UserDTO]
-    limit: int
-    offset: int
-    total: int
+class EmailVerificationResult:
+    user_id: UUID
+
+    email_verified: bool
+
+
+@dataclass(frozen=True, slots=True)
+class ResendEmailVerificationCommand:
+    user_id: UUID
+
+    verification_email_sent: bool
