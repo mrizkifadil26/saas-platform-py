@@ -3,9 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-from iam.identity.domain.value_objects import EmailVerificationTokenHash, UserId
-from iam.identity.domain.value_objects.email_verification_id import EmailVerificationId
 from iam.shared.domain import AggregateRoot
+
+from .value_objects import EmailVerificationId, EmailVerificationTokenHash, UserId
 
 
 @dataclass(slots=True)

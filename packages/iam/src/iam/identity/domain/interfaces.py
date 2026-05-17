@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Protocol
 
-from iam.identity.domain.value_objects import (
+from .value_objects import (
     EmailVerificationToken,
     EmailVerificationTokenHash,
 )
