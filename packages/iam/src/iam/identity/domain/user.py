@@ -147,6 +147,7 @@ class User(AggregateRoot[UserId]):
         # )
 
         self.email_verified_at = verified_at
+        self.touch(verified_at)
 
         # TODO: record email verified event
 
