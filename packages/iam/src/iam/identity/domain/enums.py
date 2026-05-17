@@ -101,9 +101,3 @@ class UserStatus(StrEnum):
 
     def blocks_login(self) -> bool:
         return not self.can_authenticate()
-
-
-class CredentialStatus(StrEnum):
-    ACTIVE = "active"
-    DISABLED = "disabled"
-    COMPROMISED = "compromised"

@@ -1,37 +1,46 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Any
 
+from iam.identity.domain.value_objects import UserId
 from iam.shared.domain import Entity
 
-from .enums import CredentialStatus
-from .value_objects import CredentialId, PasswordHash, UserId
+from .enums import CredentialStatus, CredentialType
+from .value_objects import CredentialId, PasswordHash
 
 
 @dataclass(eq=False, slots=True)
 class Credential(Entity[CredentialId]):
     user_id: UserId
-    password_hash: PasswordHash
+    type: CredentialType
+    secret_hash: PasswordHash
+
     status: CredentialStatus
+
     created_at: datetime
-    updated_at: datetime | None
+    updated_at: datetime | None = None
+
+    attributes: dict[str, Any] | None = field(default_factory=lambda: {})
 
     @classmethod
-    def create(
+    def password(
         cls,
         user_id: UserId,
-        password_hash: PasswordHash,
+        secret_hash: PasswordHash,
         *,
         created_at: datetime,
+        attributes: dict[str, Any] | None,
     ) -> Credential:
         return cls(
             id=CredentialId.generate(),
             user_id=user_id,
-            password_hash=password_hash,
+            type=CredentialType.PASSWORD,
+            secret_hash=secret_hash,
             status=CredentialStatus.ACTIVE,
             created_at=created_at,
-            updated_at=None,
+            attributes=attributes or {},
         )
 
     def change_password(
@@ -40,7 +49,7 @@ class Credential(Entity[CredentialId]):
         *,
         at: datetime,
     ) -> None:
-        self.password_hash = password_hash
+        self.secret_hash = password_hash
         self.updated_at = at
 
     def disable(

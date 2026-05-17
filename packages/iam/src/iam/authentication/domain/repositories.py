@@ -1,7 +1,8 @@
 from datetime import datetime
 from typing import Protocol
 
-from iam.identity.domain.value_objects import UserId
+from iam.authentication.domain.credential import Credential
+from iam.identity.domain.value_objects import EmailAddress, UserId
 
 from .authentication_attempt import AuthenticationAttempt
 
@@ -23,3 +24,10 @@ class AuthenticationAttemptRepository(Protocol):
         user_id: UserId,
         since: datetime,
     ) -> int: ...
+
+
+class CredentialRepository(Protocol):
+    async def find_by_email(
+        self,
+        email: EmailAddress,
+    ) -> Credential | None: ...

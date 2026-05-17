@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from uuid import UUID
 
 from iam.authentication.domain.value_objects import RefreshToken
 from iam.identity.domain.value_objects import EmailAddress
@@ -19,3 +20,9 @@ class RefreshAuthenticationCommand:
 
     ip_address: str
     user_agent: str
+
+
+@dataclass(frozen=True, slots=True)
+class SetupPasswordCredentialCommand:
+    user_id: UUID
+    password: str

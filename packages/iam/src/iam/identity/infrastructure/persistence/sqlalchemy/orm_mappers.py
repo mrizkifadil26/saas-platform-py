@@ -3,18 +3,14 @@ from iam.identity.domain import (
     User,
     UserStatus,
 )
-from iam.identity.domain.credential import Credential
-from iam.identity.domain.enums import CredentialStatus
 from iam.identity.domain.value_objects import (
-    CredentialId,
     EmailAddress,
     EmailVerificationId,
     EmailVerificationTokenHash,
-    PasswordHash,
     UserId,
 )
 
-from .models import CredentialModel, EmailVerificationModel, UserModel
+from .models import EmailVerificationModel, UserModel
 
 
 class UserORMMapper:
@@ -87,36 +83,3 @@ class EmailVerificationORMMapper:
         model.created_at = entity.created_at
 
 
-class CredentialORMMapper:
-    @staticmethod
-    def to_domain(model: CredentialModel) -> Credential:
-        return Credential(
-            id=CredentialId(model.id),
-            user_id=UserId(model.user_id),
-            password_hash=PasswordHash(model.password_hash),
-            status=CredentialStatus(model.status),
-            created_at=model.created_at,
-            updated_at=model.updated_at,
-        )
-
-    @staticmethod
-    def to_model(credential: Credential) -> CredentialModel:
-        return CredentialModel(
-            id=credential.id.value,
-            user_id=credential.user_id.value,
-            password_hash=credential.password_hash.value,
-            status=credential.status.value,
-            created_at=credential.created_at,
-            updated_at=credential.updated_at,
-        )
-
-    @staticmethod
-    def update_model(
-        model: CredentialModel,
-        credential: Credential,
-    ) -> None:
-        model.user_id = credential.user_id.value
-        model.password_hash = credential.password_hash.value
-        model.status = credential.status.value
-        model.created_at = credential.created_at
-        model.updated_at = credential.updated_at

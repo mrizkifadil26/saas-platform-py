@@ -1,10 +1,15 @@
+from __future__ import annotations
+
 from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import DateTime, Enum, ForeignKey, String, Uuid
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from db.app_db import AppBase
+from iam.authentication.infrastructure.persistence.sqlalchemy.models import (
+    CredentialModel,
+)
 from iam.identity.domain import UserStatus
 
 
@@ -52,6 +57,11 @@ class UserModel(AppBase):
         nullable=True,
     )
 
+    credentials: Mapped[list[CredentialModel]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
 
 class EmailVerificationModel(AppBase):
     __tablename__ = "iam_email_verifications"
@@ -62,7 +72,7 @@ class EmailVerificationModel(AppBase):
     )
 
     user_id: Mapped[UUID] = mapped_column(
-        ForeignKey("users.id"),
+        ForeignKey("iam_users.id"),
         nullable=False,
         index=True,
     )
@@ -87,41 +97,4 @@ class EmailVerificationModel(AppBase):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-    )
-
-
-class CredentialModel(AppBase):
-    __tablename__ = "iam_credentials"
-
-    id: Mapped[UUID] = mapped_column(
-        Uuid,
-        primary_key=True,
-    )
-
-    user_id: Mapped[UUID] = mapped_column(
-        Uuid,
-        ForeignKey("iam_users.id", ondelete="CASCADE"),
-        nullable=False,
-        unique=True,
-        index=True,
-    )
-
-    password_hash: Mapped[str] = mapped_column(
-        String(500),
-        nullable=False,
-    )
-
-    status: Mapped[str] = mapped_column(
-        String(30),
-        nullable=False,
-    )
-
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False,
-    )
-
-    updated_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True),
-        nullable=True,
     )

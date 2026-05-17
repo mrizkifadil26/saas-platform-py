@@ -1,10 +1,10 @@
-from datetime import UTC, datetime
-
 from iam.authentication.domain import (
     AuthenticationAttempt,
     AuthenticationAttemptRepository,
+    TokenProvider,
 )
 from iam.identity.domain import UserRepository
+from iam.shared.domain.clock import Clock
 
 from .commands import (
     AuthenticateUserCommand,
@@ -14,10 +14,6 @@ from .dto import (
     AuthenticationResult,
     AuthenticationTokens,
 )
-from .interfaces import (
-    PasswordHasher,
-    TokenProvider,
-)
 from .policies import LoginRateLimitPolicy
 
 
@@ -25,38 +21,38 @@ class AuthenticateWithPasswordUseCase:
     def __init__(
         self,
         user_repository: UserRepository,
-        credential_repository: CredentialRepository,
         authentication_attempt_repository: AuthenticationAttemptRepository,
-        password_hasher: PasswordHasher,
+        # password_hasher: PasswordHasher,
         token_provider: TokenProvider,
-        authenticate_policy: LoginRateLimitPolicy,
+        policy: LoginRateLimitPolicy,
+        clock: Clock,
     ):
         self._user_repository = user_repository
-        self._credential_repository = credential_repository
         self._authentication_attempt_repository = authentication_attempt_repository
-        self._password_hasher = password_hasher
+        # self._password_hasher = password_hasher
         self._token_provider = token_provider
-        self._authenticate_policy = authenticate_policy
+        self._policy = policy
+        self._clock = clock
 
     async def execute(
         self,
         command: AuthenticateUserCommand,
     ) -> AuthenticationResult:
-        now = datetime.now(UTC)
+        now = self._clock.now()
 
         user = await self._user_repository.find_by_email(command.email)
         if user is None:
             # TODO: raise invalid credentials exceptions
             raise
 
-        if await self._authenticate_policy.is_locked(user.id, now=now):
+        if await self._policy.is_locked(user.id, now=now):
             # TODO: raise blocked exception
             raise
 
-        credential = await self._credential_repository.find_by_user_id(user.id)
-        if credential is None:
-            # TODO: raise invalid credential exception
-            raise
+        # credential = await self._credential_repository.find_by_user_id(user.id)
+        # if credential is None:
+        # TODO: raise invalid credential exception
+        # raise
 
         is_valid = await self._password_hasher.verify(
             command.password,
@@ -101,4 +97,47 @@ class AuthenticateWithPasswordUseCase:
                 # session_id=session.id,
             ),
             tokens=tokens,
+        )
+
+
+class SetupPasswordCredentialUseCase:
+    def __init__(
+        self,
+        user_repository: UserRepository,
+        password_hasher: PasswordHasher,
+        clock: Clock,
+    ) -> None:
+        self._user_repository = user_repository
+        self._password_hasher = password_hasher
+        self._clock = clock
+
+    async def execute(
+        self,
+        command: SetupPasswordCredentialCommand,
+    ) -> SetupPasswordResult:
+        now = self._clock.now()
+
+        # payload = await self._token_provider.verify_token(command.token)
+        user_id = UserId(command.user_id)
+        user = await self._user_repository.find_by_id(user_id)
+        if user is None:
+            # TODO: raise user not found exception
+            raise
+
+        plain_password = command.password
+        password_hash = await self._password_hasher.hash(plain_password)
+
+        credential = Credential.password(
+            secret_hash=PasswordHash(password_hash),
+            created_at=now,
+        )
+        user.setup_password_credential(
+            credential=credential,
+            setup_at=now,
+        )
+
+        await self._user_repository.save(user)
+
+        return SetupPasswordResult(
+            user_id=user.id.value,
         )

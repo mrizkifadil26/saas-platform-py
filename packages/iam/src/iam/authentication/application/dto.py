@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from uuid import UUID
 
 from iam.authentication.domain.value_objects import (
     AuthenticationTokens,
@@ -27,4 +28,4 @@ class AuthenticationResult:
 
 @dataclass(frozen=True, slots=True)
 class SetupPasswordResult:
-    user_id: UserId
+    user_id: UUID
