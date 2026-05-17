@@ -7,16 +7,6 @@ from iam.authentication.domain.value_objects import (
 from iam.identity.domain.value_objects import UserId
 
 
-class PasswordHasher(Protocol):
-    async def hash(self, plain_password: str) -> str: ...
-
-    async def verify(
-        self,
-        plain_password: str,
-        password_hash: str,
-    ) -> bool: ...
-
-
 class TokenProvider(Protocol):
     async def generate_access_token(
         self,
@@ -41,3 +31,13 @@ class TokenProvider(Protocol):
         self,
         token: RefreshToken,
     ) -> object: ...
+
+
+class PasswordHasher(Protocol):
+    async def hash(self, plain_password: str) -> str: ...
+
+    async def verify(
+        self,
+        plain_password: str,
+        password_hash: str,
+    ) -> bool: ...
