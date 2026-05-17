@@ -1,3 +1,12 @@
+from iam.authentication.domain import Credential, CredentialStatus
+from iam.authentication.domain.value_objects import CredentialId, PasswordHash
+from iam.identity.domain.value_objects import UserId
+
+from .models import (
+    CredentialModel,
+)
+
+
 class CredentialORMMapper:
     @staticmethod
     def to_domain(model: CredentialModel) -> Credential:

@@ -1,9 +1,14 @@
+from datetime import datetime
+from typing import Any
 from uuid import UUID
 
-from sqlalchemy import ForeignKey, Index, UniqueConstraint, Uuid
+from sqlalchemy import DateTime, Enum, ForeignKey, Index, String, UniqueConstraint, Uuid
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import Mapped, mapped_column
 
 from db.app_db import AppBase
+from iam.authentication.domain import CredentialStatus, CredentialType
 
 
 class CredentialModel(AppBase):
@@ -72,8 +77,4 @@ class CredentialModel(AppBase):
     updated_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
-    )
-
-    user: Mapped[UserModel] = relationship(
-        back_populates="credentials",
     )
