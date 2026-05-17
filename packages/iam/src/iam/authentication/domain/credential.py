@@ -5,14 +5,14 @@ from datetime import datetime
 from typing import Any
 
 from iam.identity.domain.value_objects import UserId
-from iam.shared.domain import Entity
+from iam.shared.domain import AggregateRoot
 
 from .enums import CredentialStatus, CredentialType
 from .value_objects import CredentialId, PasswordHash
 
 
 @dataclass(eq=False, slots=True)
-class Credential(Entity[CredentialId]):
+class Credential(AggregateRoot[CredentialId]):
     user_id: UserId
     type: CredentialType
     secret_hash: PasswordHash
