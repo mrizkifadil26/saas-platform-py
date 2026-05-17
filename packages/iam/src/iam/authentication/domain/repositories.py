@@ -21,9 +21,17 @@ class AuthenticationAttemptRepository(Protocol):
 
     async def count_failures_since(
         self,
-        user_id: UserId,
+        *,
+        email: EmailAddress,
         since: datetime,
     ) -> int: ...
+
+    async def get_recent_failures(
+        self,
+        *,
+        email: EmailAddress,
+        since: datetime,
+    ) -> list[AuthenticationAttempt]: ...
 
 
 class CredentialRepository(Protocol):
