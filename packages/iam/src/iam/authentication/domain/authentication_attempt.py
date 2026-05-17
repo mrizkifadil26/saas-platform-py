@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
-from iam.identity.domain.value_objects import UserId
+from iam.identity.domain.value_objects import EmailAddress, UserId
 from iam.shared.domain import AggregateRoot
 
 from .enums import AuthenticationStatus
@@ -12,33 +12,37 @@ from .value_objects import AuthenticationAttemptId
 
 @dataclass(slots=True)
 class AuthenticationAttempt(AggregateRoot[AuthenticationAttemptId]):
-    user_id: UserId
+    email: EmailAddress
+    user_id: UserId | None
+
+    ip_address: str | None
+    user_agent: str | None
 
     status: AuthenticationStatus
 
-    ip_address: str
-    user_agent: str
+    failure_reason: str | None
+    attempted_at: datetime
 
-    attempted_at: datetime = field(default_factory=lambda: datetime.now(UTC))
-    failure_reason: str | None = None
     locked_out_until: datetime | None = None
 
     @classmethod
     def create(
         cls,
-        user_id: UserId,
         *,
-        ip_address: str,
-        user_agent: str,
-        attempted_at: datetime | None = None,
+        email: EmailAddress,
+        ip_address: str | None,
+        user_agent: str | None,
+        attempted_at: datetime,
     ) -> AuthenticationAttempt:
         return cls(
             id=AuthenticationAttemptId.generate(),
-            user_id=user_id,
-            status=AuthenticationStatus.PENDING,
+            email=email,
+            user_id=None,
             ip_address=ip_address,
             user_agent=user_agent,
-            attempted_at=attempted_at or datetime.now(UTC),
+            status=AuthenticationStatus.PENDING,
+            failure_reason=None,
+            attempted_at=attempted_at,
         )
 
     @property
@@ -61,23 +65,31 @@ class AuthenticationAttempt(AggregateRoot[AuthenticationAttemptId]):
             and self.locked_out_until > datetime.now(UTC)
         )
 
-    def mark_as_successful(self, *, attempted_at: datetime) -> None:
+    def mark_as_successful(
+        self,
+        *,
+        user_id: UserId,
+        # attempted_at: datetime,
+    ) -> None:
+        self.user_id = user_id
         self.status = AuthenticationStatus.SUCCESS
         self.failure_reason = None
         self.locked_out_until = None
-        self.attempted_at = attempted_at
+        # self.attempted_at = attempted_at
 
         # TODO: record successful authentication attempt event
 
     def mark_as_failure(
         self,
         *,
-        attempted_at: datetime,
+        # attempted_at: datetime,
         failure_reason: str,
+        user_id: UserId | None = None,
     ) -> None:
+        self.user_id = user_id
         self.status = AuthenticationStatus.FAILURE
         self.failure_reason = failure_reason
-        self.attempted_at = attempted_at
+        # self.attempted_at = attempted_at
 
         # TODO: record failed authentication attempt event
 
@@ -103,7 +115,11 @@ class AuthenticationAttempt(AggregateRoot[AuthenticationAttemptId]):
     def can_retry(self) -> bool:
         return not self.is_locked_out
 
-    def lock_remaining_seconds(self, *, now: datetime) -> int | None:
+    def lock_remaining_seconds(
+        self,
+        *,
+        now: datetime,
+    ) -> int | None:
         if not self.is_locked_out or self.locked_out_until is None:
             return None
 
