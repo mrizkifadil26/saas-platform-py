@@ -31,7 +31,7 @@ class Credential(Entity[CredentialId]):
         secret_hash: PasswordHash,
         *,
         created_at: datetime,
-        attributes: dict[str, Any] | None,
+        attributes: dict[str, Any] | None = None,
     ) -> Credential:
         return cls(
             id=CredentialId.generate(),
@@ -42,6 +42,10 @@ class Credential(Entity[CredentialId]):
             created_at=created_at,
             attributes=attributes or {},
         )
+
+    @property
+    def is_active(self) -> bool:
+        return self.status is CredentialStatus.ACTIVE
 
     def change_password(
         self,
@@ -71,7 +75,7 @@ class Credential(Entity[CredentialId]):
         self.status = CredentialStatus.COMPROMISED
         self.updated_at = at
 
-    def _ensure_active(self) -> None:
+    def ensure_active(self) -> None:
         if self.status is not CredentialStatus.ACTIVE:
             # TODO: raise invalid credentials
             # raise InvalidCredentials("Credential is not active")
