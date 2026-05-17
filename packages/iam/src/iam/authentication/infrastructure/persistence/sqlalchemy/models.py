@@ -25,6 +25,11 @@ class CredentialModel(AppBase):
             "user_id",
             "type",
         ),
+        Index(
+            "ix_credential_type_status",
+            "type",
+            "status",
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(
@@ -61,6 +66,7 @@ class CredentialModel(AppBase):
             name="credential_status",
         ),
         nullable=False,
+        index=True,
     )
 
     attributes: Mapped[dict[str, Any] | None] = mapped_column(
