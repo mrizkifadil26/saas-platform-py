@@ -2,12 +2,11 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from iam.authentication.domain.value_objects import RefreshToken
-from iam.identity.domain.value_objects import EmailAddress
 
 
 @dataclass(frozen=True, slots=True)
 class AuthenticateUserCommand:
-    email: EmailAddress
+    email: str
     password: str
 
     ip_address: str
