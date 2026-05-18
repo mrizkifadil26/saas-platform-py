@@ -34,9 +34,9 @@ class TokenProvider(Protocol):
 
 
 class PasswordHasher(Protocol):
-    async def hash(self, plain_password: str) -> str: ...
+    def hash(self, plain_password: str) -> str: ...
 
-    async def verify(
+    def verify(
         self,
         plain_password: str,
         password_hash: str,
