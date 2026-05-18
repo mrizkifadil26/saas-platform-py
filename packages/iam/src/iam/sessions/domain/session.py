@@ -7,15 +7,14 @@ from iam.identity.domain.value_objects import UserId
 from iam.shared.domain import AggregateRoot
 
 from .enums import SessionStatus
-from .refresh_token import RefreshToken
-from .value_objects import RefreshTokenHash, SessionId
+from .value_objects import RefreshTokenId, SessionId
 
 
 @dataclass(slots=True)
 class Session(AggregateRoot[SessionId]):
     user_id: UserId
-    refresh_tokens: list[RefreshToken]
-    # TODO: later track session device
+
+    status: SessionStatus
 
     created_at: datetime
     updated_at: datetime
@@ -23,27 +22,36 @@ class Session(AggregateRoot[SessionId]):
     expires_at: datetime
     last_activity_at: datetime
 
-    status: SessionStatus = SessionStatus.ACTIVE
+    current_refresh_token_id: RefreshTokenId | None = None
 
     revoked_at: datetime | None = None
+
+    ip_address: str | None = None
+    user_agent: str | None = None
+    device_name: str | None = None
 
     @classmethod
     def create(
         cls,
         *,
         user_id: UserId,
-        refresh_token: RefreshToken,
         created_at: datetime,
         ttl_days: int = 30,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+        device_name: str | None = None,
     ) -> Session:
         session = cls(
             id=SessionId.generate(),
             user_id=user_id,
-            refresh_tokens=[refresh_token],
+            status=SessionStatus.ACTIVE,
             created_at=created_at,
             updated_at=created_at,
             expires_at=created_at + timedelta(days=ttl_days),
             last_activity_at=created_at,
+            ip_address=ip_address,
+            user_agent=user_agent,
+            device_name=device_name,
         )
 
         # TODO: emit sessioncreated event
@@ -51,12 +59,32 @@ class Session(AggregateRoot[SessionId]):
         return session
 
     @property
-    def active_refresh_token(self) -> RefreshToken:
-        return self.refresh_tokens[-1]
-
-    @property
     def is_revoked(self) -> bool:
         return self.status == SessionStatus.REVOKED
+
+    def is_expired(
+        self,
+        *,
+        now: datetime,
+    ) -> bool:
+        return now >= self.expires_at
+
+    def is_active(
+        self,
+        *,
+        now: datetime,
+    ) -> bool:
+        return self.status == SessionStatus.ACTIVE and not self.is_expired
+
+    def attach_refresh_token(
+        self,
+        refresh_token_id: RefreshTokenId,
+        *,
+        now: datetime,
+    ) -> None:
+        self.current_refresh_token_id = refresh_token_id
+        self.last_activity_at = now
+        self.updated_at = now
 
     def revoke(
         self,
@@ -68,59 +96,48 @@ class Session(AggregateRoot[SessionId]):
 
         # TODO: emit session revoked event
 
-    def is_expired(
-        self,
-        *,
-        now: datetime,
-    ) -> bool:
-        return now >= self.expires_at
+    # def rotate_refresh_token(
+    #     self,
+    #     *,
+    #     current_token_hash: RefreshTokenHash,
+    #     new_refresh_token: RefreshToken,
+    #     rotated_at: datetime,
+    # ) -> None:
+    #     if self.is_revoked:
+    #         # TODO: raise session revoked error
+    #         raise
 
-    def touch(self, *, now: datetime) -> None:
-        self.last_activity_at = now
-        self.updated_at = now
+    #     if self.is_expired(now=rotated_at):
+    #         # TODO: raise session expired error
+    #         raise
 
-    def rotate_refresh_token(
-        self,
-        *,
-        current_token_hash: RefreshTokenHash,
-        new_refresh_token: RefreshToken,
-        rotated_at: datetime,
-    ) -> None:
-        if self.is_revoked:
-            # TODO: raise session revoked error
-            raise
+    #     current_token = next(
+    #         (
+    #             token
+    #             for token in self.refresh_tokens
+    #             if token.token_hash == current_token_hash
+    #         ),
+    #         None,
+    #     )
 
-        if self.is_expired(now=rotated_at):
-            # TODO: raise session expired error
-            raise
+    #     if current_token is None:
+    #         # TODO: raise invalid refresh token error
+    #         raise
 
-        current_token = next(
-            (
-                token
-                for token in self.refresh_tokens
-                if token.token_hash == current_token_hash
-            ),
-            None,
-        )
+    #     if current_token.is_revoked:
+    #         self.revoke(rotated_at)
 
-        if current_token is None:
-            # TODO: raise invalid refresh token error
-            raise
+    #         # TODO: emit refresh token reuse detected event
+    #         # TODO: raise refresh reuse error
 
-        if current_token.is_revoked:
-            self.revoke(rotated_at)
+    #     current_token.revoke(
+    #         revoked_at=rotated_at,
+    #         replaced_by=new_refresh_token.token_hash,
+    #     )
 
-            # TODO: emit refresh token reuse detected event
-            # TODO: raise refresh reuse error
+    #     self.refresh_tokens.append(new_refresh_token)
 
-        current_token.revoke(
-            revoked_at=rotated_at,
-            replaced_by=new_refresh_token.token_hash,
-        )
+    #     self.last_activity_at = rotated_at
+    #     self.updated_at = rotated_at
 
-        self.refresh_tokens.append(new_refresh_token)
-
-        self.last_activity_at = rotated_at
-        self.updated_at = rotated_at
-
-        # TODO: emit refresh token rotated event
+    #     # TODO: emit refresh token rotated event
