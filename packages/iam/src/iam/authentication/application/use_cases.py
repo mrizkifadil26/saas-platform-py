@@ -1,15 +1,18 @@
 from iam.authentication.domain import (
     AuthenticationAttempt,
     AuthenticationAttemptRepository,
+    Authenticator,
     Credential,
     CredentialRepository,
     CredentialType,
     PasswordHasher,
-    TokenProvider,
 )
+from iam.authentication.domain.enums import AuthenticationFailureReason
 from iam.authentication.domain.value_objects import PasswordHash
 from iam.identity.domain import UserRepository
 from iam.identity.domain.value_objects import EmailAddress, UserId
+from iam.sessions.domain import Session, SessionRepository
+from iam.sessions.domain.session_issuer import SessionIssuer
 from iam.shared.domain.clock import Clock
 
 from .commands import (
@@ -17,12 +20,10 @@ from .commands import (
     SetupPasswordCredentialCommand,
 )
 from .dto import (
-    AuthenticatedUser,
     AuthenticationResult,
-    AuthenticationTokens,
     SetupPasswordResult,
 )
-from .policies import LoginRateLimitPolicy
+from .policies import AuthenticationPolicy
 
 
 class AuthenticateWithPasswordUseCase:
@@ -31,16 +32,20 @@ class AuthenticateWithPasswordUseCase:
         user_repository: UserRepository,
         credential_repository: CredentialRepository,
         authentication_attempt_repository: AuthenticationAttemptRepository,
+        # session_repository: SessionRepository,
+        session_issuer: SessionIssuer,
+        authenticator: Authenticator,
         password_hasher: PasswordHasher,
-        token_provider: TokenProvider,
-        policy: LoginRateLimitPolicy,
+        policy: AuthenticationPolicy,
         clock: Clock,
     ):
         self._user_repository = user_repository
         self._credential_repository = credential_repository
         self._authentication_attempt_repository = authentication_attempt_repository
+        self._authenticator = authenticator
+        # self._session_repository = session_repository
+        self._session_issuer = session_issuer
         self._password_hasher = password_hasher
-        self._token_provider = token_provider
         self._policy = policy
         self._clock = clock
 
@@ -51,81 +56,88 @@ class AuthenticateWithPasswordUseCase:
         now = self._clock.now()
 
         email = EmailAddress(command.email)
-        attempt = AuthenticationAttempt.create(
+        credential = await self._credential_repository.find_password_by_email(email)
+        if credential is None:
+            attempt = AuthenticationAttempt.failed(
+                email=email,
+                failure_reason=AuthenticationFailureReason.INVALID_CREDENTIALS,
+                ip_address=command.ip_address,
+                user_agent=command.user_agent,
+                attempted_at=now,
+            )
+
+            await self._authentication_attempt_repository.save(attempt)
+            # TODO: raise invalid credential exception
+            raise
+
+        recent_failures = (
+            await self._authentication_attempt_repository.count_recent_failures(
+                email=email,
+                since=now - self._policy.failure_window(),
+            )
+        )
+
+        self._policy.ensure_not_locked(
+            recent_failures=recent_failures,
+        )
+
+        auth_result = self._authenticator.authenticate_with_password(
+            credential=credential,
+            password=command.password,
+        )
+
+        if auth_result.is_failure:
+            attempt = AuthenticationAttempt.failed(
+                email=email,
+                failure_reason=auth_result.failure_reason,
+                ip_address=command.ip_address,
+                user_agent=command.user_agent,
+                attempted_at=now,
+            )
+
+            await self._authentication_attempt_repository.save(attempt)
+
+        attempt = AuthenticationAttempt.succeeded(
             email=email,
+            user_id=credential.user_id,
             ip_address=command.ip_address,
             user_agent=command.user_agent,
             attempted_at=now,
         )
 
-        credential = await self._credential_repository.find_password_by_email(email)
-        if credential is None:
-            # TODO: mark as failure
-            # TODO: save to repo
-            # TODO: raise invalid credential exception
-            raise
+        await self._authentication_attempt_repository.save(attempt)
 
-        if await self._policy.is_locked(
-            # user.id,
-            credential.user_id,
-            now=now,
-        ):
-            # TODO: mark as failure
-            # TODO: save to repo
-            # TODO: raise blocked exception
-            raise
-
-        credential.ensure_active()
-
-        is_valid = await self._password_hasher.verify(
-            command.password,
-            credential.secret_hash.value,
-        )
-
-        if not is_valid:
-            # TODO: mark as failure
-            # failure_reason = "Invalid password"
-            # attempt.mark_as_failure(
-            #     failure_reason=failure_reason,
-            #     attempted_at=now,
-            # )
-            # TODO: save to repo
-            # await self._authentication_attempt_repository.save(attempt)
-            # TODO: raise invalid credential exception
-            # raise InvalidCredentials("Invalid email or password")
-            raise
-
-        user = await self._user_repository.find_by_id(credential.user_id)
-        if user is None:
-            # TODO: mark as failure
-            # TODO: save to repo
-            # TODO: raise invalid credentials exceptions
-            raise
+        # if not is_valid:
+        # TODO: mark as failure
+        # failure_reason = "Invalid password"
+        # attempt.mark_as_failure(
+        #     failure_reason=failure_reason,
+        #     attempted_at=now,
+        # )
+        # TODO: save to repo
+        # await self._authentication_attempt_repository.save(attempt)
+        # TODO: raise invalid credential exception
+        # raise InvalidCredentials("Invalid email or password")
+        # raise
 
         # TODO: needs rehash password if the hash is outdated
 
-        # TODO: create authentication session
+        access_token = self._access_token_generator.generate()
+        refresh_token = self._refresh_token_generator.generate()
 
-        access_token = await self._token_provider.generate_access_token(user.id)
-        refresh_token = await self._token_provider.generate_refresh_token(user.id)
-
-        tokens = AuthenticationTokens(
-            access_token=access_token,
-            refresh_token=refresh_token,
+        session = await self._session_issuer.issue(
+            user_id=credential.user_id,
         )
-
-        attempt.mark_as_successful(user_id=user.id)
-        await self._authentication_attempt_repository.save(attempt)
 
         # TODO: touch last_login_at
         # TODO: save to user repo
 
         return AuthenticationResult(
-            authenticated_user=AuthenticatedUser(
-                user_id=user.id,
-                # session_id=session.id,
-            ),
-            tokens=tokens,
+            user_id=credential.user_id,
+            session_id=session.id,
+            access_token=session.access_token,
+            # refresh_token=session.refresh_token,
+            refresh_token=session.active_refresh_token.token_hash.value,
         )
 
 
