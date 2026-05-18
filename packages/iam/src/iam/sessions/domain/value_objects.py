@@ -20,3 +20,16 @@ class SessionToken(ValueObject[str]):
             raise ValidationError("session token cannot be empty.")
 
         object.__setattr__(self, "value", normalized)
+
+
+@dataclass(frozen=True, slots=True)
+class RefreshTokenHash(ValueObject[str]):
+    value: str
+
+    def __post_init__(self) -> None:
+        value = self.value.strip()
+
+        if not value:
+            raise ValueError("Refresh token hash cannot be empty")
+
+        object.__setattr__(self, "value", value)
