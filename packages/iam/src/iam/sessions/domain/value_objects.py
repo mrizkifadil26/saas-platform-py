@@ -9,6 +9,10 @@ from iam.shared.domain.exceptions import ValidationError
 class SessionId(EntityId):
     pass
 
+@dataclass(frozen=True, slots=True)
+class RefreshTokenId(EntityId):
+    pass
+
 
 @dataclass(frozen=True, slots=True)
 class SessionToken(ValueObject[str]):
