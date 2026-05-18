@@ -26,7 +26,7 @@ class AuthenticationAttempt(Entity[AuthenticationAttemptId]):
     # locked_out_until: datetime | None = None
 
     @classmethod
-    def success(
+    def succeeded(
         cls,
         *,
         email: EmailAddress,
@@ -47,11 +47,11 @@ class AuthenticationAttempt(Entity[AuthenticationAttemptId]):
         )
 
     @classmethod
-    def failure(
+    def failed(
         cls,
         *,
         email: EmailAddress,
-        failure_reason: AuthenticationFailureReason,
+        failure_reason: AuthenticationFailureReason | None,
         attempted_at: datetime,
         user_id: UserId | None = None,
         user_agent: str | None = None,

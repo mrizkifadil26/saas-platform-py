@@ -19,7 +19,7 @@ class AuthenticationAttemptRepository(Protocol):
         limit: int = 10,
     ) -> list[AuthenticationAttempt]: ...
 
-    async def count_failures_since(
+    async def count_recent_failures(
         self,
         *,
         email: EmailAddress,
