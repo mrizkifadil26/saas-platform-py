@@ -1,9 +1,12 @@
-from sqlalchemy import select, update
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from db.repositories import SQLAlchemyRepository
-from iam.sessions.domain import Session, SessionRepository
+from iam.identity.domain.value_objects import UserId
+from iam.sessions.domain import Session, SessionRepository, SessionStatus
+from iam.sessions.domain.value_objects import RefreshTokenHash, SessionId
 
-from .models import SessionModel
+from .models import RefreshTokenModel, SessionModel
 from .orm_mappers import SessionORMMapper
 
 
@@ -27,9 +30,18 @@ class SQLAlchemySessionRepository(
             session,
         )
 
-    async def get_by_token_hash(self, token_hash: str) -> Session | None:
-        stmt = select(SessionModel).where(
-            SessionModel.token_hash == token_hash,
+    async def find_by_id(
+        self,
+        session_id: SessionId,
+    ) -> Session | None:
+        stmt = (
+            select(SessionModel)
+            .options(
+                selectinload(
+                    SessionModel.refresh_tokens,
+                )
+            )
+            .where(SessionModel.id == session_id.value)
         )
 
         result = await self._session.execute(stmt)
@@ -39,16 +51,50 @@ class SQLAlchemySessionRepository(
 
         return self._to_domain(model)
 
-    async def revoke(self, session_id: str) -> None:
+    async def find_by_token_hash(
+        self,
+        token_hash: RefreshTokenHash,
+    ) -> Session | None:
         stmt = (
-            update(SessionModel)
-            .where(
-                SessionModel.id == session_id,
+            select(SessionModel)
+            .join(RefreshTokenModel)
+            .options(
+                selectinload(
+                    SessionModel.refresh_tokens,
+                )
             )
-            .values(revoked=True)
+            .where(
+                RefreshTokenModel.token_hash == token_hash.value,
+            )
         )
 
-        await self._session.execute(stmt)
+        result = await self._session.execute(stmt)
+        model = result.scalar_one_or_none()
+        if not model:
+            return None
+
+        return self._to_domain(model)
+
+    async def find_active_by_user_id(
+        self,
+        user_id: UserId,
+    ) -> list[Session]:
+        stmt = (
+            select(SessionModel)
+            .options(
+                selectinload(
+                    SessionModel.refresh_tokens,
+                )
+            )
+            .where(
+                SessionModel.user_id == user_id.value,
+            )
+            .where(SessionModel.status == SessionStatus.ACTIVE)
+        )
+
+        result = await self._session.execute(stmt)
+        models = result.scalars().all()
+        return [SessionORMMapper.to_domain(model) for model in models]
 
     @property
     def model_type(self) -> type[SessionModel]:
