@@ -7,8 +7,19 @@ from iam.sessions.domain.value_objects import SessionId
 @dataclass(frozen=True, slots=True)
 class CreateSessionCommand:
     user_id: UserId
+    # TODO: later we'll add session device
+
+
+@dataclass(frozen=True, slots=True)
+class RefreshSessionCommand:
+    refresh_token: str
 
 
 @dataclass(frozen=True, slots=True)
 class RevokeSessionCommand:
     session_id: SessionId
+
+
+@dataclass(frozen=True, slots=True)
+class RevokeAllSessionsCommand:
+    user_id: UserId
