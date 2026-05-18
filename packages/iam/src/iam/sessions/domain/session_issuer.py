@@ -10,9 +10,16 @@ from .repositories import SessionRepository
 from .session import Session
 
 
+@dataclass(frozen=True, slots=True)
+class IssuedSession:
+    session: Session
+    refresh_token: str
+
+
 @dataclass(slots=True)
 class SessionIssuer:
     session_repository: SessionRepository
+
     refresh_token_generator: RefreshTokenGenerator
     refresh_token_hasher: RefreshTokenHasher
     clock: Clock
@@ -21,23 +28,36 @@ class SessionIssuer:
         self,
         *,
         user_id: UserId,
-    ) -> Session:
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+    ) -> IssuedSession:
         now = self.clock.now()
 
+        session = Session.create(
+            user_id=user_id,
+            created_at=now,
+            ip_address=ip_address,
+            user_agent=user_agent,
+        )
+
         raw_refresh_token = self.refresh_token_generator.generate()
-        hashed_refresh_token = self.refresh_token_hasher.hash(raw_refresh_token)
+        token_hash = self.refresh_token_hasher.hash(raw_refresh_token)
+
         refresh_token = RefreshToken.create(
-            token_hash=hashed_refresh_token,
+            session_id=session.id,
+            token_hash=token_hash,
             created_at=now,
             expires_at=now + timedelta(days=15),
         )
 
-        session = Session.create(
-            user_id=user_id,
-            refresh_token=refresh_token,
-            created_at=now,
+        session.attach_refresh_token(
+            refresh_token_id=refresh_token.id,
+            now=now,
         )
 
         await self.session_repository.save(session)
 
-        return session
+        return IssuedSession(
+            session=session,
+            refresh_token=raw_refresh_token,
+        )
