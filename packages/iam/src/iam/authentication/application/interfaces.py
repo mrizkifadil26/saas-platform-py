@@ -1,12 +1,3 @@
-from datetime import datetime
-from typing import Protocol
-
-from iam.sessions.domain import Session
-from iam.sessions.domain.value_objects import AccessToken
-
-from .dto import AccessTokenPayload
-
-
 class AccessTokenProvider(Protocol):
     def issue(
         self,

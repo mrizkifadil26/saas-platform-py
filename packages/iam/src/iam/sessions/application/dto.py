@@ -21,6 +21,11 @@ class SessionTokens:
 
 
 @dataclass(frozen=True, slots=True)
-class CreateSessionResult:
-    token: str
-    session: Session
+class AccessTokenPayload:
+    user_id: UserId
+    session_id: SessionId
+
+    issued_at: datetime
+    expires_at: datetime
+
+    # permissions: frozenset[str]
