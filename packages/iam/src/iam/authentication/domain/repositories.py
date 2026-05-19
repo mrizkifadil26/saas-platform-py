@@ -13,7 +13,7 @@ class AuthenticationAttemptRepository(Protocol):
         attempt: AuthenticationAttempt,
     ) -> None: ...
 
-    async def find_recent_by_user_id(
+    async def list_recent_by_user_id(
         self,
         user_id: UserId,
         limit: int = 10,
@@ -25,13 +25,6 @@ class AuthenticationAttemptRepository(Protocol):
         email: EmailAddress,
         since: datetime,
     ) -> int: ...
-
-    async def get_recent_failures(
-        self,
-        *,
-        email: EmailAddress,
-        since: datetime,
-    ) -> list[AuthenticationAttempt]: ...
 
 
 class CredentialRepository(Protocol):

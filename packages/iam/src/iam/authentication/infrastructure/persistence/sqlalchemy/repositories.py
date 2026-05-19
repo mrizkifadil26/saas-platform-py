@@ -1,12 +1,22 @@
-from sqlalchemy import select
+from datetime import datetime
+
+from sqlalchemy import desc, func, select
 
 from db.repositories import SQLAlchemyRepository
-from iam.authentication.domain import Credential, CredentialRepository, CredentialType
+from iam.authentication.domain import (
+    AuthenticationAttempt,
+    AuthenticationAttemptRepository,
+    AuthenticationOutcome,
+    Credential,
+    CredentialRepository,
+    CredentialType,
+)
 from iam.identity.domain.value_objects import EmailAddress, UserId
 from iam.identity.infrastructure.persistence.sqlalchemy.models import UserModel
 
-from .models import CredentialModel
+from .models import AuthenticationAttemptModel, CredentialModel
 from .orm_mappers import (
+    AuthenticationAttemptORMMapper,
     CredentialORMMapper,
 )
 
@@ -73,3 +83,59 @@ class SQLAlchemyCredentialRepository(
 
     def _to_model(self, entity: Credential) -> CredentialModel:
         return CredentialORMMapper.to_model(entity)
+
+
+class SQLAlchemyAuthenticationAttemptRepository(
+    SQLAlchemyRepository[AuthenticationAttempt, AuthenticationAttemptModel],
+    AuthenticationAttemptRepository,
+):
+    async def save(self, attempt: AuthenticationAttempt) -> None:
+        model = self._to_model(attempt)
+        self._session.add(model)
+
+    async def list_recent_by_user_id(
+        self,
+        user_id: UserId,
+        limit: int = 10,
+    ) -> list[AuthenticationAttempt]:
+        stmt = (
+            select(AuthenticationAttemptModel)
+            .where(AuthenticationAttemptModel.user_id == user_id.value)
+            .order_by(desc(AuthenticationAttemptModel.attempted_at))
+            .limit(limit)
+        )
+
+        result = await self._session.execute(stmt)
+        models = result.scalars().all()
+
+        return [self._to_domain(model) for model in models]
+
+    async def count_recent_failures(
+        self,
+        *,
+        email: EmailAddress,
+        since: datetime,
+    ) -> int:
+        stmt = (
+            select(func.count())
+            .select_from(AuthenticationAttemptModel)
+            .where(
+                AuthenticationAttemptModel.email == email.value,
+                AuthenticationAttemptModel.outcome == AuthenticationOutcome.DENIED,
+                AuthenticationAttemptModel.attempted_at >= since,
+            )
+        )
+
+        result = await self._session.execute(stmt)
+
+        return int(result.scalar_one())
+
+    @property
+    def model_type(self) -> type[AuthenticationAttemptModel]:
+        return AuthenticationAttemptModel
+
+    def _to_domain(self, model: AuthenticationAttemptModel) -> AuthenticationAttempt:
+        return AuthenticationAttemptORMMapper.to_domain(model)
+
+    def _to_model(self, entity: AuthenticationAttempt) -> AuthenticationAttemptModel:
+        return AuthenticationAttemptORMMapper.to_model(entity)
