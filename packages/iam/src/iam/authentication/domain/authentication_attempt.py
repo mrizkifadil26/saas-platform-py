@@ -6,7 +6,10 @@ from datetime import datetime
 from iam.identity.domain.value_objects import EmailAddress, UserId
 from iam.shared.domain import Entity
 
-from .enums import AuthenticationFailureReason, AuthenticationStatus
+from .enums import (
+    AuthenticationDenialReason,
+    AuthenticationOutcome,
+)
 from .value_objects import AuthenticationAttemptId
 
 
@@ -18,12 +21,22 @@ class AuthenticationAttempt(Entity[AuthenticationAttemptId]):
     ip_address: str | None
     user_agent: str | None
 
-    status: AuthenticationStatus
-    failure_reason: AuthenticationFailureReason | None
+    outcome: AuthenticationOutcome
+    denial_reason: AuthenticationDenialReason | None
 
     attempted_at: datetime
 
     # locked_out_until: datetime | None = None
+
+    def __post_init__(self):
+        if (
+            self.outcome == AuthenticationOutcome.SUCCESS
+            and self.denial_reason is not None
+        ):
+            raise ValueError("Successful attempt cannot have failure reason.")
+
+        if self.outcome == AuthenticationOutcome.DENIED and self.denial_reason is None:
+            raise ValueError("Failed attempt must include failure reason.")
 
     @classmethod
     def succeeded(
@@ -41,17 +54,17 @@ class AuthenticationAttempt(Entity[AuthenticationAttemptId]):
             user_id=user_id,
             ip_address=ip_address,
             user_agent=user_agent,
-            status=AuthenticationStatus.SUCCESS,
-            failure_reason=None,
+            outcome=AuthenticationOutcome.SUCCESS,
+            denial_reason=None,
             attempted_at=attempted_at,
         )
 
     @classmethod
-    def failed(
+    def denied(
         cls,
         *,
         email: EmailAddress,
-        failure_reason: AuthenticationFailureReason | None,
+        denial_reason: AuthenticationDenialReason | None,
         attempted_at: datetime,
         user_id: UserId | None = None,
         user_agent: str | None = None,
@@ -63,18 +76,18 @@ class AuthenticationAttempt(Entity[AuthenticationAttemptId]):
             user_id=user_id,
             ip_address=ip_address,
             user_agent=user_agent,
-            status=AuthenticationStatus.FAILURE,
-            failure_reason=failure_reason,
+            outcome=AuthenticationOutcome.DENIED,
+            denial_reason=denial_reason,
             attempted_at=attempted_at,
         )
 
     @property
     def is_successful(self) -> bool:
-        return self.status == AuthenticationStatus.SUCCESS
+        return self.outcome == AuthenticationOutcome.SUCCESS
 
     @property
-    def is_failure(self) -> bool:
-        return self.status == AuthenticationStatus.FAILURE
+    def is_denied(self) -> bool:
+        return self.outcome == AuthenticationOutcome.DENIED
 
     # @property
     # def is_locked_out(self) -> bool:

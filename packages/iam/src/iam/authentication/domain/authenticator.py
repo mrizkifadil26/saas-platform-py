@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Self
 
+from .authentication_decision import AuthenticationDecision
 from .credential import Credential
-from .enums import AuthenticationFailureReason
+from .enums import AuthenticationDenialReason
 from .interfaces import PasswordHasher
 
 
@@ -26,35 +26,8 @@ class Authenticator:
         )
 
         if not is_valid_password:
-            return AuthenticationDecision.failure(
-                AuthenticationFailureReason.INVALID_CREDENTIALS,
+            return AuthenticationDecision.deny(
+                AuthenticationDenialReason.INVALID_CREDENTIALS,
             )
 
-        return AuthenticationDecision.success()
-
-
-@dataclass(frozen=True, slots=True)
-class AuthenticationDecision:
-    is_success: bool
-    failure_reason: AuthenticationFailureReason | None = None
-
-    @property
-    def is_failure(self) -> bool:
-        return not self.is_success
-
-    @classmethod
-    def success(cls) -> Self:
-        return cls(
-            is_success=True,
-            failure_reason=None,
-        )
-
-    @classmethod
-    def failure(
-        cls,
-        reason: AuthenticationFailureReason,
-    ) -> Self:
-        return cls(
-            is_success=False,
-            failure_reason=reason,
-        )
+        return AuthenticationDecision.allow()

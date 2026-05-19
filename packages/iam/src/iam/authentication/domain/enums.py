@@ -1,9 +1,9 @@
 from enum import StrEnum
 
 
-class AuthenticationStatus(StrEnum):
+class AuthenticationOutcome(StrEnum):
     SUCCESS = "success"
-    FAILURE = "failure"
+    DENIED = "denied"
     LOCKED_OUT = "locked_out"
 
 
@@ -17,7 +17,7 @@ class CredentialStatus(StrEnum):
     COMPROMISED = "compromised"
 
 
-class AuthenticationFailureReason(StrEnum):
+class AuthenticationDenialReason(StrEnum):
     INVALID_CREDENTIALS = "invalid_credentials"
     ACCOUNT_DISABLED = "account_disabled"
     ACCOUNT_LOCKED = "account_locked"
