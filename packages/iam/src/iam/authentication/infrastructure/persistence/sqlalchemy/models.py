@@ -8,7 +8,12 @@ from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import Mapped, mapped_column
 
 from db.app_db import AppBase
-from iam.authentication.domain import CredentialStatus, CredentialType
+from iam.authentication.domain import (
+    AuthenticationDenialReason,
+    AuthenticationOutcome,
+    CredentialStatus,
+    CredentialType,
+)
 
 
 class CredentialModel(AppBase):
@@ -83,4 +88,70 @@ class CredentialModel(AppBase):
     updated_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
+    )
+
+
+class AuthenticationAttemptModel(AppBase):
+    __tablename__ = "iam_authentication_attempts"
+
+    __table_args__ = (
+        Index(
+            "ix_auth_attempt_email_attempted_at",
+            "email",
+            "attempted_at",
+        ),
+        Index(
+            "ix_auth_attempt_user_attempted_at",
+            "user_id",
+            "attempted_at",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(
+        Uuid,
+        primary_key=True,
+    )
+
+    email: Mapped[str] = mapped_column(
+        String(320),
+        nullable=False,
+        index=True,
+    )
+
+    user_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("iam_users.id"),
+        nullable=True,
+        index=True,
+    )
+
+    ip_address: Mapped[str | None] = mapped_column(
+        String(45),  # ipv6 safe
+        nullable=True,
+    )
+
+    user_agent: Mapped[str | None] = mapped_column(
+        String(1024),
+        nullable=True,
+    )
+
+    outcome: Mapped[AuthenticationOutcome] = mapped_column(
+        Enum(
+            AuthenticationOutcome,
+            name="authentication_outcome",
+        ),
+        nullable=False,
+    )
+
+    denial_reason: Mapped[AuthenticationDenialReason | None] = mapped_column(
+        Enum(
+            AuthenticationDenialReason,
+            name="authentication_denial_reason",
+        ),
+        nullable=True,
+    )
+
+    attempted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        index=True,
     )

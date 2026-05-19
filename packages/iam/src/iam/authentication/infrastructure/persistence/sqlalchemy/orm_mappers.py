@@ -1,8 +1,17 @@
-from iam.authentication.domain import Credential, CredentialStatus
-from iam.authentication.domain.value_objects import CredentialId, PasswordHash
-from iam.identity.domain.value_objects import UserId
+from iam.authentication.domain import (
+    AuthenticationAttempt,
+    Credential,
+    CredentialStatus,
+)
+from iam.authentication.domain.value_objects import (
+    AuthenticationAttemptId,
+    CredentialId,
+    PasswordHash,
+)
+from iam.identity.domain.value_objects import EmailAddress, UserId
 
 from .models import (
+    AuthenticationAttemptModel,
     CredentialModel,
 )
 
@@ -41,3 +50,35 @@ class CredentialORMMapper:
         model.status = credential.status
         model.created_at = credential.created_at
         model.updated_at = credential.updated_at
+
+
+class AuthenticationAttemptORMMapper:
+    @staticmethod
+    def to_domain(
+        model: AuthenticationAttemptModel,
+    ) -> AuthenticationAttempt:
+        return AuthenticationAttempt(
+            id=AuthenticationAttemptId(model.id),
+            email=EmailAddress(model.email),
+            user_id=(UserId(model.user_id) if model.user_id is not None else None),
+            ip_address=model.ip_address,
+            user_agent=model.user_agent,
+            outcome=model.outcome,
+            denial_reason=model.denial_reason,
+            attempted_at=model.attempted_at,
+        )
+
+    @staticmethod
+    def to_model(
+        entity: AuthenticationAttempt,
+    ) -> AuthenticationAttemptModel:
+        return AuthenticationAttemptModel(
+            id=str(entity.id),
+            email=str(entity.email),
+            user_id=(str(entity.user_id) if entity.user_id is not None else None),
+            ip_address=entity.ip_address,
+            user_agent=entity.user_agent,
+            outcome=entity.outcome,
+            denial_reason=entity.denial_reason,
+            attempted_at=entity.attempted_at,
+        )
