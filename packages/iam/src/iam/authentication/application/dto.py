@@ -10,16 +10,10 @@ from iam.sessions.domain.value_objects import SessionId
 class AuthenticationResult:
     user_id: UserId
     session_id: SessionId
-    access_token: str
+    access_token: AccessToken
     refresh_token: str
 
 
 @dataclass(frozen=True, slots=True)
 class SetupPasswordResult:
     user_id: UUID
-
-
-@dataclass(frozen=True, slots=True)
-class IssuedAccessToken:
-    token: AccessToken
-    # payload: AccessTokenPayload
