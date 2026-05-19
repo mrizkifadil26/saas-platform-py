@@ -5,12 +5,12 @@ from dataclasses import dataclass
 from .authentication_decision import AuthenticationDecision
 from .credential import Credential
 from .enums import AuthenticationDenialReason
-from .interfaces import PasswordHasher
+from .interfaces import CredentialVerifier
 
 
 @dataclass(frozen=True)
 class Authenticator:
-    password_hasher: PasswordHasher
+    verifier: CredentialVerifier
 
     def authenticate_with_password(
         self,
@@ -20,9 +20,9 @@ class Authenticator:
     ) -> AuthenticationDecision:
         # Rule validation
 
-        is_valid_password = self.password_hasher.verify(
-            plain_password=password,
-            password_hash=credential.secret_hash.value,
+        is_valid_password = self.verifier.verify_password(
+            credential=credential,
+            password=password,
         )
 
         if not is_valid_password:
