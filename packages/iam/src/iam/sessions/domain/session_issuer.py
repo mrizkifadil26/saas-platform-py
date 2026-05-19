@@ -6,7 +6,6 @@ from iam.shared.domain.clock import Clock
 
 from .interfaces import RefreshTokenGenerator, RefreshTokenHasher
 from .refresh_token import RefreshToken
-from .repositories import SessionRepository
 from .session import Session
 
 
@@ -18,11 +17,12 @@ class IssuedSession:
 
 @dataclass(slots=True)
 class SessionIssuer:
-    session_repository: SessionRepository
-
     refresh_token_generator: RefreshTokenGenerator
     refresh_token_hasher: RefreshTokenHasher
+
     clock: Clock
+
+    refresh_token_ttl: timedelta
 
     async def issue(
         self,
@@ -47,15 +47,13 @@ class SessionIssuer:
             session_id=session.id,
             token_hash=token_hash,
             created_at=now,
-            expires_at=now + timedelta(days=15),
+            expires_at=now + self.refresh_token_ttl,
         )
 
         session.attach_refresh_token(
             refresh_token_id=refresh_token.id,
             now=now,
         )
-
-        await self.session_repository.save(session)
 
         return IssuedSession(
             session=session,
