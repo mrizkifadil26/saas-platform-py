@@ -64,15 +64,15 @@ class SessionModel(AppBase):
 class RefreshTokenModel(AppBase):
     __tablename__ = "iam_refresh_tokens"
 
-    token_hash: Mapped[str] = mapped_column(
-        String(255),
-        primary_key=True,
-    )
-
     session_id: Mapped[UUID] = mapped_column(
         ForeignKey("iam_sessions.id"),
         nullable=False,
         index=True,
+    )
+
+    token_hash: Mapped[str] = mapped_column(
+        String(255),
+        primary_key=True,
     )
 
     expires_at: Mapped[datetime] = mapped_column(
