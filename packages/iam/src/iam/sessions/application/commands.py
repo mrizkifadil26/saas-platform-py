@@ -5,12 +5,6 @@ from iam.sessions.domain.value_objects import SessionId
 
 
 @dataclass(frozen=True, slots=True)
-class CreateSessionCommand:
-    user_id: UserId
-    # TODO: later we'll add session device
-
-
-@dataclass(frozen=True, slots=True)
 class RefreshSessionCommand:
     refresh_token: str
 
