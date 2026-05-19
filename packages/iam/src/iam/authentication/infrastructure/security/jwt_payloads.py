@@ -7,13 +7,3 @@ from iam.identity.domain.value_objects import UserId
 class AccessTokenPayload:
     user_id: UserId
     permissions: frozenset[str]
-
-
-# @dataclass(frozen=True, slots=True)
-# class RefreshTokenPayload:
-#     session_id: SessionId
-
-
-@dataclass(frozen=True, slots=True)
-class RegistrationTokenPayload:
-    user_id: UserId
