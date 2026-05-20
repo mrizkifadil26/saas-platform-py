@@ -1,6 +1,6 @@
 from .email_verification import EmailVerification
 from .enums import UserStatus
-from .interfaces import (
+from .ports import (
     EmailVerificationTokenGenerator,
     EmailVerificationTokenHasher,
 )

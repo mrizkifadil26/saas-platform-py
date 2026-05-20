@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from .authentication_decision import AuthenticationDecision
 from .credential import Credential
 from .enums import AuthenticationDenialReason
-from .interfaces import CredentialVerifier
+from .ports import CredentialVerifier
 
 
 @dataclass(frozen=True)

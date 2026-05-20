@@ -1,8 +1,7 @@
 from argon2 import PasswordHasher as Argon2Hasher
 from argon2.exceptions import VerificationError, VerifyMismatchError
 
-from iam.authentication.domain import Credential
-from iam.authentication.domain.interfaces import CredentialVerifier
+from iam.authentication.domain import Credential, CredentialVerifier
 
 
 class Argon2CredentialVerifier(CredentialVerifier):

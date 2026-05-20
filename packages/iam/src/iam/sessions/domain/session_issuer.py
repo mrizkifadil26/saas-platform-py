@@ -4,7 +4,7 @@ from datetime import timedelta
 from iam.identity.domain.value_objects import UserId
 from iam.shared.domain.clock import Clock
 
-from .interfaces import RefreshTokenGenerator, RefreshTokenHasher
+from .ports import RefreshTokenGenerator, RefreshTokenHasher
 from .refresh_token import RefreshToken
 from .session import Session
 

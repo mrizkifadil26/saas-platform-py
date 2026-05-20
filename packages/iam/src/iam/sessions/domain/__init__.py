@@ -1,5 +1,5 @@
 from .enums import SessionStatus
-from .interfaces import RefreshTokenGenerator, RefreshTokenHasher
+from .ports import RefreshTokenGenerator, RefreshTokenHasher
 from .refresh_token import RefreshToken
 from .repositories import SessionRepository
 from .session import Session

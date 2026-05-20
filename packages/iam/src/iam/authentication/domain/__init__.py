@@ -7,8 +7,8 @@ from .enums import (
     CredentialStatus,
     CredentialType,
 )
-from .interfaces import AccessTokenIssuer, PasswordHasher
 from .policies import AuthenticationPolicy
+from .ports import AccessTokenIssuer, CredentialVerifier, PasswordHasher
 from .repositories import AuthenticationAttemptRepository, CredentialRepository
 
 __all__ = [
@@ -23,5 +23,6 @@ __all__ = [
     "CredentialRepository",
     "CredentialStatus",
     "CredentialType",
+    "CredentialVerifier",
     "PasswordHasher",
 ]
