@@ -1,0 +1,88 @@
+from datetime import datetime
+from uuid import UUID
+
+from sqlalchemy import DateTime, ForeignKey, PrimaryKeyConstraint, String, Uuid, func
+from sqlalchemy.orm import Mapped, mapped_column
+
+from db.app_db import AppBase
+
+
+class RoleModel(AppBase):
+    __tablename__ = "iam_roles"
+
+    id: Mapped[UUID] = mapped_column(
+        Uuid,
+        primary_key=True,
+    )
+
+    name: Mapped[str] = mapped_column(
+        String(255),
+        unique=True,
+        nullable=False,
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+
+class UserRoleModel(AppBase):
+    __tablename__ = "iam_user_roles"
+
+    __table_args__ = (
+        PrimaryKeyConstraint(
+            "user_id",
+            "role_id",
+        ),
+    )
+
+    user_id: Mapped[UUID] = mapped_column(
+        Uuid,
+        ForeignKey(
+            "iam_users.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+    )
+
+    role_id: Mapped[UUID] = mapped_column(
+        Uuid,
+        ForeignKey(
+            "iam_roles.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+    )
+
+    assigned_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+
+class RolePermissionModel(AppBase):
+    __tablename__ = "iam_role_permissions"
+
+    __table_args__ = (
+        PrimaryKeyConstraint(
+            "role_id",
+            "permission",
+        ),
+    )
+
+    role_id: Mapped[UUID] = mapped_column(
+        Uuid,
+        ForeignKey(
+            "iam_roles.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+    )
+
+    permission: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+    )
