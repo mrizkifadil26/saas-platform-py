@@ -1,7 +1,8 @@
 from typing import Protocol
 
-from iam.authorization.domain.value_objects import Permission
 from iam.identity.domain.value_objects import UserId
+
+from .value_objects import Permission, RoleId
 
 
 class PermissionResolver(Protocol):
@@ -9,3 +10,15 @@ class PermissionResolver(Protocol):
         self,
         user_id: UserId,
     ) -> set[Permission]: ...
+
+
+class PermissionCacheInvalidator(Protocol):
+    async def invalidate_user_permissions(
+        self,
+        user_id: UserId,
+    ) -> None: ...
+
+    async def invalidate_role_permissions(
+        self,
+        role_id: RoleId,
+    ) -> None: ...

@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 
-from iam.authorization.application.dto import AuthorizationResult, RoleDTO
 from iam.authorization.domain import (
     AuthorizationService,
+    PermissionCacheInvalidator,
     PermissionResolver,
     Role,
     RoleRepository,
@@ -16,6 +16,7 @@ from .commands import (
     CreateRoleCommand,
     GrantPermissionToRoleCommand,
 )
+from .dto import AuthorizationResult, RoleDTO
 
 
 @dataclass(slots=True)
@@ -49,6 +50,7 @@ class CreateRoleUseCase:
 @dataclass(slots=True)
 class GrantPermissionToRoleUseCase:
     role_repository: RoleRepository
+    permission_cache_invalidator: PermissionCacheInvalidator
 
     async def execute(
         self,
@@ -66,11 +68,16 @@ class GrantPermissionToRoleUseCase:
 
         # TODO: commit uow here
 
+        await self.permission_cache_invalidator.invalidate_role_permissions(
+            role.id,
+        )
+
 
 @dataclass(slots=True)
 class AssignRoleToUser:
     role_repository: RoleRepository
     user_role_repository: UserRoleRepository
+    permission_cache_invalidator: PermissionCacheInvalidator
 
     async def execute(
         self,
@@ -88,6 +95,10 @@ class AssignRoleToUser:
         )
 
         # TODO: commit uow here
+
+        await self.permission_cache_invalidator.invalidate_user_permissions(
+            command.user_id,
+        )
 
 
 @dataclass(slots=True)
