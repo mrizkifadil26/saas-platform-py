@@ -1,6 +1,7 @@
 from .authorization import AuthorizationService
 from .policies import UserPolicies
-from .repositories import PermissionResolver, RoleRepository, UserRoleRepository
+from .ports import PermissionResolver
+from .repositories import RoleRepository, UserRoleRepository
 from .role import Role
 from .specifications import HasPermission
 from .user_role import UserRole

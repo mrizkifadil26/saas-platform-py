@@ -3,7 +3,7 @@ from typing import Protocol
 from iam.identity.domain.value_objects import UserId
 
 from .role import Role
-from .value_objects import Permission, RoleId
+from .value_objects import RoleId
 
 
 class UserRoleRepository(Protocol):
@@ -40,10 +40,3 @@ class RoleRepository(Protocol):
         self,
         name: str,
     ) -> Role | None: ...
-
-
-class PermissionResolver(Protocol):
-    async def resolve_permissions_for_user(
-        self,
-        user_id: UserId,
-    ) -> set[Permission]: ...
