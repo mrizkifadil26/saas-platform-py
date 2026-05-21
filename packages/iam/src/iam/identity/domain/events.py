@@ -2,13 +2,13 @@ from dataclasses import dataclass
 
 from iam.shared.domain.events import DomainEvent
 
-from .value_objects import UserId
+from .value_objects import Email, UserId
 
 
 @dataclass(frozen=True)
 class UserRegistered(DomainEvent):
     user_id: UserId
-    email: str
+    email: Email
 
 
 @dataclass(frozen=True)
