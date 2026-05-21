@@ -1,11 +1,10 @@
 from dataclasses import dataclass
-
-from iam.identity.domain.value_objects import EmailAddress, UserId
+from uuid import UUID
 
 
 @dataclass(frozen=True, slots=True)
 class AuthenticateUserCommand:
-    email: EmailAddress
+    email: str
     password: str
 
     ip_address: str
@@ -14,5 +13,5 @@ class AuthenticateUserCommand:
 
 @dataclass(frozen=True, slots=True)
 class SetupPasswordCredentialCommand:
-    user_id: UserId
+    user_id: UUID
     password: str

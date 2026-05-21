@@ -49,7 +49,7 @@ class AuthenticateWithPasswordUseCase:
     ) -> AuthenticationResult:
         now = self._clock.now()
 
-        email = command.email
+        email = Email(command.email)
         credential = await self._credential_repository.find_password_by_email(email)
         if credential is None:
             attempt = AuthenticationAttempt.denied(
@@ -124,10 +124,10 @@ class AuthenticateWithPasswordUseCase:
         # TODO: save to user repo
 
         return AuthenticationResult(
-            user_id=credential.user_id,
-            session_id=issued_session.session.id,
-            access_token=access_token,
-            refresh_token=issued_session.refresh_token,
+            user_id=credential.user_id.unwrap(),
+            session_id=session.id.unwrap(),
+            access_token=access_token.unwrap(),
+            refresh_token=raw_refresh_token.unwrap(),
         )
 
 
@@ -150,7 +150,7 @@ class SetupPasswordCredentialUseCase:
     ) -> SetupPasswordResult:
         now = self._clock.now()
 
-        user_id = command.user_id
+        user_id = UserId(command.user_id)
         user = await self._user_repository.find_by_id(user_id)
         if user is None:
             # TODO: raise user not found exception

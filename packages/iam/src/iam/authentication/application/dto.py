@@ -1,16 +1,12 @@
 from dataclasses import dataclass
 from uuid import UUID
 
-from iam.authentication.domain.value_objects import AccessToken
-from iam.identity.domain.value_objects import UserId
-from iam.sessions.domain.value_objects import SessionId
-
 
 @dataclass(frozen=True, slots=True)
 class AuthenticationResult:
-    user_id: UserId
-    session_id: SessionId
-    access_token: AccessToken
+    user_id: UUID
+    session_id: UUID
+    access_token: str
     refresh_token: str
 
 
