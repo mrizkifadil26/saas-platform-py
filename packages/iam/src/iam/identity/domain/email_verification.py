@@ -9,7 +9,9 @@ from .value_objects import EmailVerificationId, EmailVerificationTokenHash, User
 
 
 @dataclass(slots=True)
-class EmailVerification(AggregateRoot[EmailVerificationId]):
+class EmailVerification(
+    AggregateRoot[EmailVerificationId],
+):
     user_id: UserId
 
     token_hash: EmailVerificationTokenHash
