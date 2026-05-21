@@ -11,14 +11,14 @@ from iam.identity.domain.value_objects import (
     EmailVerificationToken,
     UserId,
 )
-from iam.shared.domain.clock import Clock
+from iam.shared.application import Clock
 
 from .commands import (
     RegisterUserCommand,
     ResendEmailVerificationCommand,
     VerifyEmailCommand,
 )
-from .dto import EmailVerificationResult, RegisterUserResult
+from .dto import EmailVerificationResult, RegisterUserResult, UserDTO
 from .exceptions import UserAlreadyExistsError
 
 
@@ -67,9 +67,14 @@ class RegisterUserUseCase:
         await self._verification_repository.save(verification)
 
         return RegisterUserResult(
-            user_id=user.id.unwrap(),
-            email=str(user.email),
-            verification_email_sent=True,
+            user=UserDTO(
+                id=user.id.unwrap(),
+                email=user.email.unwrap(),
+                is_verified=user.is_email_verified,
+                created_at=user.created_at,
+            ),
+            email_verification_required=True,
+            verification_expires_at=verification.expires_at,
         )
 
 
@@ -118,9 +123,15 @@ class VerifyEmailUseCase:
 
         await self._verification_repository.save(verification)
         await self._user_repository.save(user)
+        # TODO: uow commit here
 
         return EmailVerificationResult(
-            user_id=user.id.unwrap(),
+            user=UserDTO(
+                id=user.id.unwrap(),
+                email=user.email.unwrap(),
+                is_verified=user.is_email_verified,
+                created_at=user.created_at,
+            ),
             email_verified=True,
         )
 
@@ -143,7 +154,7 @@ class ResendEmailVerificationUseCase:
     async def execute(
         self,
         command: ResendEmailVerificationCommand,
-    ):
+    ) -> None:
         now = self._clock.now()
         user_id = UserId(command.user_id)
 
@@ -166,8 +177,6 @@ class ResendEmailVerificationUseCase:
         )
 
         await self._verification_repository.save(verification)
-
-        return ...
 
 
 class DeactivateUserUseCase:
