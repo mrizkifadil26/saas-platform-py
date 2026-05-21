@@ -53,12 +53,11 @@ class EmailVerification(
     ) -> bool:
         return now >= self.expires_at
 
-    def verify(
+    def mark_verified(
         self,
-        token_hash: EmailVerificationTokenHash,
         *,
         verified_at: datetime,
-    ) -> None:
+    ):
         if self.is_verified:
             # TODO: raise already consuumed error
             raise
@@ -67,9 +66,5 @@ class EmailVerification(
             # TODO: raise email verification expired error
             raise
 
-        if self.token_hash != token_hash:
-            # TODO: raise invalid email verification error
-            raise
-
         # TODO: record email verification consumed9
-        self.consumed_at = verified_at
+        self.verified_at = verified_at
