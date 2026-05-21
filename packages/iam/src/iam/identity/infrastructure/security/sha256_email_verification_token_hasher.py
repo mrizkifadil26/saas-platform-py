@@ -1,6 +1,6 @@
 import hashlib
 
-from iam.identity.domain import (
+from iam.identity.application import (
     EmailVerificationTokenHasher,
 )
 from iam.identity.domain.value_objects import (
@@ -9,12 +9,30 @@ from iam.identity.domain.value_objects import (
 )
 
 
-class Sha256EmailVerificationTokenHasher(EmailVerificationTokenHasher):
-    def hash(self, raw_token: EmailVerificationToken) -> EmailVerificationTokenHash:
-        str_token = str(raw_token)
-        return EmailVerificationTokenHash(self._hash_token(str_token))
+class Sha256EmailVerificationTokenHasher(
+    EmailVerificationTokenHasher,
+):
+    def hash(
+        self,
+        raw_token: EmailVerificationToken,
+    ) -> EmailVerificationTokenHash:
+        token_value = raw_token.unwrap()
 
-    def _hash_token(self, value: str) -> str:
+        return EmailVerificationTokenHash(
+            self._compute_hash(token_value),
+        )
+
+    def verify(
+        self,
+        raw_token: EmailVerificationToken,
+        hashed_token: EmailVerificationTokenHash,
+    ) -> bool:
+        return self.hash(raw_token) == hashed_token
+
+    def _compute_hash(
+        self,
+        value: str,
+    ) -> str:
         return hashlib.sha256(
             value.encode("utf-8"),
         ).hexdigest()
