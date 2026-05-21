@@ -1,17 +1,21 @@
+from datetime import timedelta
+
 from iam.authentication.domain import (
-    AccessTokenIssuer,
     AuthenticationAttempt,
     AuthenticationAttemptRepository,
     AuthenticationDenialReason,
     AuthenticationPolicy,
-    Authenticator,
     Credential,
     CredentialRepository,
     CredentialType,
-    PasswordHasher,
 )
 from iam.identity.domain import UserRepository
 from iam.identity.domain.value_objects import Email, UserId
+from iam.sessions.application import (
+    RefreshTokenGenerator,
+    RefreshTokenHasher,
+)
+from iam.sessions.domain import RefreshToken, Session
 from iam.shared.application import Clock
 
 from .commands import (
@@ -32,16 +36,18 @@ class AuthenticateWithPasswordUseCase:
         authentication_attempt_repository: AuthenticationAttemptRepository,
         credential_verifier: CredentialVerifier,
         policy: AuthenticationPolicy,
+        refresh_token_generator: RefreshTokenGenerator,
+        refresh_token_hasher: RefreshTokenHasher,
         access_token_issuer: AccessTokenIssuer,
-        session_issuer: SessionIssuer,
         clock: Clock,
     ):
         self._credential_repository = credential_repository
         self._authentication_attempt_repository = authentication_attempt_repository
         self._credential_verifier = credential_verifier
         self._policy = policy
+        self._refresh_token_generator = refresh_token_generator
+        self._refresh_token_hasher = refresh_token_hasher
         self._access_token_issuer = access_token_issuer
-        self._session_issuer = session_issuer
         self._clock = clock
 
     async def execute(
@@ -109,16 +115,32 @@ class AuthenticateWithPasswordUseCase:
         #     roles=credential.roles,
         # )
 
+        raw_refresh_token = self._refresh_token_generator.generate()
+        refresh_token_hash = self._refresh_token_hasher.hash(
+            raw_refresh_token,
+        )
+
+        session = Session.create(
+            user_id=credential.user_id,
+            created_at=now,
+        )
+        refresh_token = RefreshToken.create(
+            session_id=session.id,
+            token_hash=refresh_token_hash,
+            created_at=now,
+            expires_at=now + timedelta(days=15),
+        )
+        session.attach_refresh_token(
+            refresh_token.id,
+            now=now,
+        )
+
         access_token = self._access_token_issuer.issue(
             claims={
                 "sub": credential.user_id,
                 "email": email.value,
                 # "roles": credential.roles,
             }
-        )
-
-        issued_session = await self._session_issuer.issue(
-            user_id=credential.user_id,
         )
 
         # TODO: touch last_login_at
