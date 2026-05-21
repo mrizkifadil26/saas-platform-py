@@ -4,7 +4,7 @@ from iam.identity.domain import (
     UserStatus,
 )
 from iam.identity.domain.value_objects import (
-    EmailAddress,
+    Email,
     EmailVerificationId,
     EmailVerificationTokenHash,
     UserId,
@@ -18,7 +18,7 @@ class UserORMMapper:
     def to_domain(model: UserModel) -> User:
         return User(
             id=UserId(model.id),
-            email=EmailAddress(model.email),
+            email=Email(model.email),
             status=UserStatus(model.status),
             created_at=model.created_at,
             updated_at=model.updated_at,
@@ -81,5 +81,3 @@ class EmailVerificationORMMapper:
         model.token_hash = entity.token_hash.value
         model.expires_at = entity.expires_at
         model.created_at = entity.created_at
-
-

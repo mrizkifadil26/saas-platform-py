@@ -7,7 +7,7 @@ from iam.identity.domain import (
     UserRepository,
 )
 from iam.identity.domain.value_objects import (
-    EmailAddress,
+    Email,
     EmailVerificationToken,
     UserId,
 )
@@ -42,7 +42,7 @@ class RegisterUserUseCase:
         command: RegisterUserCommand,
     ) -> RegisterUserResult:
         now = self._clock.now()
-        email = EmailAddress(command.email)
+        email = Email(command.email)
 
         existing_user = await self._user_repository.find_by_email(email)
         if existing_user is not None:

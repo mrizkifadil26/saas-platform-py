@@ -8,12 +8,12 @@ from iam.shared.domain.exceptions import ValidationError
 
 from .enums import UserStatus
 from .events import UserDisabled, UserRegistered
-from .value_objects import EmailAddress, UserId
+from .value_objects import Email, UserId
 
 
 @dataclass(slots=True)
 class User(AggregateRoot[UserId]):
-    email: EmailAddress
+    email: Email
     status: UserStatus
 
     created_at: datetime
@@ -25,7 +25,7 @@ class User(AggregateRoot[UserId]):
     @classmethod
     def register(
         cls,
-        email: EmailAddress,
+        email: Email,
         *,
         registered_at: datetime,
     ) -> User:
@@ -38,7 +38,7 @@ class User(AggregateRoot[UserId]):
 
         event = UserRegistered(
             user_id=user.id,
-            email=email.value,
+            email=email,
         )
         user.record_event(event)
 
@@ -153,7 +153,7 @@ class User(AggregateRoot[UserId]):
 
     def change_email(
         self,
-        new_email: EmailAddress,
+        new_email: Email,
         *,
         changed_at: datetime,
     ) -> None:

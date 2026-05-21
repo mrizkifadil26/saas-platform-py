@@ -8,7 +8,7 @@ from iam.identity.domain import (
     UserRepository,
 )
 from iam.identity.domain.value_objects import (
-    EmailAddress,
+    Email,
     EmailVerificationId,
     EmailVerificationTokenHash,
     UserId,
@@ -42,7 +42,7 @@ class SQLAlchemyUserRepository(
 
         return self._to_domain(model)
 
-    async def find_by_email(self, email: EmailAddress) -> User | None:
+    async def find_by_email(self, email: Email) -> User | None:
         stmt = select(UserModel).where(UserModel.email == email.value)
 
         result = await self._session.execute(stmt)
