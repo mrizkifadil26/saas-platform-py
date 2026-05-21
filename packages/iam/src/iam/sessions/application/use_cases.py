@@ -1,7 +1,7 @@
 from iam.sessions.domain import (
     SessionRepository,
 )
-from iam.shared.domain.clock import Clock
+from iam.shared.application import Clock
 
 from .commands import (
     RevokeAllSessionsCommand,
