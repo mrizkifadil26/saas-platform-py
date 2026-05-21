@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 
-from iam.identity.domain.value_objects import EmailAddress, UserId
+from iam.identity.domain.value_objects import Email, UserId
 from iam.shared.domain import Entity
 
 from .enums import (
@@ -15,7 +15,7 @@ from .value_objects import AuthenticationAttemptId
 
 @dataclass(slots=True)
 class AuthenticationAttempt(Entity[AuthenticationAttemptId]):
-    email: EmailAddress
+    email: Email
     user_id: UserId | None
 
     ip_address: str | None
@@ -42,7 +42,7 @@ class AuthenticationAttempt(Entity[AuthenticationAttemptId]):
     def succeeded(
         cls,
         *,
-        email: EmailAddress,
+        email: Email,
         user_id: UserId,
         attempted_at: datetime,
         ip_address: str | None,
@@ -63,7 +63,7 @@ class AuthenticationAttempt(Entity[AuthenticationAttemptId]):
     def denied(
         cls,
         *,
-        email: EmailAddress,
+        email: Email,
         denial_reason: AuthenticationDenialReason | None,
         attempted_at: datetime,
         user_id: UserId | None = None,

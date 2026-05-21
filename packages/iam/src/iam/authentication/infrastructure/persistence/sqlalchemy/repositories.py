@@ -11,7 +11,7 @@ from iam.authentication.domain import (
     CredentialRepository,
     CredentialType,
 )
-from iam.identity.domain.value_objects import EmailAddress, UserId
+from iam.identity.domain.value_objects import Email, UserId
 from iam.identity.infrastructure.persistence.sqlalchemy.models import UserModel
 
 from .models import AuthenticationAttemptModel, CredentialModel
@@ -36,7 +36,7 @@ class SQLAlchemyCredentialRepository(
 
     async def find_password_by_email(
         self,
-        email: EmailAddress,
+        email: Email,
     ) -> Credential | None:
         stmt = (
             select(CredentialModel)
@@ -113,7 +113,7 @@ class SQLAlchemyAuthenticationAttemptRepository(
     async def count_recent_failures(
         self,
         *,
-        email: EmailAddress,
+        email: Email,
         since: datetime,
     ) -> int:
         stmt = (

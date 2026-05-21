@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Protocol
 
 from iam.authentication.domain import Credential, CredentialType
-from iam.identity.domain.value_objects import EmailAddress, UserId
+from iam.identity.domain.value_objects import Email, UserId
 
 from .authentication_attempt import AuthenticationAttempt
 
@@ -22,7 +22,7 @@ class AuthenticationAttemptRepository(Protocol):
     async def count_recent_failures(
         self,
         *,
-        email: EmailAddress,
+        email: Email,
         since: datetime,
     ) -> int: ...
 
@@ -35,7 +35,7 @@ class CredentialRepository(Protocol):
 
     async def find_password_by_email(
         self,
-        email: EmailAddress,
+        email: Email,
     ) -> Credential | None: ...
 
     async def find_by_user_and_type(

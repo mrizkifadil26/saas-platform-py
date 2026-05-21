@@ -8,7 +8,7 @@ from iam.authentication.domain.value_objects import (
     CredentialId,
     PasswordHash,
 )
-from iam.identity.domain.value_objects import EmailAddress, UserId
+from iam.identity.domain.value_objects import Email, UserId
 
 from .models import (
     AuthenticationAttemptModel,
@@ -59,7 +59,7 @@ class AuthenticationAttemptORMMapper:
     ) -> AuthenticationAttempt:
         return AuthenticationAttempt(
             id=AuthenticationAttemptId(model.id),
-            email=EmailAddress(model.email),
+            email=Email(model.email),
             user_id=(UserId(model.user_id) if model.user_id is not None else None),
             ip_address=model.ip_address,
             user_agent=model.user_agent,
