@@ -1,6 +1,6 @@
 from .authorization import AuthorizationService
+from .interfaces import PermissionCacheInvalidator, PermissionResolver
 from .policies import UserPolicies
-from .ports import PermissionCacheInvalidator, PermissionResolver
 from .repositories import RoleRepository, UserRoleRepository
 from .role import Role
 from .specifications import HasPermission

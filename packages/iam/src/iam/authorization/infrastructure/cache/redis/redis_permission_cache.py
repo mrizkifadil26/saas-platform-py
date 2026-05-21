@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from iam.authorization.domain.ports import PermissionCacheInvalidator
+from iam.authorization.domain import PermissionCacheInvalidator
 from iam.authorization.domain.value_objects import RoleId
 from iam.authorization.infrastructure.cache import Cache
 from iam.identity.domain.value_objects import UserId
