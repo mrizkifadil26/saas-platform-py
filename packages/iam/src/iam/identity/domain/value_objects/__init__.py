@@ -1,10 +1,11 @@
-from .email_address import EmailAddress
-from .email_verification import EmailVerificationToken, EmailVerificationTokenHash
+from .email import Email
 from .email_verification_id import EmailVerificationId
+from .email_verification_token import EmailVerificationToken
+from .email_verification_token_hash import EmailVerificationTokenHash
 from .user_id import UserId
 
 __all__ = [
-    "EmailAddress",
+    "Email",
     "EmailVerificationId",
     "EmailVerificationToken",
     "EmailVerificationTokenHash",

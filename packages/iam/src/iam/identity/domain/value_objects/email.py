@@ -1,16 +1,16 @@
 import re
 from dataclasses import dataclass
 
+from iam.shared.domain import ValueObject
 from iam.shared.domain.exceptions import ValidationError
-from iam.shared.domain.value_object import ValueObject
-
-EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-MAX_EMAIL_LENGTH = 320
 
 
 @dataclass(frozen=True, slots=True)
-class EmailAddress(ValueObject[str]):
-    value: str
+class Email(ValueObject[str]):
+    MAX_LENGTH = 320
+    PATTERN = re.compile(
+        r"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+    )
 
     def __post_init__(self) -> None:
         value = self.value.strip().lower()
@@ -18,10 +18,10 @@ class EmailAddress(ValueObject[str]):
         if not value:
             raise ValidationError("Email address cannot be empty")
 
-        if len(value) > MAX_EMAIL_LENGTH:
+        if len(value) > self.MAX_LENGTH:
             raise ValidationError("Email address too long")
 
-        if not EMAIL_RE.fullmatch(value):
+        if not self.PATTERN.fullmatch(value):
             raise ValidationError("Invalid email address format")
 
         local_part, _, domain_part = value.partition("@")
