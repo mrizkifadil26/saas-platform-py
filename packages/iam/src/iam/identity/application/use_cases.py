@@ -1,8 +1,6 @@
 from iam.identity.domain import (
     EmailVerification,
     EmailVerificationRepository,
-    EmailVerificationTokenGenerator,
-    EmailVerificationTokenHasher,
     User,
     UserRepository,
 )
@@ -20,6 +18,7 @@ from .commands import (
 )
 from .dto import EmailVerificationResult, RegisterUserResult, UserDTO
 from .exceptions import UserAlreadyExistsError
+from .interfaces import EmailVerificationTokenGenerator, EmailVerificationTokenHasher
 
 
 class RegisterUserUseCase:
@@ -107,8 +106,14 @@ class VerifyEmailUseCase:
             # TODO: raise typed invalid email verification token
             raise
 
-        verification.verify(
-            token_hash,
+        if not self._token_hasher.verify(
+            raw_token,
+            verification.token_hash,
+        ):
+            # TODO: raise typed email verification token error
+            raise
+
+        verification.mark_verified(
             verified_at=now,
         )
 
