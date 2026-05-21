@@ -42,7 +42,7 @@ class CreateRoleUseCase:
         # TODO: commit uow here
 
         return RoleDTO(
-            id=role.id,
+            id=role.id.unwrap(),
             name=role.name,
         )
 

@@ -1,11 +1,10 @@
 from dataclasses import dataclass
-
-from iam.authorization.domain.value_objects import RoleId
+from uuid import UUID
 
 
 @dataclass(frozen=True, slots=True)
 class RoleDTO:
-    id: RoleId
+    id: UUID
     name: str
 
 
