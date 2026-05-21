@@ -1,18 +1,26 @@
 from dataclasses import dataclass
+from datetime import datetime
 from uuid import UUID
 
 
 @dataclass(frozen=True, slots=True)
-class RegisterUserResult:
-    user_id: UUID
+class UserDTO:
+    id: UUID
     email: str
+    is_verified: bool
+    created_at: datetime
 
-    verification_email_sent: bool
+
+@dataclass(frozen=True, slots=True)
+class RegisterUserResult:
+    user: UserDTO
+    email_verification_required: bool
+    verification_expires_at: datetime | None
 
 
 @dataclass(frozen=True, slots=True)
 class EmailVerificationResult:
-    user_id: UUID
+    user: UserDTO
 
     email_verified: bool
 
