@@ -11,8 +11,8 @@ from iam.authentication.domain import (
     PasswordHasher,
 )
 from iam.identity.domain import UserRepository
-from iam.sessions.domain import SessionIssuer
-from iam.shared.domain.clock import Clock
+from iam.identity.domain.value_objects import Email, UserId
+from iam.shared.application import Clock
 
 from .commands import (
     AuthenticateUserCommand,
@@ -22,6 +22,7 @@ from .dto import (
     AuthenticationResult,
     SetupPasswordResult,
 )
+from .interfaces import AccessTokenIssuer, CredentialVerifier, PasswordHasher
 
 
 class AuthenticateWithPasswordUseCase:
@@ -29,7 +30,7 @@ class AuthenticateWithPasswordUseCase:
         self,
         credential_repository: CredentialRepository,
         authentication_attempt_repository: AuthenticationAttemptRepository,
-        authenticator: Authenticator,
+        credential_verifier: CredentialVerifier,
         policy: AuthenticationPolicy,
         access_token_issuer: AccessTokenIssuer,
         session_issuer: SessionIssuer,
@@ -37,7 +38,7 @@ class AuthenticateWithPasswordUseCase:
     ):
         self._credential_repository = credential_repository
         self._authentication_attempt_repository = authentication_attempt_repository
-        self._authenticator = authenticator
+        self._credential_verifier = credential_verifier
         self._policy = policy
         self._access_token_issuer = access_token_issuer
         self._session_issuer = session_issuer
@@ -75,15 +76,15 @@ class AuthenticateWithPasswordUseCase:
             recent_failures=recent_failures,
         )
 
-        decision = self._authenticator.authenticate_with_password(
-            credential=credential,
+        is_valid = self._credential_verifier.verify_password(
             password=command.password,
+            password_hash=credential.secret_hash,
         )
 
-        if decision.is_denied:
+        if not is_valid:
             attempt = AuthenticationAttempt.denied(
                 email=email,
-                denial_reason=decision.denial_reason,
+                denial_reason=AuthenticationDenialReason.INVALID_CREDENTIALS,
                 ip_address=command.ip_address,
                 user_agent=command.user_agent,
                 attempted_at=now,
