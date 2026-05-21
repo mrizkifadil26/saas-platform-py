@@ -1,6 +1,6 @@
 from argon2 import PasswordHasher as Argon2Hasher
 
-from iam.authentication.domain import PasswordHasher
+from iam.authentication.application import PasswordHasher
 from iam.authentication.domain.value_objects import PasswordHash
 
 

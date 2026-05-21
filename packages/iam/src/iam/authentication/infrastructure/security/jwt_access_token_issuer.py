@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import jwt
 
-from iam.authentication.domain import AccessTokenIssuer
+from iam.authentication.application import AccessTokenIssuer
 from iam.authentication.domain.value_objects import AccessToken
 from iam.authentication.infrastructure.config import JwtSettings
 
