@@ -15,11 +15,6 @@ class SessionRepository(Protocol):
         session_id: SessionId,
     ) -> Session | None: ...
 
-    # async def find_by_token_hash(
-    #     self,
-    #     token_hash: RefreshTokenHash,
-    # ) -> Session | None: ...
-
     async def find_active_by_user_id(
         self,
         user_id: UserId,
