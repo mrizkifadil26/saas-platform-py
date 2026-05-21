@@ -1,9 +1,7 @@
 from datetime import timedelta
 from typing import Any, Protocol
 
-from iam.authentication.domain import Credential
-
-from .value_objects import AccessToken, PasswordHash
+from iam.authentication.domain.value_objects import AccessToken, PasswordHash
 
 
 class PasswordHasher(Protocol):
@@ -17,8 +15,8 @@ class CredentialVerifier(Protocol):
     def verify_password(
         self,
         *,
-        credential: Credential,
         password: str,
+        password_hash: PasswordHash,
     ) -> bool: ...
 
 
