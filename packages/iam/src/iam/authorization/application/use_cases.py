@@ -74,7 +74,7 @@ class GrantPermissionToRoleUseCase:
 
 
 @dataclass(slots=True)
-class AssignRoleToUser:
+class AssignRoleToUserUseCase:
     role_repository: RoleRepository
     user_role_repository: UserRoleRepository
     permission_cache_invalidator: PermissionCacheInvalidator
