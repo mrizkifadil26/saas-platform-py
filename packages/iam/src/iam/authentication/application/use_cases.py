@@ -1,4 +1,5 @@
 from datetime import timedelta
+from uuid import uuid4
 
 from iam.authentication.domain import (
     AuthenticationAttempt,
@@ -20,6 +21,9 @@ from iam.shared.application import Clock
 
 from .commands import (
     AuthenticateUserCommand,
+    ChangePasswordCommand,
+    ForgotPasswordCommand,
+    ResetPasswordCommand,
     SetupPasswordCredentialCommand,
 )
 from .dto import (
@@ -201,3 +205,141 @@ class SetupPasswordCredentialUseCase:
         return SetupPasswordResult(
             user_id=user.id.value,
         )
+
+
+class ChangePasswordCredentialUseCase:
+    def __init__(
+        self,
+        user_repository: UserRepository,
+        credential_repository: CredentialRepository,
+        password_hasher: PasswordHasher,
+        credential_verifier: CredentialVerifier,
+        clock: Clock,
+    ) -> None:
+        self._user_repository = user_repository
+        self._credential_repository = credential_repository
+        self._password_hasher = password_hasher
+        self._credential_verifier = credential_verifier
+        self._clock = clock
+
+    async def execute(
+        self,
+        command: ChangePasswordCommand,
+    ) -> None:
+        now = self._clock.now()
+
+        user_id = UserId(command.user_id)
+        credential = await self._credential_repository.find_by_user_and_type(
+            user_id,
+            CredentialType.PASSWORD,
+        )
+
+        if credential is None:
+            # TODO: raise credential not found error
+            raise
+
+        is_valid = self._credential_verifier.verify_password(
+            password=command.current_password,
+            password_hash=credential.secret_hash,
+        )
+        if not is_valid:
+            # TODO: raise invalid credentials error
+            raise
+
+        credential.change_password(
+            self._password_hasher.hash(
+                command.new_password,
+            ),
+            at=now,
+        )
+
+        await self._credential_repository.save(credential)
+
+        # TODO: session revoke all
+        # TODO: refresh tokens revoke all
+
+
+class ForgotPasswordCredentialUseCase:
+    def __init__(
+        self,
+        user_repository: UserRepository,
+        credential_repository: CredentialRepository,
+        # password_hasher: PasswordHasher,
+        clock: Clock,
+    ) -> None:
+        self._user_repository = user_repository
+        self._credential_repository = credential_repository
+        # self._password_hasher = password_hasher
+        self._clock = clock
+
+    async def execute(
+        self,
+        command: ForgotPasswordCommand,
+    ) -> None:
+        email = Email(command.email)
+        user = await self._user_repository.find_by_email(
+            email,
+        )
+
+        # TODO: is this better or just raise
+        if user is None:
+            return
+
+        credential = await self._credential_repository.find_by_user_and_type(
+            user.id,
+            CredentialType.PASSWORD,
+        )
+        # TODO: this is also
+        if credential is None:
+            return
+
+        # TODO: generate token
+        # TODO: create password reset request (is it db stored value?)
+
+        # TODO: notify the password reset through email
+
+
+class ResetPasswordCredentialUseCase:
+    def __init__(
+        self,
+        user_repository: UserRepository,
+        credential_repository: CredentialRepository,
+        password_hasher: PasswordHasher,
+        clock: Clock,
+    ) -> None:
+        self._user_repository = user_repository
+        self._credential_repository = credential_repository
+        self._password_hasher = password_hasher
+        self._clock = clock
+
+    async def execute(
+        self,
+        command: ResetPasswordCommand,
+    ) -> None:
+        now = self._clock.now()
+
+        # TODO: hash token
+
+        # TODO: find the password reset tokens in db
+
+        credential = await self._credential_repository.find_by_user_and_type(
+            # TODO: get user id by reset, this is for the temp val
+            UserId(uuid4()),
+            CredentialType.PASSWORD,
+        )
+        if credential is None:
+            # TODO: raise invalid password reset token
+            raise
+
+        credential.change_password(
+            self._password_hasher.hash(command.new_password),
+            at=now,
+        )
+
+        # TODO: password reset consumed_at
+
+        await self._credential_repository.save(credential)
+        # TODO: save password resets repo
+
+        # TODO: revoke all sessions for user
+        # TODO: revoke refresh tokens for user
