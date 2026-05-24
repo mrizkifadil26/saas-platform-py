@@ -48,7 +48,6 @@ class EmailVerification(
 
     def is_expired(
         self,
-        *,
         now: datetime,
     ) -> bool:
         return now >= self.expires_at

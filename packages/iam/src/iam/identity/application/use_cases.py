@@ -17,7 +17,13 @@ from .commands import (
     VerifyEmailCommand,
 )
 from .dto import EmailVerificationResult, RegisterUserResult, UserDTO
-from .exceptions import UserAlreadyExistsError
+from .exceptions import (
+    EmailVerificationExpiredError,
+    InvalidEmailVerificationTokenError,
+    UserAlreadyExistsError,
+    UserEmailAlreadyVerifiedError,
+    UserNotFoundError,
+)
 from .interfaces import EmailVerificationTokenGenerator, EmailVerificationTokenHasher
 
 
@@ -103,37 +109,26 @@ class VerifyEmailUseCase:
             token_hash
         )
         if verification is None:
-            # TODO: raise typed invalid email verification token
-            raise
+            raise InvalidEmailVerificationTokenError()
 
-        if not self._token_hasher.verify(
-            raw_token,
-            verification.token_hash,
-        ):
-            # TODO: raise typed email verification token error
-            raise
-
-        verification.mark_verified(
-            verified_at=now,
-        )
+        if verification.is_expired(now):
+            raise EmailVerificationExpiredError()
 
         user = await self._user_repository.find_by_id(verification.user_id)
         if user is None:
-            # TODO: raise typed user not found
-            raise
+            raise UserNotFoundError()
 
-        user.mark_email_as_verified(
-            verified_at=now,
-        )
+        user.mark_email_as_verified(verified_at=now)
+        verification.mark_verified(verified_at=now)
 
-        await self._verification_repository.save(verification)
         await self._user_repository.save(user)
+        await self._verification_repository.save(verification)
         # TODO: uow commit here
 
         return EmailVerificationResult(
             user=UserDTO(
-                id=user.id.unwrap(),
-                email=user.email.unwrap(),
+                id=user.id.value,
+                email=user.email.value,
                 is_verified=user.is_email_verified,
                 created_at=user.created_at,
             ),
@@ -165,12 +160,10 @@ class ResendEmailVerificationUseCase:
 
         user = await self._user_repository.find_by_id(user_id)
         if user is None:
-            # TOOD: raise not found error
-            raise
+            raise UserNotFoundError()
 
         if user.is_email_verified:
-            # TODO: raise already verified error
-            raise
+            raise UserEmailAlreadyVerifiedError()
 
         raw_token = self._token_generator.generate()
         token_hash = self._token_hasher.hash(raw_token)

@@ -26,7 +26,7 @@ class EmailVerificationResult:
 
 
 @dataclass(frozen=True, slots=True)
-class ResendEmailVerificationCommand:
+class ResendEmailVerificationResult:
     user_id: UUID
 
     verification_email_sent: bool
