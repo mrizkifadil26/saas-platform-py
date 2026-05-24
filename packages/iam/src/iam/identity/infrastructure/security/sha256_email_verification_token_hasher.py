@@ -22,13 +22,6 @@ class Sha256EmailVerificationTokenHasher(
             self._compute_hash(token_value),
         )
 
-    def verify(
-        self,
-        raw_token: EmailVerificationToken,
-        hashed_token: EmailVerificationTokenHash,
-    ) -> bool:
-        return self.hash(raw_token) == hashed_token
-
     def _compute_hash(
         self,
         value: str,

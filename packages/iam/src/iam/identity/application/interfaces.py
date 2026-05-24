@@ -15,9 +15,3 @@ class EmailVerificationTokenHasher(Protocol):
         self,
         raw_token: EmailVerificationToken,
     ) -> EmailVerificationTokenHash: ...
-
-    def verify(
-        self,
-        raw_token: EmailVerificationToken,
-        hashed_token: EmailVerificationTokenHash,
-    ) -> bool: ...
