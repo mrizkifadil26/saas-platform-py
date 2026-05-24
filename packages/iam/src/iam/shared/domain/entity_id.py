@@ -9,7 +9,7 @@ from .value_object import ValueObject
 
 EntityIdT = TypeVar(
     "EntityIdT",
-    bound=EntityId,
+    bound="EntityId",
 )
 
 
