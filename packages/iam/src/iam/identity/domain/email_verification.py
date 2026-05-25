@@ -5,6 +5,14 @@ from datetime import datetime, timedelta
 
 from iam.shared.domain import AggregateRoot
 
+from .events import (
+    EmailVerificationCreated,
+    EmailVerificationVerified,
+)
+from .exceptions import (
+    EmailVerificationAlreadyVerifiedError,
+    EmailVerificationExpiredError,
+)
 from .value_objects import EmailVerificationId, EmailVerificationTokenHash, UserId
 
 
@@ -38,7 +46,12 @@ class EmailVerification(
             created_at=created_at,
         )
 
-        # TODO: record email verification created
+        event = EmailVerificationCreated(
+            verification_id=verification.id,
+            user_id=verification.user_id,
+            expires_at=verification.expires_at,
+        )
+        verification.record_event(event)
 
         return verification
 
@@ -58,12 +71,16 @@ class EmailVerification(
         verified_at: datetime,
     ):
         if self.is_verified:
-            # TODO: raise already consuumed error
-            raise
+            raise EmailVerificationAlreadyVerifiedError()
 
         if self.is_expired(now=verified_at):
-            # TODO: raise email verification expired error
-            raise
+            raise EmailVerificationExpiredError()
 
-        # TODO: record email verification consumed9
         self.verified_at = verified_at
+
+        event = EmailVerificationVerified(
+            verification_id=self.id,
+            user_id=self.user_id,
+            verified_at=verified_at,
+        )
+        self.record_event(event)
