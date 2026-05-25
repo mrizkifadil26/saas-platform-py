@@ -3,7 +3,7 @@ from datetime import datetime
 
 from iam.shared.domain.events import DomainEvent
 
-from .value_objects import Email, UserId
+from .value_objects import Email, EmailVerificationId, UserId
 
 
 @dataclass(frozen=True, slots=True)
@@ -60,3 +60,17 @@ class UserEmailChanged(DomainEvent):
     previous_email: Email
     new_email: Email
     changed_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class EmailVerificationCreated(DomainEvent):
+    verification_id: EmailVerificationId
+    user_id: UserId
+    expires_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class EmailVerificationVerified(DomainEvent):
+    verification_id: EmailVerificationId
+    user_id: UserId
+    verified_at: datetime
