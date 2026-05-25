@@ -55,11 +55,7 @@ class UserStatus(StrEnum):
         return self == UserStatus.ACTIVE
 
     def can_activate(self) -> bool:
-        return self in {
-            UserStatus.PENDING,
-            UserStatus.LOCKED,
-            UserStatus.SUSPENDED,
-        }
+        return self.is_pending()
 
     def can_lock(self) -> bool:
         return self.is_active()

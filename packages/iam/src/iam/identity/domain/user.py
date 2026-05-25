@@ -4,10 +4,26 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from iam.shared.domain import AggregateRoot
-from iam.shared.domain.exceptions import ValidationError
 
 from .enums import UserStatus
-from .events import UserDisabled, UserRegistered
+from .events import (
+    UserActivated,
+    UserDisabled,
+    UserEmailChanged,
+    UserEmailVerified,
+    UserLocked,
+    UserRegistered,
+    UserSuspended,
+    UserUnlocked,
+    UserUnsuspended,
+)
+from .exceptions import (
+    InvalidUserStateError,
+    UserEmailAlreadyVerifiedError,
+    UserEmailUnchangedError,
+    UserEmailVerificationBlockedError,
+    UserLoginBlockedError,
+)
 from .value_objects import Email, UserId
 
 
@@ -54,18 +70,18 @@ class User(AggregateRoot[UserId]):
         activated_at: datetime,
     ) -> None:
         if not self.status.can_activate():
-            raise ValidationError("User already active or invalid state")
-
-        # if not self.verification.is_verified:
-        #     raise ValidationError("Email must be verified before activation")
+            raise InvalidUserStateError(
+                "User is not eligible for activation",
+            )
 
         self.status = UserStatus.ACTIVE
         self.touch(activated_at)
 
-        # TODO: record user activated event
-        # self.record_event(
-        #     UserActivated(user_id=self.id)
-        # )
+        event = UserActivated(
+            user_id=self.id,
+            activated_at=activated_at,
+        )
+        self.record_event(event)
 
     def disable(
         self,
@@ -73,83 +89,115 @@ class User(AggregateRoot[UserId]):
         disabled_at: datetime,
     ) -> None:
         if not self.status.can_disable():
-            raise ValidationError(f"Cannot disable user from '{self.status}'")
+            raise InvalidUserStateError(
+                "User is already disabled",
+            )
 
         self.status = UserStatus.DISABLED
         self.touch(disabled_at)
 
-        event = UserDisabled(user_id=self.id)
+        event = UserDisabled(
+            user_id=self.id,
+            disabled_at=disabled_at,
+        )
         self.record_event(event)
 
-    def lock(self, *, locked_at: datetime) -> None:
+    def lock(
+        self,
+        *,
+        locked_at: datetime,
+    ) -> None:
         if not self.status.can_lock():
-            raise ValidationError(
-                f"Cannot lock user from '{self.status}'",
+            raise InvalidUserStateError(
+                "User cannot be locked",
             )
 
         self.status = UserStatus.LOCKED
         self.touch(locked_at)
 
-        # TODO: record user locked event
-        # self.record_event(
-        #     UserLocked(user_id=self.id)
-        # )
+        event = UserLocked(
+            user_id=self.id,
+            locked_at=locked_at,
+        )
+        self.record_event(event)
 
-    def unlock(self, *, unlocked_at: datetime) -> None:
+    def unlock(
+        self,
+        *,
+        unlocked_at: datetime,
+    ) -> None:
         if not self.status.can_unlock():
-            raise ValidationError(f"Cannot unlock user from '{self.status}'")
+            raise InvalidUserStateError(
+                "User is not locked",
+            )
 
         self.status = UserStatus.ACTIVE
         self.touch(unlocked_at)
 
         # TODO: record user unlocked event
-        # self.record_event(
-        #     UserUnlocked(user_id=self.id)
-        # )
+        event = UserUnlocked(
+            user_id=self.id,
+            unlocked_at=unlocked_at,
+        )
+        self.record_event(event)
 
-    def suspend(self, *, suspended_at: datetime) -> None:
+    def suspend(
+        self,
+        *,
+        suspended_at: datetime,
+    ) -> None:
         if not self.status.can_suspend():
-            raise ValidationError(f"Cannot suspend user from '{self.status}'")
+            raise InvalidUserStateError(
+                "User cannot be suspended",
+            )
 
         self.status = UserStatus.SUSPENDED
         self.touch(suspended_at)
 
-        # TODO: record user suspended event
-        # self.record_event(
-        #     UserSuspended(user_id=self.id)
-        # )
+        event = UserSuspended(
+            user_id=self.id,
+            suspended_at=suspended_at,
+        )
+        self.record_event(event)
 
-    def unsuspend(self, *, unsuspended_at: datetime) -> None:
+    def unsuspend(
+        self,
+        *,
+        unsuspended_at: datetime,
+    ) -> None:
         if not self.status.can_unsuspend():
-            raise ValidationError(f"Cannot unsuspend user from '{self.status}'")
+            raise InvalidUserStateError(
+                "User is not suspended",
+            )
 
         self.status = UserStatus.ACTIVE
         self.touch(unsuspended_at)
 
-        # TODO: record user unsuspended event
-        # self.record_event(
-        #     UserUnsuspended(user_id=self.id)
-        # )
+        event = UserUnsuspended(
+            user_id=self.id,
+            unsuspended_at=unsuspended_at,
+        )
+        self.record_event(event)
 
     def mark_email_as_verified(
         self,
         *,
         verified_at: datetime,
     ) -> None:
-        # if self.verification.is_verified:
-        #     raise ValidationError("Email already verified")
+        if self.is_email_verified:
+            raise UserEmailAlreadyVerifiedError()
 
         if self.status.is_disabled():
-            raise ValidationError("Disabled user cannot verify email")
-
-        # self.verification = self.verification.verify(
-        #     verified_at=verified_at,
-        # )
+            raise UserEmailVerificationBlockedError()
 
         self.email_verified_at = verified_at
         self.touch(verified_at)
 
-        # TODO: record email verified event
+        event = UserEmailVerified(
+            user_id=self.id,
+            verified_at=verified_at,
+        )
+        self.record_event(event)
 
     def change_email(
         self,
@@ -158,12 +206,20 @@ class User(AggregateRoot[UserId]):
         changed_at: datetime,
     ) -> None:
         if self.email == new_email:
-            raise ValidationError("New email is the same as the current email")
+            raise UserEmailUnchangedError()
+
+        previous_email = self.email
 
         self.email = new_email
         self.touch(changed_at)
 
-        # TODO: record email changed event
+        event = UserEmailChanged(
+            user_id=self.id,
+            previous_email=previous_email,
+            new_email=new_email,
+            changed_at=changed_at,
+        )
+        self.record_event(event)
 
     def mark_login(
         self,
@@ -171,9 +227,7 @@ class User(AggregateRoot[UserId]):
         logged_in_at: datetime,
     ) -> None:
         if self.status.blocks_login():
-            raise ValidationError(
-                f"Cannot login with user status '{self.status}'",
-            )
+            raise UserLoginBlockedError()
 
         self.last_login_at = logged_in_at
         self.touch(logged_in_at)
