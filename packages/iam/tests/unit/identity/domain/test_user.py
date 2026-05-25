@@ -10,7 +10,9 @@ from iam.identity.domain.events import (
     UserEmailVerified,
     UserLocked,
     UserRegistered,
+    UserSuspended,
     UserUnlocked,
+    UserUnsuspended,
 )
 from iam.identity.domain.exceptions import (
     InvalidUserStateError,
@@ -19,7 +21,6 @@ from iam.identity.domain.exceptions import (
     UserEmailVerificationBlockedError,
     UserLoginBlockedError,
 )
-from iam.identity.domain.user import UserSuspended, UserUnsuspended
 from iam.identity.domain.value_objects import Email
 from tests.factories.identity import make_email, make_user
 from tests.factories.shared import make_datetime
