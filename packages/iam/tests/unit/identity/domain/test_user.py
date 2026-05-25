@@ -21,36 +21,8 @@ from iam.identity.domain.exceptions import (
 )
 from iam.identity.domain.user import UserSuspended, UserUnsuspended
 from iam.identity.domain.value_objects import Email
-
-
-def make_email() -> Email:
-    return Email("john@example.com")
-
-
-def make_datetime() -> datetime:
-    return datetime(
-        2026,
-        1,
-        1,
-        tzinfo=timezone.utc,
-    )
-
-
-def make_user(
-    *,
-    status: UserStatus = UserStatus.ACTIVE,
-) -> User:
-    now = make_datetime()
-
-    return User(
-        id=User.register(
-            make_email(),
-            registered_at=now,
-        ).id,
-        email=make_email(),
-        status=status,
-        created_at=now,
-    )
+from tests.factories.identity import make_email, make_user
+from tests.factories.shared import make_datetime
 
 
 class TestUserRegister:
