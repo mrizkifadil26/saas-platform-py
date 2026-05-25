@@ -29,3 +29,17 @@ class UserEmailVerificationBlockedError(
 
 class UserEmailUnchangedError(DomainError):
     """Raised when changing to the same email."""
+
+
+class EmailVerificationAlreadyVerifiedError(DomainError):
+    def __init__(self) -> None:
+        super().__init__(
+            "Email verification has already been verified.",
+        )
+
+
+class EmailVerificationExpiredError(DomainError):
+    def __init__(self) -> None:
+        super().__init__(
+            "Email verification has expired.",
+        )
