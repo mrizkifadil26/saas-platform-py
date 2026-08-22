@@ -1,12 +1,11 @@
+from packages.shared.db.src.db.settings import BaseDBSettings
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     create_async_engine,
 )
 
-from db.config.settings import AppDBSettings
 
-
-def create_app_engine(cfg: AppDBSettings) -> AsyncEngine:
+def create_engine(cfg: BaseDBSettings) -> AsyncEngine:
     return create_async_engine(
         cfg.url,
         pool_pre_ping=True,

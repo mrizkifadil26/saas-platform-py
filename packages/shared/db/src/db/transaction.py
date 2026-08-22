@@ -3,11 +3,11 @@ from __future__ import annotations
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-class ProductTransactionManager:
+class TransactionManager:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def __aenter__(self) -> ProductTransactionManager:
+    async def __aenter__(self) -> TransactionManager:
         return self
 
     async def __aexit__(self, exc_type, exc, tb) -> None:
