@@ -1,4 +1,4 @@
-from db.app_db.base import AppBase
+from .base import AppBase
 
 __all__ = [
     "AppBase",

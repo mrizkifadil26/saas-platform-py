@@ -1,7 +1,7 @@
 from sqlalchemy import MetaData
 from sqlalchemy.orm import DeclarativeBase
 
-from db.app_db.naming import NAMING_CONVENTION
+from ..naming import NAMING_CONVENTION
 
 
 class ProductBase(DeclarativeBase):

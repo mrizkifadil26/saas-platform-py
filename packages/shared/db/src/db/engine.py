@@ -1,8 +1,9 @@
-from packages.shared.db.src.db.settings import BaseDBSettings
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     create_async_engine,
 )
+
+from .settings import BaseDBSettings
 
 
 def create_engine(cfg: BaseDBSettings) -> AsyncEngine:
