@@ -24,7 +24,8 @@ config.set_main_option("sqlalchemy.url", database_url)
 # target_metadata = mymodel.Base.metadata
 
 import iam.authentication.infrastructure.persistence.database.models
-import iam.identity.infrastructure.persistence.database.models  # noqa: F401
+import iam.identity.infrastructure.persistence.database.models
+import iam.sessions.infrastructure.persistence.database.models  # noqa: F401
 
 target_metadata = IAMBase.metadata
 # other values from the config, defined by the needs of env.py,
