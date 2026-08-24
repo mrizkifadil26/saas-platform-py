@@ -1,8 +1,8 @@
 from datetime import datetime
 
 from sqlalchemy import desc, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.repositories import SQLAlchemyRepository
 from iam.authentication.domain import (
     AuthenticationAttempt,
     AuthenticationAttemptRepository,
@@ -12,7 +12,7 @@ from iam.authentication.domain import (
     CredentialType,
 )
 from iam.identity.domain.value_objects import Email, UserId
-from iam.identity.infrastructure.persistence.sqlalchemy.models import UserModel
+from iam.identity.infrastructure.persistence.database.models import UserModel
 
 from .models import AuthenticationAttemptModel, CredentialModel
 from .orm_mappers import (
@@ -22,9 +22,11 @@ from .orm_mappers import (
 
 
 class SQLAlchemyCredentialRepository(
-    SQLAlchemyRepository[Credential, CredentialModel],
     CredentialRepository,
 ):
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
     async def save(self, credential: Credential) -> None:
         existing = await self._session.get(CredentialModel, credential.id)
         if existing is None:
@@ -86,9 +88,11 @@ class SQLAlchemyCredentialRepository(
 
 
 class SQLAlchemyAuthenticationAttemptRepository(
-    SQLAlchemyRepository[AuthenticationAttempt, AuthenticationAttemptModel],
     AuthenticationAttemptRepository,
 ):
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
     async def save(self, attempt: AuthenticationAttempt) -> None:
         model = self._to_model(attempt)
         self._session.add(model)

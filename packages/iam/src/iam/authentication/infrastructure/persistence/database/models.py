@@ -7,16 +7,16 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import Mapped, mapped_column
 
-from db.app_db import AppBase
 from iam.authentication.domain import (
     AuthenticationDenialReason,
     AuthenticationOutcome,
     CredentialStatus,
     CredentialType,
 )
+from iam.shared.infrastructure.persistence import IAMBase
 
 
-class CredentialModel(AppBase):
+class CredentialModel(IAMBase):
     __tablename__ = "iam_credentials"
 
     __table_args__ = (
@@ -91,7 +91,7 @@ class CredentialModel(AppBase):
     )
 
 
-class AuthenticationAttemptModel(AppBase):
+class AuthenticationAttemptModel(IAMBase):
     __tablename__ = "iam_authentication_attempts"
 
     __table_args__ = (
