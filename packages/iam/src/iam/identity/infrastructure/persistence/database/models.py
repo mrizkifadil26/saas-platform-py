@@ -14,7 +14,7 @@ from iam.shared.infrastructure.persistence import IAMBase
 
 
 class UserModel(IAMBase):
-    __tablename__ = "iam_users"
+    __tablename__ = "users"
 
     id: Mapped[UUID] = mapped_column(
         Uuid,
@@ -69,7 +69,7 @@ class UserModel(IAMBase):
 
 
 class EmailVerificationModel(IAMBase):
-    __tablename__ = "iam_email_verifications"
+    __tablename__ = "email_verifications"
 
     id: Mapped[UUID] = mapped_column(
         Uuid,
@@ -77,7 +77,7 @@ class EmailVerificationModel(IAMBase):
     )
 
     user_id: Mapped[UUID] = mapped_column(
-        ForeignKey("iam.iam_users.id"),
+        ForeignKey("iam.users.id"),
         nullable=False,
         index=True,
     )

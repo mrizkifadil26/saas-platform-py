@@ -11,7 +11,7 @@ from iam.shared.infrastructure.persistence import IAMBase
 
 
 class SessionModel(IAMBase):
-    __tablename__ = "iam_sessions"
+    __tablename__ = "sessions"
 
     id: Mapped[UUID] = mapped_column(
         Uuid,
@@ -20,7 +20,7 @@ class SessionModel(IAMBase):
 
     user_id: Mapped[UUID] = mapped_column(
         Uuid,
-        ForeignKey("iam_users.id", ondelete="CASCADE"),
+        ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
@@ -62,10 +62,10 @@ class SessionModel(IAMBase):
 
 
 class RefreshTokenModel(IAMBase):
-    __tablename__ = "iam_refresh_tokens"
+    __tablename__ = "refresh_tokens"
 
     session_id: Mapped[UUID] = mapped_column(
-        ForeignKey("iam_sessions.id"),
+        ForeignKey("sessions.id"),
         nullable=False,
         index=True,
     )

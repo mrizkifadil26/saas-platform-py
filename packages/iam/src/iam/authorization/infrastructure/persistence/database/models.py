@@ -8,7 +8,7 @@ from iam.shared.infrastructure.persistence import IAMBase
 
 
 class RoleModel(IAMBase):
-    __tablename__ = "iam_roles"
+    __tablename__ = "roles"
 
     id: Mapped[UUID] = mapped_column(
         Uuid,
@@ -29,7 +29,7 @@ class RoleModel(IAMBase):
 
 
 class UserRoleModel(IAMBase):
-    __tablename__ = "iam_user_roles"
+    __tablename__ = "user_roles"
 
     __table_args__ = (
         PrimaryKeyConstraint(
@@ -41,7 +41,7 @@ class UserRoleModel(IAMBase):
     user_id: Mapped[UUID] = mapped_column(
         Uuid,
         ForeignKey(
-            "iam_users.id",
+            "users.id",
             ondelete="CASCADE",
         ),
         nullable=False,
@@ -50,7 +50,7 @@ class UserRoleModel(IAMBase):
     role_id: Mapped[UUID] = mapped_column(
         Uuid,
         ForeignKey(
-            "iam_roles.id",
+            "roles.id",
             ondelete="CASCADE",
         ),
         nullable=False,
@@ -64,7 +64,7 @@ class UserRoleModel(IAMBase):
 
 
 class RolePermissionModel(IAMBase):
-    __tablename__ = "iam_role_permissions"
+    __tablename__ = "role_permissions"
 
     __table_args__ = (
         PrimaryKeyConstraint(
@@ -76,7 +76,7 @@ class RolePermissionModel(IAMBase):
     role_id: Mapped[UUID] = mapped_column(
         Uuid,
         ForeignKey(
-            "iam_roles.id",
+            "roles.id",
             ondelete="CASCADE",
         ),
         nullable=False,

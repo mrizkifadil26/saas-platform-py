@@ -17,7 +17,7 @@ from iam.shared.infrastructure.persistence import IAMBase
 
 
 class CredentialModel(IAMBase):
-    __tablename__ = "iam_credentials"
+    __tablename__ = "credentials"
 
     __table_args__ = (
         UniqueConstraint(
@@ -44,7 +44,7 @@ class CredentialModel(IAMBase):
 
     user_id: Mapped[UUID] = mapped_column(
         ForeignKey(
-            "iam_users.id",
+            "users.id",
             ondelete="CASCADE",
         ),
         nullable=False,
@@ -92,7 +92,7 @@ class CredentialModel(IAMBase):
 
 
 class AuthenticationAttemptModel(IAMBase):
-    __tablename__ = "iam_authentication_attempts"
+    __tablename__ = "authentication_attempts"
 
     __table_args__ = (
         Index(
@@ -119,7 +119,7 @@ class AuthenticationAttemptModel(IAMBase):
     )
 
     user_id: Mapped[UUID | None] = mapped_column(
-        ForeignKey("iam_users.id"),
+        ForeignKey("users.id"),
         nullable=True,
         index=True,
     )
