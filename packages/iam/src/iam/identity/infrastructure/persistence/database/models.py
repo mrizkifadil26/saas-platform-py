@@ -15,9 +15,6 @@ from iam.shared.infrastructure.persistence import IAMBase
 
 class UserModel(IAMBase):
     __tablename__ = "iam_users"
-    __table_args__ = {  # noqa: RUF012
-        "schema": "iam",
-    }
 
     id: Mapped[UUID] = mapped_column(
         Uuid,
@@ -73,9 +70,6 @@ class UserModel(IAMBase):
 
 class EmailVerificationModel(IAMBase):
     __tablename__ = "iam_email_verifications"
-    __table_args__ = {  # noqa: RUF012
-        "schema": "iam",
-    }
 
     id: Mapped[UUID] = mapped_column(
         Uuid,
