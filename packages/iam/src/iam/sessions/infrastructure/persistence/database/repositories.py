@@ -1,7 +1,7 @@
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from db.repositories import SQLAlchemyRepository
 from iam.identity.domain.value_objects import UserId
 from iam.sessions.domain import Session, SessionRepository, SessionStatus
 from iam.sessions.domain.value_objects import RefreshTokenHash, SessionId
@@ -11,9 +11,11 @@ from .orm_mappers import SessionORMMapper
 
 
 class SQLAlchemySessionRepository(
-    SQLAlchemyRepository[Session, SessionModel],
     SessionRepository,
 ):
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
     async def save(self, session: Session) -> None:
         existing_model = await self._session.get(
             SessionModel,

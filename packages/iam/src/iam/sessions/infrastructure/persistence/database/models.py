@@ -6,11 +6,11 @@ from uuid import UUID
 from sqlalchemy import DateTime, Enum, ForeignKey, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from db.app_db import AppBase
 from iam.sessions.domain import SessionStatus
+from iam.shared.infrastructure.persistence import IAMBase
 
 
-class SessionModel(AppBase):
+class SessionModel(IAMBase):
     __tablename__ = "iam_sessions"
 
     id: Mapped[UUID] = mapped_column(
@@ -61,7 +61,7 @@ class SessionModel(AppBase):
     )
 
 
-class RefreshTokenModel(AppBase):
+class RefreshTokenModel(IAMBase):
     __tablename__ = "iam_refresh_tokens"
 
     session_id: Mapped[UUID] = mapped_column(
