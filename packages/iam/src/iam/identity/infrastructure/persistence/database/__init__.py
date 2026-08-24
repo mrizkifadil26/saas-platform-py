@@ -1,3 +1,5 @@
 from .repositories import SQLAlchemyUserRepository
 
-__all__ = ["SQLAlchemyUserRepository"]
+__all__ = [
+    "SQLAlchemyUserRepository",
+]

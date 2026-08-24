@@ -1,6 +1,6 @@
 from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.repositories import SQLAlchemyRepository
 from iam.identity.domain import (
     EmailVerification,
     EmailVerificationRepository,
@@ -18,10 +18,10 @@ from .models import EmailVerificationModel, UserModel
 from .orm_mappers import EmailVerificationORMMapper, UserORMMapper
 
 
-class SQLAlchemyUserRepository(
-    SQLAlchemyRepository[User, UserModel],
-    UserRepository,
-):
+class SQLAlchemyUserRepository(UserRepository):
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
     async def save(self, user: User) -> None:
         existing = await self._session.get(UserModel, user.id)
         if existing is None:
@@ -82,10 +82,10 @@ class SQLAlchemyUserRepository(
         return UserORMMapper.to_model(entity)
 
 
-class SQLAlchemyEmailVerificationRepository(
-    SQLAlchemyRepository[EmailVerification, EmailVerificationModel],
-    EmailVerificationRepository,
-):
+class SQLAlchemyEmailVerificationRepository(EmailVerificationRepository):
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
     async def save(self, verification: EmailVerification) -> None:
         existing = await self._session.get(EmailVerificationModel, verification.id)
         if existing is None:

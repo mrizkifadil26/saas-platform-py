@@ -6,15 +6,18 @@ from uuid import UUID
 from sqlalchemy import DateTime, Enum, ForeignKey, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from db.app_db import AppBase
 from iam.authentication.infrastructure.persistence.sqlalchemy.models import (
     CredentialModel,
 )
 from iam.identity.domain import UserStatus
+from iam.shared.infrastructure.persistence import IAMBase
 
 
-class UserModel(AppBase):
+class UserModel(IAMBase):
     __tablename__ = "iam_users"
+    __table_args__ = {  # noqa: RUF012
+        "schema": "iam",
+    }
 
     id: Mapped[UUID] = mapped_column(
         Uuid,
@@ -62,9 +65,17 @@ class UserModel(AppBase):
         cascade="all, delete-orphan",
     )
 
+    email_verifications: Mapped[list[EmailVerificationModel]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
 
-class EmailVerificationModel(AppBase):
+
+class EmailVerificationModel(IAMBase):
     __tablename__ = "iam_email_verifications"
+    __table_args__ = {  # noqa: RUF012
+        "schema": "iam",
+    }
 
     id: Mapped[UUID] = mapped_column(
         Uuid,
@@ -72,7 +83,7 @@ class EmailVerificationModel(AppBase):
     )
 
     user_id: Mapped[UUID] = mapped_column(
-        ForeignKey("iam_users.id"),
+        ForeignKey("iam.iam_users.id"),
         nullable=False,
         index=True,
     )
@@ -97,4 +108,8 @@ class EmailVerificationModel(AppBase):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
+    )
+
+    user: Mapped[UserModel] = relationship(
+        back_populates="email_verifications",
     )
