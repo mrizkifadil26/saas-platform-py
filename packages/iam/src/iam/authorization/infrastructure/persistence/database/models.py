@@ -4,10 +4,10 @@ from uuid import UUID
 from sqlalchemy import DateTime, ForeignKey, PrimaryKeyConstraint, String, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column
 
-from db.app_db import AppBase
+from iam.shared.infrastructure.persistence import IAMBase
 
 
-class RoleModel(AppBase):
+class RoleModel(IAMBase):
     __tablename__ = "iam_roles"
 
     id: Mapped[UUID] = mapped_column(
@@ -28,7 +28,7 @@ class RoleModel(AppBase):
     )
 
 
-class UserRoleModel(AppBase):
+class UserRoleModel(IAMBase):
     __tablename__ = "iam_user_roles"
 
     __table_args__ = (
@@ -63,7 +63,7 @@ class UserRoleModel(AppBase):
     )
 
 
-class RolePermissionModel(AppBase):
+class RolePermissionModel(IAMBase):
     __tablename__ = "iam_role_permissions"
 
     __table_args__ = (

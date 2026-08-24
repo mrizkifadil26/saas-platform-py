@@ -1,10 +1,9 @@
 from sqlalchemy import delete, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.repositories import SQLAlchemyRepository
 from iam.authorization.domain import (
     Role,
     RoleRepository,
-    UserRole,
     UserRoleRepository,
 )
 from iam.authorization.domain.value_objects import RoleId
@@ -17,9 +16,11 @@ from .models import RoleModel, RolePermissionModel, UserRoleModel
 
 
 class SQLAlchemyRoleRepository(
-    SQLAlchemyRepository[Role, RoleModel],
     RoleRepository,
 ):
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
     async def save(self, role: Role) -> None:
         existing = await self._session.get(RoleModel, role.id)
         if existing is None:
@@ -80,11 +81,19 @@ class SQLAlchemyRoleRepository(
     def model_type(self) -> type[RoleModel]:
         return RoleModel
 
+    def _to_domain(self, model: RoleModel) -> Role:
+        return RoleORMMapper.to_domain(model)
+
+    def _to_model(self, entity: Role) -> RoleModel:
+        return RoleORMMapper.to_model(entity)
+
 
 class SQLAlchemyUserRoleRepository(
-    SQLAlchemyRepository[UserRole, UserRoleModel],
     UserRoleRepository,
 ):
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
     async def assign_role(
         self,
         user_id: UserId,
