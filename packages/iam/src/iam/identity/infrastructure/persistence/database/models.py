@@ -6,7 +6,7 @@ from uuid import UUID
 from sqlalchemy import DateTime, Enum, ForeignKey, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from iam.authentication.infrastructure.persistence.sqlalchemy.models import (
+from iam.authentication.infrastructure.persistence.database.models import (
     CredentialModel,
 )
 from iam.identity.domain import UserStatus
