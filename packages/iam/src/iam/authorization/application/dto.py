@@ -6,6 +6,7 @@ from uuid import UUID
 class RoleDTO:
     id: UUID
     name: str
+    permissions: frozenset[str]
 
 
 @dataclass(frozen=True, slots=True)
