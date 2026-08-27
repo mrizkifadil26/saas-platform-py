@@ -6,6 +6,6 @@ from .value_objects import RoleId
 
 
 @dataclass(frozen=True, slots=True)
-class UserRole:
+class RoleAssignment:
     user_id: UserId
     role_id: RoleId

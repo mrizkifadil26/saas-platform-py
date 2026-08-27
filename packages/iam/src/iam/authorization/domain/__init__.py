@@ -1,19 +1,14 @@
-from .authorization import AuthorizationService
-from .interfaces import PermissionCacheInvalidator, PermissionResolver
-from .policies import UserPolicies
-from .repositories import RoleRepository, UserRoleRepository
+from .permission import PermissionSet
+from .permission_catalog import UserPermissions
+from .repositories import RoleAssignmentRepository, RoleRepository
 from .role import Role
-from .specifications import HasPermission
-from .user_role import UserRole
+from .role_assignment import RoleAssignment
 
 __all__ = [
-    "AuthorizationService",
-    "HasPermission",
-    "PermissionCacheInvalidator",
-    "PermissionResolver",
+    "PermissionSet",
     "Role",
+    "RoleAssignment",
+    "RoleAssignmentRepository",
     "RoleRepository",
-    "UserPolicies",
-    "UserRole",
-    "UserRoleRepository",
+    "UserPermissions",
 ]

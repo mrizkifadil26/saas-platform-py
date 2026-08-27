@@ -1,45 +1,77 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 
-from iam.shared.domain import Entity
+from iam.shared.domain.aggregate_root import AggregateRoot
 
 from .value_objects import Permission, RoleId
 
 
 @dataclass(slots=True)
-class Role(Entity[RoleId]):
-    name: str
-    permissions: set[Permission] = field(default_factory=set[Permission])
+class Role(AggregateRoot[RoleId]):
+    _name: str
+    _permissions: set[Permission] = field(default_factory=set)
+
+    def __post_init__(self) -> None:
+        if not self._name.strip():
+            raise ValueError("Role name cannot be empty")
 
     @classmethod
     def create(
         cls,
+        *,
         name: str,
+        permissions: Iterable[Permission] = (),
     ) -> Role:
         role = cls(
             id=RoleId.generate(),
-            name=name,
+            _name=name,
+            _permissions=set(permissions),
         )
 
         # TODO: emit role created event
+        event = ...
+        role.record_event(event)
 
         return role
 
-    def grant(
-        self,
-        permission: Permission,
-    ) -> None:
-        self.permissions.add(permission)
+    @property
+    def name(self) -> str:
+        return self._name
 
-    def revoke(
+    @property
+    def permissions(self) -> frozenset[Permission]:
+        return frozenset(self._permissions)
+
+    def rename(self, name: str) -> None:
+        if not name.strip():
+            raise ValueError("Role name cannot be empty")
+
+        self._name = name
+
+    def grant_permission(
         self,
         permission: Permission,
     ) -> None:
-        self.permissions.discard(permission)
+        self._permissions.add(permission)
+
+        # record event
+        event = ...
+        self.record_event(event)
+
+    def revoke_permission(
+        self,
+        permission: Permission,
+    ) -> None:
+        self._permissions.discard(permission)
+
+        # record event
+        event = ...
+        self.record_event(event)
 
     def has_permission(
         self,
         permission: Permission,
     ) -> bool:
-        return permission in self.permissions
+        return permission in self._permissions
