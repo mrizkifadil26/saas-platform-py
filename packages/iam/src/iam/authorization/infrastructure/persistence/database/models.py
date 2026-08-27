@@ -2,7 +2,7 @@ from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import DateTime, ForeignKey, PrimaryKeyConstraint, String, Uuid, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from iam.shared.infrastructure.persistence import IAMBase
 
@@ -23,8 +23,13 @@ class RoleModel(IAMBase):
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        server_default=func.now(),
         nullable=False,
+    )
+
+    permissions = relationship(
+        "RolePermissionModel",
+        lazy="selectin",
+        cascade="all, delete-orphan",
     )
 
 

@@ -1,4 +1,4 @@
-from iam.authorization.domain import Role, UserRole
+from iam.authorization.domain import Role, RoleAssignment
 from iam.authorization.domain.value_objects import Permission, RoleId
 from iam.identity.domain.value_objects import UserId
 
@@ -15,14 +15,14 @@ class RoleORMMapper:
         model: RoleModel,
         permissions: list[RolePermissionModel],
     ) -> Role:
-        permission_sets: set[Permission] = {
-            Permission(permission.permission) for permission in permissions
+        permission_set: set[Permission] = {
+            Permission(item.permission) for item in permissions
         }
 
         return Role(
             id=RoleId(model.id),
-            name=model.name,
-            permissions=permission_sets,
+            _name=model.name,
+            _permissions=permission_set,
         )
 
     @staticmethod
@@ -35,26 +35,31 @@ class RoleORMMapper:
         )
 
     @staticmethod
-    def update_model(
-        model: RoleModel,
+    def to_permission_models(
         role: Role,
-    ) -> None:
-        model.name = role.name
+    ) -> list[RolePermissionModel]:
+        return [
+            RolePermissionModel(
+                role_id=role.id.value,
+                permission=permission.value,
+            )
+            for permission in role.permissions
+        ]
 
 
-class UserRoleORMMapper:
+class RoleAssignmentORMMapper:
     @staticmethod
     def to_domain(
         model: UserRoleModel,
-    ) -> UserRole:
-        return UserRole(
+    ) -> RoleAssignment:
+        return RoleAssignment(
             user_id=UserId(model.user_id),
             role_id=RoleId(model.role_id),
         )
 
     @staticmethod
     def to_model(
-        entity: UserRole,
+        entity: RoleAssignment,
     ) -> UserRoleModel:
         return UserRoleModel(
             user_id=entity.user_id.value,

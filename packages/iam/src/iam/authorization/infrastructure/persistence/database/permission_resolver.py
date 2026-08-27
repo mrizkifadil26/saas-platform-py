@@ -1,7 +1,7 @@
 from sqlalchemy import distinct, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from iam.authorization.domain import PermissionResolver
+from iam.authorization.application.ports import PermissionResolver
 from iam.authorization.domain.value_objects import Permission
 from iam.identity.domain.value_objects import UserId
 
@@ -14,16 +14,13 @@ from .models import (
 class SQLAlchemyPermissionResolver(
     PermissionResolver,
 ):
-    def __init__(
-        self,
-        session: AsyncSession,
-    ) -> None:
+    def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
     async def resolve_permissions_for_user(
         self,
         user_id: UserId,
-    ) -> set[Permission]:
+    ) -> set[Permission] | None:
         stmt = (
             select(distinct(RolePermissionModel.permission))
             .join(
@@ -34,6 +31,6 @@ class SQLAlchemyPermissionResolver(
         )
 
         result = await self._session.execute(stmt)
-        permissions = result.scalars().all()
+        permissions = result.scalars()
 
         return {Permission(permission) for permission in permissions}

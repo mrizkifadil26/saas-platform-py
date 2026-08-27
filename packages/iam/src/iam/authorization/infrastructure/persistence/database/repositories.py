@@ -1,18 +1,19 @@
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from iam.authorization.domain import (
     Role,
+    RoleAssignmentRepository,
     RoleRepository,
-    UserRoleRepository,
 )
 from iam.authorization.domain.value_objects import RoleId
-from iam.authorization.infrastructure.persistence.sqlalchemy.orm_mappers import (
-    RoleORMMapper,
-)
 from iam.identity.domain.value_objects import UserId
 
 from .models import RoleModel, RolePermissionModel, UserRoleModel
+from .orm_mappers import (
+    RoleORMMapper,
+)
 
 
 class SQLAlchemyRoleRepository(
@@ -21,6 +22,13 @@ class SQLAlchemyRoleRepository(
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    async def add(self, role: Role) -> None:
+        role_model = self._to_model(role)
+        permission_models = RoleORMMapper.to_permission_models(role)
+
+        self._session.add(role_model)
+        self._session.add_all(permission_models)
+
     async def save(self, role: Role) -> None:
         existing = await self._session.get(RoleModel, role.id)
         if existing is None:
@@ -28,68 +36,86 @@ class SQLAlchemyRoleRepository(
             self._session.add(model)
             return
 
-        #
+        # TODO: the rest of the operation is here
+        return
 
     async def find_by_id(
         self,
         role_id: RoleId,
     ) -> Role | None:
-        role_stmt = select(RoleModel).where(
+        stmt = (
+            select(RoleModel)
+            .options(selectinload(RoleModel.permissions))
+            .where(
+                RoleModel.id == role_id.value,
+            )
+        )
+
+        result = await self._session.execute(stmt)
+        model = result.scalar_one_or_none()
+        if model is None:
+            return None
+
+        return self._to_domain(
+            model,
+            list(model.permissions),
+        )
+
+    async def find_by_name(
+        self,
+        name: str,
+    ) -> Role | None:
+        stmt = (
+            select(RoleModel)
+            .options(selectinload(RoleModel.permissions))
+            .where(
+                RoleModel.name == name,
+            )
+        )
+
+        result = await self._session.execute(stmt)
+        model = result.scalar_one_or_none()
+        if model is None:
+            return None
+
+        return RoleORMMapper.to_domain(
+            model,
+            list(model.permissions),
+        )
+
+    async def delete(
+        self,
+        role_id: RoleId,
+    ) -> None:
+        stmt = delete(RoleModel).where(
             RoleModel.id == role_id.value,
         )
 
-        role_result = await self._session.execute(role_stmt)
-        role_model = role_result.scalar_one_or_none()
+        await self._session.execute(stmt)
 
-        if role_model is None:
-            return None
-
-        permission_stmt = select(RolePermissionModel).where(
-            RolePermissionModel.role_id == role_model.id
-        )
-        permission_result = await self._session.execute(permission_stmt)
-        permission_models = permission_result.scalars().all()
-
+    @staticmethod
+    def _to_domain(
+        model: RoleModel,
+        permissions: list[RolePermissionModel],
+    ) -> Role:
         return RoleORMMapper.to_domain(
-            role_model,
-            list(permission_models),
+            model,
+            permissions,
         )
 
-    async def find_by_name(self, name: str) -> Role | None:
-        role_stmt = select(RoleModel).where(
-            RoleModel.name == name,
-        )
-
-        role_result = await self._session.execute(role_stmt)
-        role_model = role_result.scalar_one_or_none()
-
-        if role_model is None:
-            return None
-
-        permission_stmt = select(RolePermissionModel).where(
-            RolePermissionModel.role_id == role_model.id
-        )
-        permission_result = await self._session.execute(permission_stmt)
-        permission_models = permission_result.scalars().all()
-
-        return RoleORMMapper.to_domain(
-            role_model,
-            list(permission_models),
-        )
+    @staticmethod
+    def _to_model(
+        entity: Role,
+    ) -> RoleModel:
+        return RoleORMMapper.to_model(entity)
 
     @property
     def model_type(self) -> type[RoleModel]:
         return RoleModel
 
-    def _to_domain(self, model: RoleModel) -> Role:
-        return RoleORMMapper.to_domain(model)
 
-    def _to_model(self, entity: Role) -> RoleModel:
-        return RoleORMMapper.to_model(entity)
-
-
-class SQLAlchemyUserRoleRepository(
-    UserRoleRepository,
+class SQLAlchemyRoleAssignmentRepository(
+    RoleAssignmentRepository,
 ):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
@@ -118,12 +144,31 @@ class SQLAlchemyUserRoleRepository(
 
         await self._session.execute(stmt)
 
+    async def is_assigned(
+        self,
+        user_id: UserId,
+        role_id: RoleId,
+    ) -> bool:
+        stmt = (
+            select(UserRoleModel.user_id)
+            .where(
+                UserRoleModel.user_id == user_id.value,
+                UserRoleModel.role_id == role_id.value,
+            )
+            .limit(1)
+        )
+
+        result = await self._session.execute(stmt)
+        model = result.scalar_one_or_none()
+
+        return model is not None
+
     async def list_role_ids_for_user(
         self,
         user_id: UserId,
     ) -> list[RoleId]:
         stmt = select(UserRoleModel.role_id).where(
-            UserRoleModel.user_id == user_id.value
+            UserRoleModel.user_id == user_id.value,
         )
 
         result = await self._session.execute(stmt)
