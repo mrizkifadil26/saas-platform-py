@@ -1,6 +1,6 @@
 from redis import Redis
 
-from iam.authorization.infrastructure.cache import Cache
+from iam.shared.application.cache import Cache
 
 
 class RedisCache(Cache):
@@ -38,3 +38,6 @@ class RedisCache(Cache):
         key: str,
     ) -> None:
         await self._redis.delete(key)
+
+    async def delete_pattern(self, key: str) -> None:
+        raise NotImplementedError
