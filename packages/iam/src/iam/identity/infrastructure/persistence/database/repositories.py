@@ -110,6 +110,19 @@ class SQLAlchemyEmailVerificationRepository(EmailVerificationRepository):
 
         return self._to_domain(model)
 
+    async def find_by_user_id(self, user_id: UserId) -> EmailVerification | None:
+        stmt = select(EmailVerificationModel).where(
+            EmailVerificationModel.user_id == user_id.value
+        )
+
+        result = await self._session.execute(stmt)
+        model = result.scalar_one_or_none()
+
+        if model is None:
+            return None
+
+        return self._to_domain(model)
+
     async def find_by_token_hash(
         self, token_hash: EmailVerificationTokenHash
     ) -> EmailVerification | None:

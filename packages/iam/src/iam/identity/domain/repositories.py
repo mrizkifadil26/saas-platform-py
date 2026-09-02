@@ -41,6 +41,11 @@ class EmailVerificationRepository(Protocol):
         self, verification_id: EmailVerificationId
     ) -> EmailVerification | None: ...
 
+    async def find_by_user_id(
+        self,
+        user_id: UserId,
+    ) -> EmailVerification | None: ...
+
     async def find_by_token_hash(
         self,
         token_hash: EmailVerificationTokenHash,
