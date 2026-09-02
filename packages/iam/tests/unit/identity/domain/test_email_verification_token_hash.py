@@ -1,43 +1,28 @@
-import pytest
-
 from iam.identity.domain.value_objects import (
     EmailVerificationTokenHash,
 )
 from iam.shared.domain.exceptions import ValidationError
+from tests.contracts.domain.string_value_object import (
+    assert_rejects_empty,
+    assert_trims_whitespace,
+    assert_valid_string_value_object,
+)
 
 
 class TestEmailVerificationTokenHash:
-    def test_creates_with_valid_value(self) -> None:
-        token = EmailVerificationTokenHash(
+    def test_string_value_object_contract(self) -> None:
+        assert_valid_string_value_object(
+            EmailVerificationTokenHash,
             "hashed-token",
         )
 
-        assert token.value == "hashed-token"
-
-    def test_str_returns_value(self) -> None:
-        token = EmailVerificationTokenHash(
+        assert_trims_whitespace(
+            EmailVerificationTokenHash,
             "hashed-token",
         )
 
-        assert str(token) == "hashed-token"
-
-    def test_normalizes_whitespace(self) -> None:
-        token = EmailVerificationTokenHash(
-            "  hashed-token  ",
+        assert_rejects_empty(
+            EmailVerificationTokenHash,
+            ValidationError,
+            "Verification token hash cannot be empty",
         )
-
-        assert token.value == "hashed-token"
-
-    def test_raises_when_empty(self) -> None:
-        with pytest.raises(
-            ValidationError,
-            match="Verification token hash cannot be empty",
-        ):
-            EmailVerificationTokenHash("")
-
-    def test_raises_when_whitespace_only(self) -> None:
-        with pytest.raises(
-            ValidationError,
-            match="Verification token hash cannot be empty",
-        ):
-            EmailVerificationTokenHash("   ")

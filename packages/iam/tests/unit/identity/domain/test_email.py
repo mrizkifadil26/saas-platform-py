@@ -2,29 +2,37 @@ import pytest
 
 from iam.identity.domain.value_objects import Email
 from iam.shared.domain.exceptions import ValidationError
+from tests.contracts.domain.string_value_object import (
+    assert_rejects_empty,
+    assert_trims_whitespace,
+    assert_valid_string_value_object,
+)
 
 
 class TestEmail:
-    def test_creates_with_valid_email(self) -> None:
-        email = Email(
+    def test_string_value_object_contract(self) -> None:
+        assert_valid_string_value_object(
+            Email,
             "user@example.com",
         )
 
-        assert email.value == "user@example.com"
-
-    def test_normalizes_whitespace_and_lowercase(self) -> None:
-        email = Email(
-            "  USER@Example.COM  ",
-        )
-
-        assert email.value == "user@example.com"
-
-    def test_str_returns_value(self) -> None:
-        email = Email(
+        assert_trims_whitespace(
+            Email,
             "user@example.com",
         )
 
-        assert str(email) == "user@example.com"
+        assert_rejects_empty(
+            Email,
+            ValidationError,
+            "Email address cannot be empty",
+        )
+
+    def test_normalizes_lowercase(self) -> None:
+        email = Email(
+            "USER@Example.COM",
+        )
+
+        assert email.value == "user@example.com"
 
     def test_raises_when_empty(self) -> None:
         with pytest.raises(
@@ -32,13 +40,6 @@ class TestEmail:
             match="Email address cannot be empty",
         ):
             Email("")
-
-    def test_raises_when_whitespace_only(self) -> None:
-        with pytest.raises(
-            ValidationError,
-            match="Email address cannot be empty",
-        ):
-            Email("   ")
 
     @pytest.mark.parametrize(
         "value",
