@@ -1,22 +1,14 @@
-from datetime import timedelta
+from dataclasses import dataclass
 from uuid import uuid4
 
 from iam.authentication.domain import (
-    AuthenticationAttempt,
-    AuthenticationAttemptRepository,
-    AuthenticationDenialReason,
-    AuthenticationPolicy,
     Credential,
     CredentialRepository,
     CredentialType,
 )
 from iam.identity.domain import UserRepository
 from iam.identity.domain.value_objects import Email, UserId
-from iam.sessions.application import (
-    RefreshTokenGenerator,
-    RefreshTokenHasher,
-)
-from iam.sessions.domain import RefreshToken, Session
+from iam.sessions.application.api import SessionIssuer
 from iam.shared.application import Clock
 
 from .commands import (
@@ -30,87 +22,61 @@ from .dto import (
     AuthenticationResult,
     SetupPasswordResult,
 )
-from .interfaces import AccessTokenIssuer, CredentialVerifier, PasswordHasher
+from .ports import CredentialVerifier, PasswordHasher
 
 
+@dataclass(slots=True)
 class AuthenticateWithPasswordUseCase:
-    def __init__(
-        self,
-        credential_repository: CredentialRepository,
-        authentication_attempt_repository: AuthenticationAttemptRepository,
-        credential_verifier: CredentialVerifier,
-        policy: AuthenticationPolicy,
-        refresh_token_generator: RefreshTokenGenerator,
-        refresh_token_hasher: RefreshTokenHasher,
-        access_token_issuer: AccessTokenIssuer,
-        clock: Clock,
-    ):
-        self._credential_repository = credential_repository
-        self._authentication_attempt_repository = authentication_attempt_repository
-        self._credential_verifier = credential_verifier
-        self._policy = policy
-        self._refresh_token_generator = refresh_token_generator
-        self._refresh_token_hasher = refresh_token_hasher
-        self._access_token_issuer = access_token_issuer
-        self._clock = clock
+    credential_repository: CredentialRepository
+    credential_verifier: CredentialVerifier
+
+    login_throttle: LoginThrottle
+    session_issuer: SessionIssuer
+    # authentication_recorder: AuthenticationRecorder
+
+    clock: Clock
 
     async def execute(
         self,
         command: AuthenticateUserCommand,
     ) -> AuthenticationResult:
-        now = self._clock.now()
-
+        now = self.clock.now()
         email = Email(command.email)
-        credential = await self._credential_repository.find_password_by_email(email)
-        if credential is None:
-            attempt = AuthenticationAttempt.denied(
-                email=email,
-                denial_reason=AuthenticationDenialReason.INVALID_CREDENTIALS,
-                ip_address=command.ip_address,
-                user_agent=command.user_agent,
-                attempted_at=now,
-            )
 
-            await self._authentication_attempt_repository.save(attempt)
-            # TODO: raise invalid credential exception
+        throttle = await self.login_throttle.check()
+        if not throttle.allowed:
+            # raise AuthenticationThrottledError
             raise
 
-        recent_failures = (
-            await self._authentication_attempt_repository.count_recent_failures(
-                email=email,
-                since=now - self._policy.failure_window(),
-            )
-        )
+        credential = await self.credential_repository.find_password_by_email(email)
+        if credential is None:
+            self._record_failure()
+            self.login_throttle.record_failure()
 
-        self._policy.ensure_not_locked(
-            recent_failures=recent_failures,
-        )
+            # raise InvalidCredentialsError
+            raise
 
-        is_valid = self._credential_verifier.verify_password(
+        is_valid = self.credential_verifier.verify_password(
             password=command.password,
             password_hash=credential.secret_hash,
         )
 
         if not is_valid:
-            attempt = AuthenticationAttempt.denied(
-                email=email,
-                denial_reason=AuthenticationDenialReason.INVALID_CREDENTIALS,
-                ip_address=command.ip_address,
-                user_agent=command.user_agent,
-                attempted_at=now,
-            )
+            self._record_failure()
+            self.login_throttle.record_failure()
 
-            await self._authentication_attempt_repository.save(attempt)
+            # raise InvalidCredentialsError
+            raise
 
-        attempt = AuthenticationAttempt.succeeded(
-            email=email,
-            user_id=credential.user_id,
-            ip_address=command.ip_address,
-            user_agent=command.user_agent,
-            attempted_at=now,
-        )
-
-        await self._authentication_attempt_repository.save(attempt)
+        self.login_throttle.record_success()
+        # attempt = AuthenticationAttempt.succeeded(
+        #     email=email,
+        #     user_id=credential.user_id,
+        #     ip_address=command.ip_address,
+        #     user_agent=command.user_agent,
+        #     attempted_at=now,
+        # )
+        # await self._authentication_attempt_repository.save(attempt)
 
         # TODO: use principal if authz completed
         # principal = AuthenticatedPrincipal(
@@ -119,42 +85,20 @@ class AuthenticateWithPasswordUseCase:
         #     roles=credential.roles,
         # )
 
-        raw_refresh_token = self._refresh_token_generator.generate()
-        refresh_token_hash = self._refresh_token_hasher.hash(
-            raw_refresh_token,
-        )
-
-        session = Session.create(
+        issued = await self.session_issuer.issue(
             user_id=credential.user_id,
-            created_at=now,
-        )
-        refresh_token = RefreshToken.create(
-            session_id=session.id,
-            token_hash=refresh_token_hash,
-            created_at=now,
-            expires_at=now + timedelta(days=15),
-        )
-        session.attach_refresh_token(
-            refresh_token.id,
-            now=now,
-        )
-
-        access_token = self._access_token_issuer.issue(
-            claims={
-                "sub": credential.user_id,
-                "email": email.value,
-                # "roles": credential.roles,
-            }
+            # email=email,
+            issued_at=now,
         )
 
         # TODO: touch last_login_at
         # TODO: save to user repo
 
         return AuthenticationResult(
-            user_id=credential.user_id.unwrap(),
-            session_id=session.id.unwrap(),
-            access_token=access_token.unwrap(),
-            refresh_token=raw_refresh_token.unwrap(),
+            user_id=credential.user_id.value,
+            session_id=issued.session_id.value,
+            access_token=issued.access_token.value,
+            refresh_token=issued.refresh_token.value,
         )
 
 
