@@ -34,6 +34,7 @@ build-backend = "uv_build"
 
 [tool.ruff]
 line-length = 88
+src = [".", "src"]
 
 [tool.ruff.lint]
 select = [
@@ -56,11 +57,11 @@ quote-style = "double"
 indent-style = "space"
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
+pythonpath = [".", "src"]
 testpaths = ["tests"]
 
 [tool.deptry]
-known_first_party = ["iam"]
+known_first_party = ["iam", "db", "tests",]
 
 [tool.uv.sources]
 db = { workspace = true }
