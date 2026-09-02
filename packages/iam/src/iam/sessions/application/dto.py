@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from iam.identity.domain.value_objects import UserId
-from iam.sessions.domain.value_objects import SessionId
+from iam.sessions.domain.value_objects import AccessToken, RefreshTokenSecret, SessionId
 
 
 @dataclass(frozen=True, slots=True)
@@ -32,3 +32,16 @@ class SessionResult:
 class SessionTokens:
     access_token: str
     refresh_token: str
+
+
+@dataclass(frozen=True, slots=True)
+class IssuedSession:
+    session_id: SessionId
+    access_token: AccessToken
+    refresh_token: RefreshTokenSecret
+
+
+@dataclass(frozen=True, slots=True)
+class RotatedSessionTokens:
+    access_token: AccessToken
+    refresh_token: RefreshTokenSecret

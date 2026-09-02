@@ -1,4 +1,4 @@
-from .interfaces import RefreshTokenGenerator, RefreshTokenHasher
+from .ports import RefreshTokenGenerator, RefreshTokenHasher
 
 __all__ = [
     "RefreshTokenGenerator",
