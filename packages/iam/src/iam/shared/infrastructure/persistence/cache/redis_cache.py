@@ -1,4 +1,4 @@
-from redis import Redis
+from redis.asyncio import Redis
 
 from iam.shared.application.cache import Cache
 
@@ -14,11 +14,7 @@ class RedisCache(Cache):
         self,
         key: str,
     ) -> str | None:
-        value = await self._redis.get(key)
-        if value is None:
-            return None
-
-        return value.decode()
+        return await self._redis.get(key)
 
     async def set(
         self,
