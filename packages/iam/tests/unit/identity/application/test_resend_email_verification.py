@@ -1,5 +1,4 @@
-from datetime import UTC, datetime
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import Mock
 
 import pytest
 
@@ -14,20 +13,25 @@ from iam.identity.domain.value_objects import (
     Email,
     EmailVerificationToken,
     EmailVerificationTokenHash,
+    UserId,
+)
+from tests.factories.shared import make_datetime
+from tests.support.fakes.clock import FakeClock
+from tests.support.fakes.user_repository import InMemoryUserRepository
+from tests.support.fakes.verification_repository import (
+    InMemoryEmailVerificationRepository,
 )
 
 
 @pytest.mark.asyncio
 async def test_should_resend_email_verification():
-    user_repository = AsyncMock()
-    verification_repository = AsyncMock()
+    now = make_datetime()
+
+    user_repository = InMemoryUserRepository()
+    verification_repository = InMemoryEmailVerificationRepository()
 
     token_generator = Mock()
     token_hasher = Mock()
-    clock = Mock()
-
-    now = datetime.now(UTC)
-    clock.now.return_value = now
 
     raw_token = EmailVerificationToken("raw-token")
     hashed_token = EmailVerificationTokenHash("hashed-token")
@@ -39,14 +43,14 @@ async def test_should_resend_email_verification():
         email=Email("test@example.com"),
         registered_at=now,
     )
-    user_repository.find_by_id.return_value = user
+    await user_repository.save(user)
 
     use_case = ResendEmailVerificationUseCase(
         user_repository=user_repository,
         verification_repository=verification_repository,
         token_generator=token_generator,
         token_hasher=token_hasher,
-        clock=clock,
+        clock=FakeClock(now),
     )
 
     command = ResendEmailVerificationCommand(
@@ -55,110 +59,88 @@ async def test_should_resend_email_verification():
 
     await use_case.execute(command)
 
-    user_repository.find_by_id.assert_awaited_once_with(
-        user.id,
-    )
     token_generator.generate.assert_called_once()
     token_hasher.hash.assert_called_once_with(raw_token)
 
-    verification_repository.save.assert_awaited_once()
-    saved_verification = verification_repository.save.await_args.args[0]
+    saved_verification = await verification_repository.find_by_user_id(
+        user.id,
+    )
 
+    assert saved_verification is not None
     assert saved_verification.user_id == user.id
     assert saved_verification.token_hash == hashed_token
 
 
 @pytest.mark.asyncio
 async def test_should_raise_when_email_already_verified():
-    user_repository = AsyncMock()
-    verification_repository = AsyncMock()
+    now = make_datetime()
+
+    user_repository = InMemoryUserRepository()
+    verification_repository = InMemoryEmailVerificationRepository()
 
     token_generator = Mock()
     token_hasher = Mock()
-    clock = Mock()
-
-    now = datetime.now(UTC)
-    clock.now.return_value = now
-
-    raw_token = EmailVerificationToken("raw-token")
-    hashed_token = EmailVerificationTokenHash("hashed-token")
-
-    token_generator.generate.return_value = raw_token
-    token_hasher.hash.return_value = hashed_token
 
     user = User.register(
         email=Email("test@example.com"),
         registered_at=now,
     )
     user.mark_email_as_verified(verified_at=now)
-    user_repository.find_by_id.return_value = user
+    await user_repository.save(user)
 
     use_case = ResendEmailVerificationUseCase(
         user_repository=user_repository,
         verification_repository=verification_repository,
         token_generator=token_generator,
         token_hasher=token_hasher,
-        clock=clock,
+        clock=FakeClock(now),
     )
 
     command = ResendEmailVerificationCommand(
         user_id=user.id.value,
     )
 
-    with pytest.raises(UserEmailAlreadyVerifiedError):
+    with pytest.raises(
+        UserEmailAlreadyVerifiedError,
+    ):
         await use_case.execute(command)
-
-    user_repository.find_by_id.assert_awaited_once_with(user.id)
 
     token_generator.generate.assert_not_called()
     token_hasher.hash.assert_not_called()
 
-    verification_repository.save.assert_not_awaited()
+    verification = await verification_repository.find_by_user_id(
+        user.id,
+    )
+
+    assert verification is None
 
 
 @pytest.mark.asyncio
 async def test_should_raise_when_user_not_found():
-    user_repository = AsyncMock()
-    verification_repository = AsyncMock()
+    now = make_datetime()
+
+    user_repository = InMemoryUserRepository()
+    verification_repository = InMemoryEmailVerificationRepository()
 
     token_generator = Mock()
     token_hasher = Mock()
-    clock = Mock()
-
-    now = datetime.now(UTC)
-    clock.now.return_value = now
-
-    raw_token = EmailVerificationToken("raw-token")
-    hashed_token = EmailVerificationTokenHash("hashed-token")
-
-    token_generator.generate.return_value = raw_token
-    token_hasher.hash.return_value = hashed_token
-
-    user = User.register(
-        email=Email("test@example.com"),
-        registered_at=now,
-    )
-    # user_repository.find_by_id.return_value = user
-    user_repository.find_by_id.return_value = None
 
     use_case = ResendEmailVerificationUseCase(
         user_repository=user_repository,
         verification_repository=verification_repository,
         token_generator=token_generator,
         token_hasher=token_hasher,
-        clock=clock,
+        clock=FakeClock(now),
     )
 
     command = ResendEmailVerificationCommand(
-        user_id=user.id.value,
+        user_id=UserId.generate().value,
     )
 
-    with pytest.raises(UserNotFoundError):
+    with pytest.raises(
+        UserNotFoundError,
+    ):
         await use_case.execute(command)
-
-    user_repository.find_by_id.assert_awaited_once_with(user.id)
 
     token_generator.generate.assert_not_called()
     token_hasher.hash.assert_not_called()
-
-    verification_repository.save.assert_not_awaited()
