@@ -123,11 +123,11 @@ class SQLAlchemyRoleAssignmentRepository(
     async def assign_role(
         self,
         user_id: UserId,
-        role: Role,
+        role_id: RoleId,
     ) -> None:
         model = UserRoleModel(
             user_id=user_id.value,
-            role_id=role.id.value,
+            role_id=role_id.value,
         )
 
         self._session.add(model)
@@ -135,11 +135,11 @@ class SQLAlchemyRoleAssignmentRepository(
     async def revoke_role(
         self,
         user_id: UserId,
-        role: Role,
+        role_id: RoleId,
     ) -> None:
         stmt = delete(UserRoleModel).where(
             UserRoleModel.user_id == user_id.value,
-            UserRoleModel.role_id == role.id.value,
+            UserRoleModel.role_id == role_id.value,
         )
 
         await self._session.execute(stmt)
