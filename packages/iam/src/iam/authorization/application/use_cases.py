@@ -1,3 +1,4 @@
+import json
 from dataclasses import dataclass
 
 from iam.authorization.domain import (
@@ -6,7 +7,9 @@ from iam.authorization.domain import (
     RoleAssignmentRepository,
     RoleRepository,
 )
-from iam.authorization.domain.value_objects import RoleId
+from iam.authorization.domain.value_objects import Permission, RoleId
+from iam.identity.domain.value_objects.user_id import UserId
+from iam.shared.application.cache import Cache
 
 from .commands import (
     AssignRoleToUserCommand,
@@ -253,20 +256,38 @@ class ListUserRoleIdsUseCase:
 @dataclass(slots=True)
 class CheckPermissionUseCase:
     permission_resolver: PermissionResolver
+    cache: Cache
+    cache_ttl: int = 300
 
     async def execute(
         self,
         query: CheckPermissionQuery,
     ) -> AuthorizationResult:
-        user_id = query.user_id
-        required = query.permission
-
-        resolved = await self.permission_resolver.resolve_permissions_for_user(
-            user_id,
+        key = self._cache_key(
+            query.user_id,
         )
 
-        permissions = PermissionSet.from_iterable(resolved)
-        is_allowed = permissions.allows(required)
+        cached = await self.cache.get(key)
+        if cached is not None:
+            permissions = self._deserialize(
+                cached,
+            )
+        else:
+            resolved = await self.permission_resolver.resolve_permissions_for_user(
+                query.user_id,
+            )
+
+            permissions = PermissionSet.from_iterable(
+                resolved,
+            )
+
+            await self.cache.set(
+                key,
+                self._serialize(permissions),
+                ttl=self.cache_ttl,
+            )
+
+        is_allowed = permissions.allows(query.permission)
 
         if not is_allowed:
             # Raise Permission Denied error
@@ -274,4 +295,30 @@ class CheckPermissionUseCase:
 
         return AuthorizationResult(
             allowed=is_allowed,
+        )
+
+    @staticmethod
+    def _cache_key(
+        user_id: UserId,
+    ) -> str:
+        return f"iam:authorization:user:{user_id}:permissions:v1"
+
+    @staticmethod
+    def _serialize(
+        permissions: PermissionSet,
+    ) -> str:
+        return json.dumps(
+            [str(permission) for permission in permissions],
+        )
+
+    @staticmethod
+    def _deserialize(
+        value: str,
+    ) -> PermissionSet:
+        raw_permissions = json.loads(value)
+
+        return PermissionSet(
+            permissions=frozenset(
+                Permission(permission) for permission in raw_permissions
+            ),
         )
