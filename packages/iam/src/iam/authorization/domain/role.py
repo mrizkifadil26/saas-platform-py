@@ -11,11 +11,14 @@ from .value_objects import Permission, RoleId
 @dataclass(slots=True)
 class Role(AggregateRoot[RoleId]):
     _name: str
-    _permissions: set[Permission] = field(default_factory=set)
+    _permissions: set[Permission] = field(default_factory=lambda: set[Permission]())
 
     def __post_init__(self) -> None:
-        if not self._name.strip():
+        name = self._name.strip()
+        if not name:
             raise ValueError("Role name cannot be empty")
+
+        self._name = name
 
     @classmethod
     def create(
@@ -31,8 +34,8 @@ class Role(AggregateRoot[RoleId]):
         )
 
         # TODO: emit role created event
-        event = ...
-        role.record_event(event)
+        # event = ...
+        # role.record_event(event)
 
         return role
 
@@ -45,7 +48,8 @@ class Role(AggregateRoot[RoleId]):
         return frozenset(self._permissions)
 
     def rename(self, name: str) -> None:
-        if not name.strip():
+        name = name.strip()
+        if not name:
             raise ValueError("Role name cannot be empty")
 
         self._name = name
@@ -57,8 +61,8 @@ class Role(AggregateRoot[RoleId]):
         self._permissions.add(permission)
 
         # record event
-        event = ...
-        self.record_event(event)
+        # event = ...
+        # self.record_event(event)
 
     def revoke_permission(
         self,
@@ -67,8 +71,8 @@ class Role(AggregateRoot[RoleId]):
         self._permissions.discard(permission)
 
         # record event
-        event = ...
-        self.record_event(event)
+        # event = ...
+        # self.record_event(event)
 
     def has_permission(
         self,
