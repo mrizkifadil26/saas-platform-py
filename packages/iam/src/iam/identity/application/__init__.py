@@ -3,7 +3,7 @@ from .commands import (
     ResendEmailVerificationCommand,
     VerifyEmailCommand,
 )
-from .interfaces import EmailVerificationTokenGenerator, EmailVerificationTokenHasher
+from .ports import EmailVerificationTokenGenerator, EmailVerificationTokenHasher
 from .use_cases import (
     RegisterUserUseCase,
     ResendEmailVerificationUseCase,
