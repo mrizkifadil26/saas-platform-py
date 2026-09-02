@@ -16,6 +16,19 @@ class RefreshTokenId(EntityId):
 
 
 @dataclass(frozen=True, slots=True)
+class RefreshTokenSecret(ValueObject[str]):
+    value: str
+
+    def __post_init__(self) -> None:
+        value = self.value.strip()
+
+        if not value:
+            raise ValidationError("Refresh token secret cannot be empty")
+
+        object.__setattr__(self, "value", value)
+
+
+@dataclass(frozen=True, slots=True)
 class RefreshTokenHash(ValueObject[str]):
     value: str
 
@@ -27,14 +40,15 @@ class RefreshTokenHash(ValueObject[str]):
 
         object.__setattr__(self, "value", value)
 
+
 @dataclass(frozen=True, slots=True)
-class RefreshTokenSecret(ValueObject[str]):
+class AccessToken(ValueObject[str]):
     value: str
 
     def __post_init__(self) -> None:
         value = self.value.strip()
 
         if not value:
-            raise ValidationError("Refresh token hash cannot be empty")
+            raise ValueError("Access token cannot be empty")
 
         object.__setattr__(self, "value", value)
