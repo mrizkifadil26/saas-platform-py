@@ -1,6 +1,7 @@
 from typing import Protocol
 
-from iam.authorization.domain.value_objects import Permission, RoleId
+from iam.authorization.domain.permission_set import PermissionSet
+from iam.authorization.domain.value_objects import RoleId
 from iam.identity.domain.value_objects import UserId
 
 
@@ -8,12 +9,12 @@ class PermissionCache(Protocol):
     async def get(
         self,
         user_id: UserId,
-    ) -> set[Permission] | None: ...
+    ) -> PermissionSet | None: ...
 
     async def set(
         self,
         user_id: UserId,
-        permissions: set[Permission],
+        permissions: PermissionSet,
         *,
         ttl: int | None = None,
     ) -> None: ...
@@ -25,10 +26,15 @@ class PermissionCache(Protocol):
 
 
 class PermissionResolver(Protocol):
-    async def resolve_permissions_for_user(
+    # async def resolve_permissions_for_user(
+    #     self,
+    #     user_id: UserId,
+    # ) -> set[Permission]: ...
+
+    async def resolve(
         self,
         user_id: UserId,
-    ) -> set[Permission] | None: ...
+    ) -> PermissionSet: ...
 
 
 class PermissionCacheInvalidator(Protocol):
