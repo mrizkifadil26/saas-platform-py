@@ -123,6 +123,7 @@ class VerifyEmailUseCase:
         )
 
 
+@dataclass(slots=True)
 class ResendEmailVerificationUseCase:
     user_repository: UserRepository
     verification_repository: EmailVerificationRepository
