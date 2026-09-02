@@ -1,5 +1,5 @@
-from .permission import PermissionSet
 from .permission_catalog import UserPermissions
+from .permission_set import PermissionSet
 from .repositories import RoleAssignmentRepository, RoleRepository
 from .role import Role
 from .role_assignment import RoleAssignment
