@@ -33,8 +33,10 @@ from .ports import EmailVerificationTokenGenerator, EmailVerificationTokenHasher
 class RegisterUserUseCase:
     user_repository: UserRepository
     verification_repository: EmailVerificationRepository
+
     token_generator: EmailVerificationTokenGenerator
     token_hasher: EmailVerificationTokenHasher
+
     clock: Clock
 
     async def execute(
@@ -82,6 +84,7 @@ class RegisterUserUseCase:
 class VerifyEmailUseCase:
     user_repository: UserRepository
     verification_repository: EmailVerificationRepository
+
     token_hasher: EmailVerificationTokenHasher
     clock: Clock
 
