@@ -1,7 +1,6 @@
-from .interfaces import AccessTokenIssuer, CredentialVerifier, PasswordHasher
+from .ports import CredentialVerifier, PasswordHasher
 
 __all__ = [
-    "AccessTokenIssuer",
     "CredentialVerifier",
     "PasswordHasher",
 ]

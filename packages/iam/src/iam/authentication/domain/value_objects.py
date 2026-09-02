@@ -31,14 +31,3 @@ class PasswordHash(ValueObject[str]):
         object.__setattr__(self, "value", value)
 
 
-@dataclass(frozen=True, slots=True)
-class AccessToken(ValueObject[str]):
-    value: str
-
-    def __post_init__(self) -> None:
-        value = self.value.strip()
-
-        if not value:
-            raise ValueError("Access token cannot be empty")
-
-        object.__setattr__(self, "value", value)
