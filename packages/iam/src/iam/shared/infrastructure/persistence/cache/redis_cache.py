@@ -1,39 +1,34 @@
+from datetime import timedelta
+
 from redis.asyncio import Redis
 
-from iam.shared.application.cache import Cache
+from .cache import CacheStore
 
 
-class RedisCache(Cache):
+class RedisCacheStore(CacheStore):
     def __init__(
         self,
-        redis: Redis,
+        client: Redis,
     ) -> None:
-        self._redis = redis
+        self._client = client
 
     async def get(
         self,
         key: str,
-    ) -> str | None:
-        return await self._redis.get(key)
+    ) -> bytes | None:
+        return await self._client.get(key)
 
     async def set(
         self,
         key: str,
-        value: str,
+        value: bytes,
         *,
-        ttl: int | None = None,
+        ttl: timedelta,
     ) -> None:
-        await self._redis.set(
-            key,
-            value,
-            ex=ttl,
-        )
+        await self._client.set(key, value, ex=int(ttl.total_seconds()))
 
     async def delete(
         self,
         key: str,
     ) -> None:
-        await self._redis.delete(key)
-
-    async def delete_pattern(self, key: str) -> None:
-        raise NotImplementedError
+        await self._client.delete(key)
