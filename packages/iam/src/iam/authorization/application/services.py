@@ -1,10 +1,13 @@
+import json
 from dataclasses import dataclass
+from datetime import timedelta
 
 from iam.authorization.domain.permission_set import PermissionSet
 from iam.authorization.domain.value_objects import Permission
 from iam.identity.domain.value_objects.user_id import UserId
+from iam.shared.infrastructure.persistence.cache.cache import CacheKey, CacheStore
 
-from .ports import PermissionCache, PermissionResolver
+from .ports import PermissionResolver
 
 
 @dataclass(slots=True)
@@ -26,25 +29,41 @@ class AuthorizationService:
 
 @dataclass(slots=True)
 class CachedPermissionResolver:
-    cache: PermissionCache
     resolver: PermissionResolver
+    cache: CacheStore
+    key_builder: CacheKey
+    ttl: timedelta = timedelta(minutes=5)
+    # cache: PermissionCache
 
     async def resolve(
         self,
         *,
         user_id: UserId,
     ) -> PermissionSet:
-        cached = await self.cache.get(user_id=user_id)
-        if cached is not None:
-            return cached
-
-        permissions = await self.resolver.resolve(
-            user_id=user_id,
+        key = self.key_builder.build(
+            "authz:permissions:v1",
+            str(user_id),
         )
 
+        cached = await self.cache.get(key)
+        if cached is not None:
+            values = json.loads(cached)
+
+            return PermissionSet(
+                frozenset(
+                    Permission(value)  # force split
+                    for value in values
+                )
+            )
+
+        permissions = await self.resolver.resolve(user_id)
+
         await self.cache.set(
-            user_id=user_id,
-            permissions=permissions,
+            key,
+            json.dumps(
+                [str(permission) for permission in permissions]  # force split
+            ).encode(),
+            ttl=self.ttl,
         )
 
         return permissions

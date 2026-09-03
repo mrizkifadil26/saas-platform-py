@@ -1,7 +1,6 @@
 from typing import Protocol
 
 from iam.authorization.domain.permission_set import PermissionSet
-from iam.authorization.domain.value_objects import RoleId
 from iam.identity.domain.value_objects import UserId
 
 
@@ -38,12 +37,17 @@ class PermissionResolver(Protocol):
 
 
 class PermissionCacheInvalidator(Protocol):
-    async def invalidate_user_permissions(
+    async def invalidate_user(
         self,
         user_id: UserId,
     ) -> None: ...
 
-    async def invalidate_role_permissions(
-        self,
-        role_id: RoleId,
-    ) -> None: ...
+    # async def invalidate_user_permissions(
+    #     self,
+    #     user_id: UserId,
+    # ) -> None: ...
+
+    # async def invalidate_role_permissions(
+    #     self,
+    #     role_id: RoleId,
+    # ) -> None: ...
