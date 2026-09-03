@@ -6,7 +6,6 @@ from .enums import (
     CredentialStatus,
     CredentialType,
 )
-from .policies import AuthenticationPolicy
 from .repositories import AuthenticationAttemptRepository, CredentialRepository
 
 __all__ = [
@@ -14,7 +13,6 @@ __all__ = [
     "AuthenticationAttemptRepository",
     "AuthenticationDenialReason",
     "AuthenticationOutcome",
-    "AuthenticationPolicy",
     "Credential",
     "CredentialRepository",
     "CredentialStatus",
