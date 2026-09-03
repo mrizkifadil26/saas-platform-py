@@ -22,7 +22,7 @@ from .dto import (
     AuthenticationResult,
     SetupPasswordResult,
 )
-from .ports import CredentialVerifier, PasswordHasher
+from .ports import CredentialVerifier, LoginThrottle, PasswordHasher
 
 
 @dataclass(slots=True)
@@ -43,15 +43,18 @@ class AuthenticateWithPasswordUseCase:
         now = self.clock.now()
         email = Email(command.email)
 
-        throttle = await self.login_throttle.check()
+        throttle = await self.login_throttle.acquire(
+            email=email,
+            ip_address=command.ip_address,
+        )
         if not throttle.allowed:
             # raise AuthenticationThrottledError
             raise
 
         credential = await self.credential_repository.find_password_by_email(email)
         if credential is None:
-            self._record_failure()
-            self.login_throttle.record_failure()
+            # self._record_failure()
+            # self.login_throttle.record_failure()
 
             # raise InvalidCredentialsError
             raise
@@ -62,13 +65,13 @@ class AuthenticateWithPasswordUseCase:
         )
 
         if not is_valid:
-            self._record_failure()
-            self.login_throttle.record_failure()
+            # self._record_failure()
+            # self.login_throttle.record_failure()
 
             # raise InvalidCredentialsError
             raise
 
-        self.login_throttle.record_success()
+        # self.login_throttle.record_success()
         # attempt = AuthenticationAttempt.succeeded(
         #     email=email,
         #     user_id=credential.user_id,
