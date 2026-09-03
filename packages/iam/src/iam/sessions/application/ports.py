@@ -39,8 +39,6 @@ class AccessTokenIssuer(Protocol):
     def issue(
         self,
         claims: AccessTokenClaims,
-        # claims: dict[str, Any],
-        # expires_in: timedelta | None = None,
     ) -> AccessToken: ...
 
 
