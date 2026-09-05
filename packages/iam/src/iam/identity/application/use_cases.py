@@ -1,10 +1,9 @@
+import uuid
 from dataclasses import dataclass
 
 from iam.identity.domain import (
     EmailVerification,
-    EmailVerificationRepository,
     User,
-    UserRepository,
 )
 from iam.identity.domain.value_objects import (
     Email,
@@ -12,6 +11,8 @@ from iam.identity.domain.value_objects import (
     UserId,
 )
 from iam.shared.application import Clock
+from iam.shared.application.outbox import OutboxWriter
+from iam.shared.application.unit_of_work import UnitOfWork
 
 from .commands import (
     RegisterUserCommand,
@@ -26,7 +27,12 @@ from .exceptions import (
     UserEmailAlreadyVerifiedError,
     UserNotFoundError,
 )
-from .ports import EmailVerificationTokenGenerator, EmailVerificationTokenHasher
+from .ports import (
+    EmailVerificationRepository,
+    EmailVerificationTokenGenerator,
+    EmailVerificationTokenHasher,
+    UserRepository,
+)
 
 
 @dataclass(slots=True)
@@ -38,6 +44,8 @@ class RegisterUserUseCase:
     token_hasher: EmailVerificationTokenHasher
 
     clock: Clock
+    outbox: OutboxWriter
+    uow: UnitOfWork
 
     async def execute(
         self,
@@ -65,8 +73,23 @@ class RegisterUserUseCase:
             ttl_minutes=15,
         )
 
-        await self.user_repository.save(user)
-        await self.verification_repository.save(verification)
+        async with self.uow:
+            await self.user_repository.save(user)
+            await self.verification_repository.save(verification)
+
+            await self.outbox.add(
+                id=uuid.uuid4(),
+                topic="iam.email_verification_requested",
+                payload={
+                    "user_id": str(user.id),
+                    "email": user.email.value,
+                    "verification_token": token_hash,
+                },
+            )
+
+            await self.uow.commit()
+
+        # send email
 
         return RegisterUserResult(
             user=UserDTO(

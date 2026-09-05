@@ -3,9 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from iam.identity.domain import (
     EmailVerification,
-    EmailVerificationRepository,
     User,
-    UserRepository,
 )
 from iam.identity.domain.value_objects import (
     Email,
@@ -18,7 +16,7 @@ from .models import EmailVerificationModel, UserModel
 from .orm_mappers import EmailVerificationORMMapper, UserORMMapper
 
 
-class SQLAlchemyUserRepository(UserRepository):
+class SQLAlchemyUserRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
@@ -82,7 +80,7 @@ class SQLAlchemyUserRepository(UserRepository):
         return UserORMMapper.to_model(entity)
 
 
-class SQLAlchemyEmailVerificationRepository(EmailVerificationRepository):
+class SQLAlchemyEmailVerificationRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

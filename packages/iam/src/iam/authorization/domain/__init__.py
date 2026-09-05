@@ -1,14 +1,12 @@
-from .permission_catalog import UserPermissions
-from .permission_set import PermissionSet
+from . import permission_catalog as permissions
 from .repositories import RoleAssignmentRepository, RoleRepository
 from .role import Role
 from .role_assignment import RoleAssignment
 
 __all__ = [
-    "PermissionSet",
     "Role",
     "RoleAssignment",
     "RoleAssignmentRepository",
     "RoleRepository",
-    "UserPermissions",
+    "permissions",
 ]

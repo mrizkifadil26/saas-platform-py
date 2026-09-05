@@ -4,4 +4,12 @@ target-version = "py311"
 src = ["services", "packages"]
 
 [tool.pytest.ini_options]
-testpaths = ["services", "packages"]
+testpaths = [
+    "packages/iam/tests",
+]
+
+[tool.uv.workspace]
+members = [
+    "packages/iam",
+    "packages/shared/db",
+]

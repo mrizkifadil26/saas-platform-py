@@ -1,17 +1,18 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from iam.shared.domain.aggregate_root import AggregateRoot
 
-from .value_objects import Permission, RoleId
+from .value_objects import Permission, PermissionSet, RoleId
 
 
 @dataclass(slots=True)
 class Role(AggregateRoot[RoleId]):
     _name: str
-    _permissions: set[Permission] = field(default_factory=lambda: set[Permission]())
+    # _permissions: set[Permission] = field(default_factory=lambda: set[Permission]())
+    _permissions: PermissionSet
 
     def __post_init__(self) -> None:
         name = self._name.strip()
@@ -30,7 +31,7 @@ class Role(AggregateRoot[RoleId]):
         role = cls(
             id=RoleId.generate(),
             _name=name,
-            _permissions=set(permissions),
+            _permissions=PermissionSet.from_iterable(permissions),
         )
 
         # TODO: emit role created event
