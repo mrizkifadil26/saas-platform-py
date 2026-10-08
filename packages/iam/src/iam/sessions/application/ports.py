@@ -42,6 +42,13 @@ class AccessTokenIssuer(Protocol):
     ) -> AccessToken: ...
 
 
+class AccessTokenVerifier(Protocol):
+    def verify(
+        self,
+        token: AccessToken,
+    ) -> AccessTokenClaims | None: ...
+
+
 class SessionUnitOfWork(Protocol):
     sessions: SessionRepository
     refresh_tokens: RefreshTokenRepository

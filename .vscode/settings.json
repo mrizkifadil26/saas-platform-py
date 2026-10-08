@@ -1,27 +1,6 @@
 {
     "python.defaultInterpreterPath": "",
-    "python.analysis.typeCheckingMode": "basic",
-    "python.analysis.autoImportCompletions": true,
-    "python.analysis.diagnosticSeverityOverrides": {
-        "reportMissingImports": "none"
-    },
-    // Make Pylance not crawl the whole monorepo like a raccoon in your attic
-    "python.analysis.exclude": [
-        "**/.venv/**",
-        "**/__pycache__/**",
-        "**/.mypy_cache/**",
-        "**/.ruff_cache/**",
-        "**/.pytest_cache/**",
-        "**/.tox/**",
-        "**/.nox/**",
-        "**/.cache/**",
-        "**/node_modules/**",
-        "**/dist/**",
-        "**/build/**",
-        "**/.git/**",
-        "**/htmlcov/**",
-        "**/.coverage"
-    ],
+    "python.analysis.autoImportCompletions": false,
     "[python]": {
         "editor.defaultFormatter": "charliermarsh.ruff",
         "editor.formatOnSave": true,
@@ -54,4 +33,11 @@
         100
     ],
     "editor.renderWhitespace": "boundary",
+    "python-envs.pythonProjects": [
+        {
+            "path": ".",
+            "envManager": "ms-python.python:venv",
+            "packageManager": "ms-python.python:pip"
+        }
+    ],
 }

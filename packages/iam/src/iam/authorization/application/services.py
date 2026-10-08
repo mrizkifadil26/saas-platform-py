@@ -67,3 +67,27 @@ class CachedPermissionResolver:
         )
 
         return permissions
+
+
+@dataclass(frozeon=True, slots=True)
+class AuthorizationContext:
+    principal: Principal | None
+    roles: frozenset[str]
+    permissions: frozenset[str]
+
+    @classmethod
+    def anonymous(cls) -> :
+        return cls(
+            principal=None,
+            roles=frozenset(),
+            permissions=frozenset(),
+        )
+
+    @property
+    def user_id(self) -> UUID | None:
+        return self.principal.user_id if self.principal else None
+
+async def get_authz_context(
+    request: Request,
+) -> AuthorizationContext:
+    return request.state.authorization

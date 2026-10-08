@@ -7,8 +7,8 @@ class AuthenticateUserCommand:
     email: str
     password: str
 
-    ip_address: str
-    user_agent: str
+    ip_address: str | None
+    user_agent: str | None
 
 
 @dataclass(frozen=True, slots=True)

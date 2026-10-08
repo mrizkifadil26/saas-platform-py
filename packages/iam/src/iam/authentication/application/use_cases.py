@@ -1,14 +1,18 @@
 from dataclasses import dataclass
 from uuid import uuid4
 
+from iam.authentication.application.queries import GetAuthenticationQuery
 from iam.authentication.domain import (
     Credential,
     CredentialRepository,
     CredentialType,
 )
-from iam.identity.domain import UserRepository
+from iam.identity.application.ports import UserRepository
 from iam.identity.domain.value_objects import Email, UserId
 from iam.sessions.application.api import SessionIssuer
+from iam.sessions.application.ports import AccessTokenVerifier
+from iam.sessions.domain import SessionRepository
+from iam.sessions.domain.value_objects import AccessToken
 from iam.shared.application import Clock
 
 from .commands import (
@@ -290,3 +294,38 @@ class ResetPasswordCredentialUseCase:
 
         # TODO: revoke all sessions for user
         # TODO: revoke refresh tokens for user
+
+
+@dataclass(slots=True)
+class GetAuthenticatedUserUseCase:
+    sessions: SessionRepository
+    verifier: AccessTokenVerifier
+    clock: Clock
+
+    async def execute(
+        self,
+        query: GetAuthenticationQuery,
+    ) -> AuthenticationResult | None:
+        now = self.clock.now()
+
+        access_token = AccessToken(query.access_token)
+        claims = self.verifier.verify(access_token)
+        if claims is None:
+            return None
+
+        session = await self.sessions.find_by_id(claims.session_id)
+        if session is None:
+            return None
+
+        if session.is_expired(now):
+            return None
+
+        if session.user_id != claims.user_id:
+            return None
+
+        return AuthenticationResult(
+            user_id=session.user_id.value,
+            session_id=session.id.value,
+            access_token=access_token.value,
+            refresh_token="dummy_refresh_token",
+        )

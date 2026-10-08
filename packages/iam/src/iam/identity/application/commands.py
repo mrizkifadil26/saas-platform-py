@@ -5,6 +5,8 @@ from uuid import UUID
 @dataclass(frozen=True, slots=True)
 class RegisterUserCommand:
     email: str
+    password: str
+    name: str
 
 
 @dataclass(frozen=True, slots=True)

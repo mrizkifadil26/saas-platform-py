@@ -21,7 +21,6 @@ class EmailVerification(
     AggregateRoot[EmailVerificationId],
 ):
     user_id: UserId
-
     token_hash: EmailVerificationTokenHash
 
     expires_at: datetime

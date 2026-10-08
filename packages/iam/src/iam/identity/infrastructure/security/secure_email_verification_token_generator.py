@@ -1,12 +1,9 @@
 import secrets
 
-from iam.identity.application import EmailVerificationTokenGenerator
 from iam.identity.domain.value_objects import EmailVerificationToken
 
 
-class SecureEmailVerificationTokenGenerator(
-    EmailVerificationTokenGenerator,
-):
+class SecureEmailVerificationTokenGenerator:
     def __init__(
         self,
         *,
@@ -17,13 +14,8 @@ class SecureEmailVerificationTokenGenerator(
     def generate(
         self,
     ) -> EmailVerificationToken:
-        return EmailVerificationToken(
-            self._generate_raw_token(),
-        )
-
-    def _generate_raw_token(
-        self,
-    ) -> str:
-        return secrets.token_urlsafe(
+        token_value = secrets.token_urlsafe(
             self._token_bytes,
         )
+
+        return EmailVerificationToken(token_value)

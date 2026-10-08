@@ -4,7 +4,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from iam.shared.infrastructure.persistence import IAMBase
+from iam.shared.infrastructure.database import IAMBase
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -23,10 +23,10 @@ config.set_main_option("sqlalchemy.url", database_url)
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 
-import iam.authentication.infrastructure.persistence.database.models
-import iam.authorization.infrastructure.persistence.database.models
-import iam.identity.infrastructure.persistence.database.models
-import iam.sessions.infrastructure.persistence.database.models  # noqa: F401
+import iam.authentication.infrastructure.persistence.database.models  # pyright: ignore[reportUnusedImport]
+import iam.authorization.infrastructure.persistence.database.models  # pyright: ignore[reportUnusedImport]
+import iam.identity.infrastructure.database.models  # pyright: ignore[reportUnusedImport]
+import iam.sessions.infrastructure.database.models  # pyright: ignore[reportUnusedImport] # noqa: F401
 
 target_metadata = IAMBase.metadata
 # other values from the config, defined by the needs of env.py,

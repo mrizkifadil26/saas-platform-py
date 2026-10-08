@@ -18,6 +18,5 @@
         }
     ],
     "settings": {
-        "python.terminal.activateEnvironment": false
     }
 }

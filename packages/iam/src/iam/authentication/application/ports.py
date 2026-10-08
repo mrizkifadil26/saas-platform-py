@@ -5,7 +5,7 @@ from datetime import timedelta
 from typing import Protocol
 
 from iam.authentication.domain.value_objects import PasswordHash
-from iam.identity.domain.value_objects.email import Email
+from iam.identity.domain.value_objects import Email
 
 
 class PasswordHasher(Protocol):

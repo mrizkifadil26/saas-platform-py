@@ -2,9 +2,7 @@ from dataclasses import dataclass
 
 from iam.identity.domain import (
     EmailVerification,
-    EmailVerificationRepository,
     User,
-    UserRepository,
 )
 from iam.identity.domain.value_objects import (
     Email,
@@ -12,13 +10,21 @@ from iam.identity.domain.value_objects import (
     UserId,
 )
 from iam.shared.application import Clock
+from iam.shared.application.messaging.message import MessageEnvelope, MessageMetadata
+from iam.shared.application.messaging.outbox import OutboxRepository
+from iam.shared.application.unit_of_work import UnitOfWork
 
 from .commands import (
     RegisterUserCommand,
     ResendEmailVerificationCommand,
     VerifyEmailCommand,
 )
-from .dto import EmailVerificationResult, RegisterUserResult, UserDTO
+from .dto import (
+    EmailVerificationResult,
+    RegisterUserResult,
+    SendEmailVerificationRequest,
+    UserDTO,
+)
 from .exceptions import (
     EmailVerificationExpiredError,
     InvalidEmailVerificationTokenError,
@@ -26,18 +32,26 @@ from .exceptions import (
     UserEmailAlreadyVerifiedError,
     UserNotFoundError,
 )
-from .ports import EmailVerificationTokenGenerator, EmailVerificationTokenHasher
+from .ports import (
+    EmailVerificationRepository,
+    EmailVerificationTokenGenerator,
+    EmailVerificationTokenHasher,
+    UserRepository,
+)
 
 
 @dataclass(slots=True)
 class RegisterUserUseCase:
     user_repository: UserRepository
     verification_repository: EmailVerificationRepository
+    outbox_repository: OutboxRepository
 
     token_generator: EmailVerificationTokenGenerator
     token_hasher: EmailVerificationTokenHasher
 
     clock: Clock
+    # outbox: OutboxWriter
+    uow: UnitOfWork
 
     async def execute(
         self,
@@ -65,10 +79,27 @@ class RegisterUserUseCase:
             ttl_minutes=15,
         )
 
-        await self.user_repository.save(user)
-        await self.verification_repository.save(verification)
+        message = MessageEnvelope(
+            message_type="iam.email_verification_requested",
+            payload=SendEmailVerificationRequest(
+                user_id=user.id.value,
+                email=user.email.value,
+                verification_token=raw_token.value,
+            ),
+            metadata=MessageMetadata.create(),
+        )
+
+        async with self.uow:
+            await self.user_repository.save(user)
+            await self.verification_repository.save(verification)
+            await self.outbox_repository.add(message)
+
+            await self.uow.commit()
+
+        # send email
 
         return RegisterUserResult(
+            id=str("dummy-registration-id"),
             user=UserDTO(
                 id=user.id.value,
                 email=user.email.value,
@@ -166,5 +197,5 @@ class DeactivateUserUseCase:
     async def execute(self): ...
 
 
-class ReactivateUseUseCase:
+class ReactivateUserUseCase:
     async def execute(self): ...
