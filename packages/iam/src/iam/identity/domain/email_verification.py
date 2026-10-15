@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from iam.shared.domain import AggregateRoot
 
@@ -21,7 +21,6 @@ class EmailVerification(
     AggregateRoot[EmailVerificationId],
 ):
     user_id: UserId
-
     token_hash: EmailVerificationTokenHash
 
     expires_at: datetime
@@ -36,14 +35,14 @@ class EmailVerification(
         user_id: UserId,
         token_hash: EmailVerificationTokenHash,
         created_at: datetime,
-        ttl_minutes: int = 15,
+        expires_at: datetime,
     ) -> EmailVerification:
         verification = cls(
             id=EmailVerificationId.generate(),
             user_id=user_id,
             token_hash=token_hash,
-            expires_at=created_at + timedelta(minutes=ttl_minutes),
             created_at=created_at,
+            expires_at=expires_at,
         )
 
         event = EmailVerificationCreated(

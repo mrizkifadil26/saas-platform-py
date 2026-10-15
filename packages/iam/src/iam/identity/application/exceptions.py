@@ -9,21 +9,21 @@ class UserAlreadyExistsError(IdentityError):
         super().__init__(f"User already exists: {email}")
 
 
-class UserNotFoundError(Exception):
+class UserNotFoundError(IdentityError):
     """Raised when a user with the specified identifier does not exist."""
 
 
-class InvalidPasswordError(Exception):
+class InvalidCredentialsError(IdentityError):
     """Raised when a provided password does not meet security requirements."""
 
 
-class InvalidEmailVerificationTokenError(Exception):
+class InvalidEmailVerificationTokenError(IdentityError):
     """Raised when email verification token is invalid."""
 
 
-class EmailVerificationExpiredError(Exception):
+class EmailVerificationExpiredError(IdentityError):
     """Raised when verification token has expired."""
 
 
-class UserEmailAlreadyVerifiedError(Exception):
+class UserEmailAlreadyVerifiedError(IdentityError):
     """Raised when attempting to verify or resend verification for an already verified email."""

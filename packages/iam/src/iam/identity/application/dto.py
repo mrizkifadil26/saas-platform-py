@@ -13,6 +13,7 @@ class UserDTO:
 
 @dataclass(frozen=True, slots=True)
 class RegisterUserResult:
+    id: str
     user: UserDTO
     email_verification_required: bool
     verification_expires_at: datetime | None
@@ -30,3 +31,18 @@ class ResendEmailVerificationResult:
     user_id: UUID
 
     verification_email_sent: bool
+
+
+@dataclass(frozen=True, slots=True)
+class SendEmailVerificationRequest:
+    user_id: UUID
+    email: str
+    verification_token: str
+
+
+@dataclass(frozen=True, slots=True)
+class GetUserResult:
+    id: UUID
+    email: str
+    # name: str
+    email_verified: bool

@@ -11,6 +11,8 @@ class UserRegistered(DomainEvent):
     user_id: UserId
     email: Email
 
+    event_type = "iam.user.registered"
+
 
 @dataclass(frozen=True, slots=True)
 class UserEmailVerified(DomainEvent):

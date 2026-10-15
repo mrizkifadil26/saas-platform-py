@@ -1,27 +1,6 @@
 {
     "python.defaultInterpreterPath": "",
-    "python.analysis.typeCheckingMode": "basic",
-    "python.analysis.autoImportCompletions": true,
-    "python.analysis.diagnosticSeverityOverrides": {
-        "reportMissingImports": "none"
-    },
-    // Make Pylance not crawl the whole monorepo like a raccoon in your attic
-    "python.analysis.exclude": [
-        "**/.venv/**",
-        "**/__pycache__/**",
-        "**/.mypy_cache/**",
-        "**/.ruff_cache/**",
-        "**/.pytest_cache/**",
-        "**/.tox/**",
-        "**/.nox/**",
-        "**/.cache/**",
-        "**/node_modules/**",
-        "**/dist/**",
-        "**/build/**",
-        "**/.git/**",
-        "**/htmlcov/**",
-        "**/.coverage"
-    ],
+    "python.analysis.autoImportCompletions": false,
     "[python]": {
         "editor.defaultFormatter": "charliermarsh.ruff",
         "editor.formatOnSave": true,
@@ -47,7 +26,10 @@
         "**/__pycache__/**": true,
         "**/.venv/**": true,
         "**/.mypy_cache/**": true,
-        "**/.ruff_cache/**": true
+        "**/.ruff_cache/**": true,
+        "**/node_modules/**": true,
+        "**/.git/objects/**": true,
+        "**/.git/subtree-cache/**": true
     },
     // Quality of life
     "editor.rulers": [

@@ -1,11 +1,15 @@
 from typing import Protocol
 
 
-class Cache(Protocol):
-    async def get(self, key: str) -> str | None: ...
+class CacheStore(Protocol):
+    async def get(self, key: str) -> bytes | None: ...
 
-    async def set(self, key: str, value: str, *, ttl: int | None = None) -> None: ...
+    async def set(
+        self,
+        key: str,
+        value: bytes,
+        *,
+        ttl: int | None = None,
+    ) -> None: ...
 
     async def delete(self, key: str) -> None: ...
-
-    async def delete_pattern(self, key: str) -> None: ...

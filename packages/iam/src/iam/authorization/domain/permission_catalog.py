@@ -1,12 +1,11 @@
-from dataclasses import dataclass
+from typing import Final
 
 from iam.authorization.domain.value_objects import Permission
 
 
-@dataclass(frozen=True, slots=True)
 class UserPermissions:
-    READ = Permission("users.read")
-    CREATE = Permission("users.create")
-    UPDATE = Permission("users.update")
-    DELETE = Permission("users.delete")
-    MANAGE = Permission("users.*")
+    READ: Final = Permission("users:read")
+    CREATE: Final = Permission("users:create")
+    UPDATE: Final = Permission("users:update")
+    DELETE: Final = Permission("users:delete")
+    MANAGE: Final = Permission("users:*")
