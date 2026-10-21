@@ -1,15 +1,7 @@
-from .email_verification import EmailVerification
-from .enums import UserStatus
-from .repositories import (
-    EmailVerificationRepository,
-    UserRepository,
-)
-from .user import User
+from .enums import IdentityProvider
+from .external_identity import ExternalIdentity
 
 __all__ = [
-    "EmailVerification",
-    "EmailVerificationRepository",
-    "User",
-    "UserRepository",
-    "UserStatus",
+    "ExternalIdentity",
+    "IdentityProvider",
 ]

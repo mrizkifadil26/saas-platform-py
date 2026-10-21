@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from iam.shared.domain import Entity
+from iam.shared.kernel import Entity
 
 
 @dataclass(eq=False)

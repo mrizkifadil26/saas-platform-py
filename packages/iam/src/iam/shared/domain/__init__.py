@@ -1,13 +1,5 @@
-from .aggregate_root import AggregateRoot
-from .entity import Entity
-from .entity_id import EntityId
-from .events import DomainEvent
-from .value_object import ValueObject
+from .email import EmailAddress
 
 __all__ = [
-    "AggregateRoot",
-    "DomainEvent",
-    "Entity",
-    "EntityId",
-    "ValueObject",
+    "EmailAddress",
 ]

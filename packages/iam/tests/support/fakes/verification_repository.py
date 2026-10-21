@@ -3,12 +3,12 @@
 from dataclasses import dataclass, field
 
 from iam.identity.domain import EmailVerificationRepository
-from iam.identity.domain.email_verification import EmailVerification
 from iam.identity.domain.value_objects import (
     EmailVerificationId,
     EmailVerificationTokenHash,
     UserId,
 )
+from iam.registrations.domain.email_verification import EmailVerification
 
 
 @dataclass(slots=True)

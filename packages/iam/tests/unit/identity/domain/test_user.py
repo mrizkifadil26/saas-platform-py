@@ -1,9 +1,10 @@
 from datetime import datetime, timezone
 
 import pytest
+from tests.factories.identity import make_email, make_user
+from tests.factories.shared import make_datetime
 
-from iam.identity.domain import User, UserStatus
-from iam.identity.domain.events import (
+from iam.accounts.domain.events import (
     UserActivated,
     UserDisabled,
     UserEmailChanged,
@@ -14,16 +15,15 @@ from iam.identity.domain.events import (
     UserUnlocked,
     UserUnsuspended,
 )
-from iam.identity.domain.exceptions import (
+from iam.accounts.domain.exceptions import (
     InvalidUserStateError,
     UserEmailAlreadyVerifiedError,
     UserEmailUnchangedError,
     UserEmailVerificationBlockedError,
     UserLoginBlockedError,
 )
+from iam.identity.domain import User, UserStatus
 from iam.identity.domain.value_objects import Email
-from tests.factories.identity import make_email, make_user
-from tests.factories.shared import make_datetime
 
 
 class TestUserRegister:

@@ -1,7 +1,54 @@
+[dependency-groups]
+dev = ["deptry>=0.25.1", "pyright>=1.1.414", "ruff>=0.15.22"]
+
+test = ["pytest>=9.1.1", "pytest-asyncio>=1.4.0", "pytest-cov>=7.1.0"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"
 src = ["services", "packages"]
 
+[tool.ruff.lint]
+select = [
+    "I",    # import sorting
+    "F401", # unused imports
+    "F822", # undefined name in __all__
+    "F403", # import * usage
+    "F405", # name from import * not defined
+    "RUF",  # Ruff-specific rules
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["iam", "db"]
+force-single-line = false
+combine-as-imports = true
+split-on-trailing-comma = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pyright]
+include = ["services", "packages"]
+typeCheckingMode = "strict"
+reportMissingTypeStubs = "none"
+
 [tool.pytest.ini_options]
-testpaths = ["services", "packages"]
+testpaths = ["packages/iam/tests"]
+asyncio_mode = "auto"
+
+[tool.deptry]
+known_first_party = ["iam", "db", "tests"]
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = [
+    "packages/iam",
+    "packages/shared/db",
+    "services/api",
+]
+
+[tool.uv.sources]
+db = { workspace = true }

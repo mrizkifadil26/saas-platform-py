@@ -1,32 +1,23 @@
 from dataclasses import dataclass
-from datetime import datetime
-from uuid import UUID
+
+from iam.accounts.domain.value_objects import UserId
+from iam.identity.domain.enums import IdentityProvider
+from iam.shared.domain.email import EmailAddress
 
 
 @dataclass(frozen=True, slots=True)
-class UserDTO:
-    id: UUID
-    email: str
-    is_verified: bool
-    created_at: datetime
+class ExternalAuthentication:
+    user_id: UserId
+    provider: IdentityProvider
+    is_new_identity: bool
 
 
 @dataclass(frozen=True, slots=True)
-class RegisterUserResult:
-    user: UserDTO
-    email_verification_required: bool
-    verification_expires_at: datetime | None
+class ExternalProfile:
+    provider: IdentityProvider
+    subject: str
 
-
-@dataclass(frozen=True, slots=True)
-class EmailVerificationResult:
-    user: UserDTO
-
+    email: EmailAddress
     email_verified: bool
 
-
-@dataclass(frozen=True, slots=True)
-class ResendEmailVerificationResult:
-    user_id: UUID
-
-    verification_email_sent: bool
+    name: str | None = None

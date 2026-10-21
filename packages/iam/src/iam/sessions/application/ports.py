@@ -1,11 +1,10 @@
 from dataclasses import dataclass
 from datetime import datetime
-from types import TracebackType
-from typing import Protocol, Self
+from typing import Protocol
 
-from iam.identity.domain.value_objects import UserId
-from iam.sessions.domain import SessionRepository
-from iam.sessions.domain.repositories import RefreshTokenRepository
+from iam.accounts.domain.value_objects import UserId
+from iam.sessions.domain.refresh_token import RefreshToken
+from iam.sessions.domain.session import Session
 from iam.sessions.domain.value_objects import (
     AccessToken,
     RefreshTokenHash,
@@ -42,19 +41,33 @@ class AccessTokenIssuer(Protocol):
     ) -> AccessToken: ...
 
 
-class SessionUnitOfWork(Protocol):
-    sessions: SessionRepository
-    refresh_tokens: RefreshTokenRepository
-
-    async def __aenter__(self) -> Self: ...
-
-    async def __aexit__(
+class AccessTokenVerifier(Protocol):
+    def verify(
         self,
-        exc_type: type[BaseException] | None,
-        exc: BaseException | None,
-        traceback: TracebackType | None,
-    ) -> None: ...
+        token: AccessToken,
+    ) -> AccessTokenClaims | None: ...
 
-    async def commit(self) -> None: ...
 
-    async def rollback(self) -> None: ...
+class SessionRepository(Protocol):
+    async def save(self, session: Session) -> None: ...
+
+    async def find_by_id(
+        self,
+        session_id: SessionId,
+    ) -> Session | None: ...
+
+    async def find_active_by_user_id(
+        self,
+        user_id: UserId,
+    ) -> list[Session]: ...
+
+
+class RefreshTokenRepository(Protocol):
+    async def save(self, session: RefreshToken) -> None: ...
+
+    async def update(self, session: RefreshToken) -> None: ...
+
+    async def find_by_token_hash(
+        self,
+        token_hash: RefreshTokenHash,
+    ) -> RefreshToken | None: ...

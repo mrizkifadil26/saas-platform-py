@@ -1,0 +1,6 @@
+class DeactivateUserHandler:
+    async def execute(self): ...
+
+
+class ReactivateUserHandler:
+    async def execute(self): ...

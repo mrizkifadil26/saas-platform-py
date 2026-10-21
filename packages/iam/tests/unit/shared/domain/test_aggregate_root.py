@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from iam.shared.domain import AggregateRoot, DomainEvent
+from iam.shared.kernel import AggregateRoot, DomainEvent
 
 
 @dataclass(frozen=True)

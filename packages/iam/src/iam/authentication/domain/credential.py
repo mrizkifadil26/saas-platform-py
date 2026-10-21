@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Any
 
 from iam.identity.domain.value_objects import UserId
-from iam.shared.domain import AggregateRoot
+from iam.shared.kernel import AggregateRoot
 
 from .enums import CredentialStatus, CredentialType
 from .value_objects import CredentialId, PasswordHash

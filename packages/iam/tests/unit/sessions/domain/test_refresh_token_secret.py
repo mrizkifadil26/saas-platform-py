@@ -1,10 +1,11 @@
-from iam.sessions.domain.value_objects import RefreshTokenSecret
-from iam.shared.domain.exceptions import ValidationError
 from tests.contracts.domain.string_value_object import (
     assert_rejects_empty,
     assert_trims_whitespace,
     assert_valid_string_value_object,
 )
+
+from iam.sessions.domain.value_objects import RefreshTokenSecret
+from iam.shared.kernel.exceptions import ValidationError
 
 
 class TestRefreshTokenSecret:

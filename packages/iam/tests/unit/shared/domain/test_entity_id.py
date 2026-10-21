@@ -2,8 +2,8 @@ from uuid import UUID
 
 import pytest
 
-from iam.shared.domain import EntityId
-from iam.shared.domain.exceptions import ValidationError
+from iam.shared.kernel import EntityId
+from iam.shared.kernel.exceptions import ValidationError
 
 
 class UserId(EntityId):

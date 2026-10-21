@@ -1,13 +1,17 @@
 from unittest.mock import Mock
 
 import pytest
+from tests.factories.shared import make_datetime
+from tests.support.fakes.clock import FakeClock
+from tests.support.fakes.user_repository import InMemoryUserRepository
+from tests.support.fakes.verification_repository import (
+    InMemoryEmailVerificationRepository,
+)
 
 from iam.identity.application import (
     ResendEmailVerificationCommand,
     ResendEmailVerificationUseCase,
 )
-from iam.identity.application.exceptions import UserNotFoundError
-from iam.identity.application.use_cases import UserEmailAlreadyVerifiedError
 from iam.identity.domain import User
 from iam.identity.domain.value_objects import (
     Email,
@@ -15,12 +19,8 @@ from iam.identity.domain.value_objects import (
     EmailVerificationTokenHash,
     UserId,
 )
-from tests.factories.shared import make_datetime
-from tests.support.fakes.clock import FakeClock
-from tests.support.fakes.user_repository import InMemoryUserRepository
-from tests.support.fakes.verification_repository import (
-    InMemoryEmailVerificationRepository,
-)
+from iam.registration.application.handlers import UserEmailAlreadyVerifiedError
+from iam.registration.domain.exceptions import UserNotFoundError
 
 
 @pytest.mark.asyncio

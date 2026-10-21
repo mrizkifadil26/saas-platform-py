@@ -2,17 +2,17 @@ from datetime import timedelta
 from unittest.mock import Mock
 
 import pytest
-
-from iam.identity.application import RegisterUserCommand, RegisterUserUseCase
-from iam.identity.application.exceptions import UserAlreadyExistsError
-from iam.identity.domain import User
-from iam.identity.domain.value_objects import Email
 from tests.factories.shared import make_datetime
 from tests.support.fakes.clock import FakeClock
 from tests.support.fakes.user_repository import InMemoryUserRepository
 from tests.support.fakes.verification_repository import (
     InMemoryEmailVerificationRepository,
 )
+
+from iam.identity.application import RegisterUserCommand, RegisterUserUseCase
+from iam.identity.domain import User
+from iam.identity.domain.value_objects import Email
+from iam.registration.domain.exceptions import UserAlreadyExistsError
 
 
 @pytest.mark.asyncio

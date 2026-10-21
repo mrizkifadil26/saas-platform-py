@@ -1,30 +1,27 @@
-from datetime import datetime
 from typing import Protocol
 
+from iam.accounts.domain.value_objects import UserId
 from iam.authentication.domain import Credential, CredentialType
-from iam.identity.domain.value_objects import Email, UserId
+from iam.shared.domain.email import EmailAddress
 
-from .authentication_attempt import AuthenticationAttempt
+# class AuthenticationAttemptRepository(Protocol):
+#     async def save(
+#         self,
+#         attempt: AuthenticationAttempt,
+#     ) -> None: ...
 
+#     async def list_recent_by_user_id(
+#         self,
+#         user_id: UserId,
+#         limit: int = 10,
+#     ) -> list[AuthenticationAttempt]: ...
 
-class AuthenticationAttemptRepository(Protocol):
-    async def save(
-        self,
-        attempt: AuthenticationAttempt,
-    ) -> None: ...
-
-    async def list_recent_by_user_id(
-        self,
-        user_id: UserId,
-        limit: int = 10,
-    ) -> list[AuthenticationAttempt]: ...
-
-    async def count_recent_failures(
-        self,
-        *,
-        email: Email,
-        since: datetime,
-    ) -> int: ...
+#     async def count_recent_failures(
+#         self,
+#         *,
+#         email: Email,
+#         since: datetime,
+#     ) -> int: ...
 
 
 class CredentialRepository(Protocol):
@@ -35,7 +32,7 @@ class CredentialRepository(Protocol):
 
     async def find_password_by_email(
         self,
-        email: Email,
+        email: EmailAddress,
     ) -> Credential | None: ...
 
     async def find_by_user_and_type(

@@ -1,4 +1,4 @@
-from iam.shared.domain import ValueObject
+from iam.shared.kernel import ValueObject
 
 
 class StringValueObject(ValueObject[str]):

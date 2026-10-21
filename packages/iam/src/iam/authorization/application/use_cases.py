@@ -9,7 +9,7 @@ from iam.authorization.domain import (
 )
 from iam.authorization.domain.value_objects import Permission, RoleId
 from iam.identity.domain.value_objects.user_id import UserId
-from iam.shared.application.cache import Cache
+from iam.shared.infrastructure.cache.cache import Cache
 
 from .commands import (
     AssignRoleToUserCommand,

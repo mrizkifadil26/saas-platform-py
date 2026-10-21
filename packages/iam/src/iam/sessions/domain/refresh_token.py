@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 
-from iam.shared.domain import AggregateRoot
+from iam.shared.kernel import AggregateRoot
 
 from .value_objects import RefreshTokenHash, RefreshTokenId, SessionId
 

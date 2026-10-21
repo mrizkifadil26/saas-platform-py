@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 
-from iam.shared.domain import EntityId
-from iam.shared.domain.entity_id import ValueObject
-from iam.shared.domain.exceptions import ValidationError
+from iam.shared.kernel import EntityId
+from iam.shared.kernel.entity_id import ValueObject
+from iam.shared.kernel.exceptions import ValidationError
 
 
 @dataclass(frozen=True, slots=True)

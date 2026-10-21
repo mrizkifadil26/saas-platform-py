@@ -1,12 +1,9 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-from iam.identity.domain.value_objects import UserId
-from iam.sessions.application.dto import IssuedSession
-from iam.sessions.domain import RefreshToken, Session
+from iam.sessions.domain import RefreshToken
 from iam.sessions.domain.value_objects import RefreshTokenSecret
 
-from .api import SessionIssuer
 from .dto import RotatedSessionTokens
 from .ports import (
     AccessTokenClaims,
@@ -16,68 +13,67 @@ from .ports import (
     SessionUnitOfWork,
 )
 
+# @dataclass(slots=True)
+# class IssueSessionService(SessionIssuer):
+#     unit_of_work: SessionUnitOfWork
 
-@dataclass(slots=True)
-class IssueSessionService(SessionIssuer):
-    unit_of_work: SessionUnitOfWork
+#     refresh_token_generator: RefreshTokenGenerator
+#     refresh_token_hasher: RefreshTokenHasher
+#     access_token_issuer: AccessTokenIssuer
 
-    refresh_token_generator: RefreshTokenGenerator
-    refresh_token_hasher: RefreshTokenHasher
-    access_token_issuer: AccessTokenIssuer
+#     session_ttl: timedelta
+#     refresh_token_ttl: timedelta
+#     access_token_ttl: timedelta
 
-    session_ttl: timedelta
-    refresh_token_ttl: timedelta
-    access_token_ttl: timedelta
+#     async def issue(
+#         self,
+#         *,
+#         user_id: UserId,
+#         issued_at: datetime,
+#     ) -> IssuedSession:
+#         session = Session.create(
+#             user_id=user_id,
+#             created_at=issued_at,
+#             expires_at=issued_at + self.session_ttl,
+#         )
 
-    async def issue(
-        self,
-        *,
-        user_id: UserId,
-        issued_at: datetime,
-    ) -> IssuedSession:
-        session = Session.create(
-            user_id=user_id,
-            created_at=issued_at,
-            expires_at=issued_at + self.session_ttl,
-        )
+#         raw_refresh_token = self.refresh_token_generator.generate()
+#         refresh_token_hash = self.refresh_token_hasher.hash(
+#             raw_refresh_token,
+#         )
 
-        raw_refresh_token = self.refresh_token_generator.generate()
-        refresh_token_hash = self.refresh_token_hasher.hash(
-            raw_refresh_token,
-        )
+#         refresh_token = RefreshToken.create(
+#             session_id=session.id,
+#             token_hash=refresh_token_hash,
+#             created_at=issued_at,
+#             expires_at=issued_at + self.refresh_token_ttl,
+#         )
 
-        refresh_token = RefreshToken.create(
-            session_id=session.id,
-            token_hash=refresh_token_hash,
-            created_at=issued_at,
-            expires_at=issued_at + self.refresh_token_ttl,
-        )
+#         session.attach_refresh_token(
+#             refresh_token.id,
+#             now=issued_at,
+#         )
 
-        session.attach_refresh_token(
-            refresh_token.id,
-            now=issued_at,
-        )
+#         async with self.unit_of_work as uow:
+#             await uow.sessions.save(session)
+#             await uow.refresh_tokens.save(refresh_token)
 
-        async with self.unit_of_work as uow:
-            await uow.sessions.save(session)
-            await uow.refresh_tokens.save(refresh_token)
+#             await uow.commit()
 
-            await uow.commit()
+#         access_token = self.access_token_issuer.issue(
+#             AccessTokenClaims(
+#                 user_id=user_id,
+#                 session_id=session.id,
+#                 issued_at=issued_at,
+#                 expires_at=issued_at + self.access_token_ttl,
+#             )
+#         )
 
-        access_token = self.access_token_issuer.issue(
-            AccessTokenClaims(
-                user_id=user_id,
-                session_id=session.id,
-                issued_at=issued_at,
-                expires_at=issued_at + self.access_token_ttl,
-            )
-        )
-
-        return IssuedSession(
-            session_id=session.id,
-            access_token=access_token,
-            refresh_token=raw_refresh_token,
-        )
+#         return IssuedSession(
+#             session_id=session.id,
+#             access_token=access_token,
+#             refresh_token=raw_refresh_token,
+#         )
 
 
 @dataclass(slots=True)
@@ -129,8 +125,8 @@ class RotateRefreshTokenService:
                 raise
 
             # if current_token.session_id != session.id:
-                # raise InvalidRefreshTokenError()
-                # raise
+            # raise InvalidRefreshTokenError()
+            # raise
 
             new_raw_token = self.token_generator.generate()
             new_token_hash = self.token_hasher.hash(new_raw_token)

@@ -1,18 +1,18 @@
 from datetime import timedelta
 
 import pytest
-
-from iam.identity.domain import EmailVerification
-from iam.identity.domain.exceptions import (
-    EmailVerificationAlreadyVerifiedError,
-    EmailVerificationExpiredError,
-)
 from tests.factories.identity import (
     make_email_verification,
     make_email_verification_token_hash,
     make_user_id,
 )
 from tests.factories.shared import make_datetime
+
+from iam.accounts.domain.exceptions import (
+    EmailVerificationAlreadyVerifiedError,
+    EmailVerificationExpiredError,
+)
+from iam.identity.domain import EmailVerification
 
 
 class TestVerificationCreate:

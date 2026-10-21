@@ -1,17 +1,36 @@
 from typing import Protocol
 
-from iam.identity.domain.value_objects import (
-    EmailVerificationToken,
-    EmailVerificationTokenHash,
-)
+from iam.identity.application.dto import ExternalProfile
+from iam.identity.domain import ExternalIdentity, IdentityProvider
 
 
-class EmailVerificationTokenGenerator(Protocol):
-    def generate(self) -> EmailVerificationToken: ...
-
-
-class EmailVerificationTokenHasher(Protocol):
-    def hash(
+class ExternalIdentityRepository(Protocol):
+    async def get(
         self,
-        raw_token: EmailVerificationToken,
-    ) -> EmailVerificationTokenHash: ...
+        *,
+        provider: IdentityProvider,
+        subject: str,
+    ) -> ExternalIdentity | None: ...
+
+    async def add(
+        self,
+        identity: ExternalIdentity,
+    ) -> None: ...
+
+
+class IdentityProviderClient(Protocol):
+    name: IdentityProvider
+
+    async def authenticate(
+        self,
+        *,
+        authorization_code: str,
+        redirect_uri: str,
+    ) -> ExternalProfile: ...
+
+
+class IdentityProviderRegistry(Protocol):
+    def get(
+        self,
+        provider: IdentityProvider,
+    ) -> IdentityProviderClient: ...

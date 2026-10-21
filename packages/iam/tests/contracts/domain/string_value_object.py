@@ -3,7 +3,7 @@ from typing import TypeVar
 
 import pytest
 
-from iam.shared.domain.value_object import ValueObject
+from iam.shared.kernel.value_object import ValueObject
 
 T = TypeVar(
     "T",

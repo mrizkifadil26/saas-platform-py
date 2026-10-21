@@ -1,4 +1,4 @@
-from .authentication_attempt import AuthenticationAttempt
+from ._authentication_attempt import AuthenticationAttempt
 from .credential import Credential
 from .enums import (
     AuthenticationDenialReason,

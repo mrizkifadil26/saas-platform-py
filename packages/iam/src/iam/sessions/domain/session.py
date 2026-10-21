@@ -3,8 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 
-from iam.identity.domain.value_objects import UserId
-from iam.shared.domain import AggregateRoot
+from iam.accounts.domain.value_objects import UserId
+from iam.shared.kernel import AggregateRoot
 
 from .enums import SessionStatus
 from .value_objects import RefreshTokenId, SessionId

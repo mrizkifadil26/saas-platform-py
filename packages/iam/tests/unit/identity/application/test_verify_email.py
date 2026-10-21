@@ -2,13 +2,10 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+from tests.factories.shared import make_datetime
+from tests.support.fakes.clock import FakeClock
 
 from iam.identity.application import VerifyEmailCommand, VerifyEmailUseCase
-from iam.identity.application.exceptions import (
-    EmailVerificationExpiredError,
-    InvalidEmailVerificationTokenError,
-)
-from iam.identity.application.use_cases import UserNotFoundError
 from iam.identity.domain import EmailVerification, User
 from iam.identity.domain.value_objects import (
     Email,
@@ -16,8 +13,11 @@ from iam.identity.domain.value_objects import (
     EmailVerificationTokenHash,
     UserId,
 )
-from tests.factories.shared import make_datetime
-from tests.support.fakes.clock import FakeClock
+from iam.registration.application.handlers import UserNotFoundError
+from iam.registration.domain.exceptions import (
+    EmailVerificationExpiredError,
+    InvalidEmailVerificationTokenError,
+)
 
 
 @pytest.mark.asyncio
