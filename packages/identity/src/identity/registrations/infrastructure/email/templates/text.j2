@@ -1,0 +1,13 @@
+{% extends "base/text.j2" %}
+
+{% block content %}
+Verify your email address
+
+Please verify your email address using the link below:
+
+{{ verification_url }}
+
+This link expires in {{ expires_in }}.
+
+If you didn't request this, you can safely ignore this email.
+{% endblock %}
