@@ -1,0 +1,45 @@
+{
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.codeActionsOnSave": {
+        "source.organizeImports.ruff": "explicit",
+        "source.fixAll.ruff": "explicit",
+    },
+    "python.analysis.languageServerMode": "light",
+    "python.analysis.diagnosticMode": "openFilesOnly",
+    "python.analysis.autoImportCompletions": false,
+    "python.analysis.indexing": false,
+    "python.testing.pytestEnabled": false,
+    "python.testing.autoTestDiscoverOnSaveEnabled": false,
+    "python.testing.promptToConfigure": false,
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "files.watcherExclude": {
+        "**/.git/objects/**": true,
+        "**/.venv/**": true,
+        "**/__pycache__/**": true,
+        "**/.pytest_cache/**": true,
+        "**/.ruff_cache/**": true,
+        "**/.mypy_cache/**": true,
+        "**/build/**": true,
+        "**/dist/**": true,
+        "**/node_modules/**": true
+    },
+    "search.exclude": {
+        "**/.venv": true,
+        "**/__pycache__": true,
+        "**/.pytest_cache": true,
+        "**/.ruff_cache": true,
+        "**/.mypy_cache": true,
+        "**/build": true,
+        "**/dist": true,
+        "**/node_modules": true
+    },
+    "python-envs.pythonProjects": [
+        {
+            "path": ".",
+            "envManager": "ms-python.python:venv",
+            "packageManager": "ms-python.python:pip"
+        }
+    ],
+}

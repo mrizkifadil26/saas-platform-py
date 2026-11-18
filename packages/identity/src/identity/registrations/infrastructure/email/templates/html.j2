@@ -1,0 +1,24 @@
+{# email_verification/html.jinja2 #}
+{% extends "base/html.jinja2" %}
+
+{% block title %}
+Verify your email address
+{% endblock %}
+
+{% block content %}
+<h1>Verify your email address</h1>
+
+<p>
+    Please verify your email address by clicking the button below.
+</p>
+
+<p>
+    <a href="{{ verification_url }}">
+        Verify email address
+    </a>
+</p>
+
+<p>
+    This link expires in {{ expires_in }}.
+</p>
+{% endblock %}
