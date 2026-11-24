@@ -1,0 +1,45 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from identity.shared.infrastructure.time.clock import Clock
+from identity.shared.infrastructure.time.system_clock import SystemClock
+
+from .settings import Settings
+
+
+@dataclass(slots=True)
+class AppContainer:
+    settings: Settings
+
+    # app_db: Database
+    # rabbitmq: RabbitMQClient
+    # redis: RedisClient
+    clock: Clock
+
+    # iam: IAMContainer
+
+    @classmethod
+    async def create(cls, settings: Settings) -> AppContainer:
+        # app_db = Database.create(settings.db)
+        # rabbitmq = await RabbitMQClient.create(
+        #     settings.rabbitmq,
+        #     exchange_name="",
+        # )
+        # redis = RedisClient.create(settings.redis)
+        clock = SystemClock()
+
+        return cls(
+            settings=settings,
+            # app_db=app_db,
+            # rabbitmq=rabbitmq,
+            # redis=redis,
+            clock=clock,
+        )
+
+    async def start(self) -> None: ...
+
+    async def stop(self) -> None: ...
+        # await self.redis.close()
+        # await self.rabbitmq.close()
+        # await self.app_db.stop()

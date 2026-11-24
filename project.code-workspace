@@ -9,15 +9,17 @@
             "path": "packages/shared/db"
         },
         {
-            "name": "IAM",
-            "path": "packages/iam"
+            "name": "Identity",
+            "path": "packages/identity"
         },
         {
             "name": "API",
             "path": "services/api"
+        },
+        {
+            "name": "Worker",
+            "path": "services/worker"
         }
     ],
-    "settings": {
-        "python.terminal.activateEnvironment": false
-    }
+    "settings": {}
 }
